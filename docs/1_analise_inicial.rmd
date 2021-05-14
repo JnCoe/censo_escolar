@@ -1,0 +1,433 @@
+---
+title: "1. Análise inicial"
+author: "Jonas Coelho"
+date: "07/05/2021"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include=FALSE}
+#Bibliotecas
+library('dplyr')
+library('kableExtra')
+
+# Gráficos
+library(hrbrthemes)
+library(viridis)
+library(ggplot2)
+
+library(geobr)
+library(sf)
+
+library(crul)
+
+```
+
+# I. Abrindo dados do censo 2020
+
+Vamos iniciar com os microdados do censo que podem ser obtidos nesse endereço: https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-escolar . Note que o arquivo possui 2GB e pode levar horas para ser baixado mesmo em boa conexão.
+
+Primeiramente, vamos importar os dicionários disponíveis na pasta de anexos:
+
+```{r message=FALSE, warning=FALSE}
+dici_escolas <- readxl::read_excel('../dados/dicionario.xlsx', sheet = 'BAS_ESCOLA', skip = 7) %>%
+  janitor::clean_names() %>%
+  slice(3:n())
+```
+
+Agora visualizar:
+
+```{r}
+dici_escolas %>%
+    knitr::kable("html") %>%
+    kable_styling() %>%
+    scroll_box(width = "100%", height = "500px")
+```
+
+É possível notar que há diversas colunas. Pelas colunas, é possível notar que a base também é bastante extensa, possuindo escolas de EJA, Ensino Fundamental, Médio, Instituições de Atividades Complementares (como clubes), EAD, entre outras, além de instituições públicas e privadas.Como consequência, um comparativo entre estados/municípios sem levar em conta essas particularidades poderia acabar sendo espúrio. 
+
+Por esse motivo, vamos realizar uma filtragem para manter apenas as instituições de ensino regular (creche a ensino médio). Para isso, realizaremos o filtro na coluna "in_regular == 1". Também vamos excluir as escolas que possuem exclusivamente atividade complementar (tp_atividade_complementar != 2). Vamos também criar tabelas separadas de escolas públicas e particulares para facilitar a análise.
+
+```{r}
+escolas <- data.table::fread('../dados/escolas.CSV', sep = '|') %>%
+  janitor::clean_names() %>%
+  filter(in_regular == 1 & tp_atividade_complementar != 2)
+
+escolas_pub <- escolas %>%
+  filter(tp_dependencia == 1 | tp_dependencia == 2 | tp_dependencia == 3)
+
+escolas_priv <- escolas %>%
+  filter(tp_dependencia == 4)
+```
+
+É necessário também criar uma coluna para variáveis baseadas no número de alunos matriculados. Como não há esse número nas tabelas, vamos ter que calcular com base nos microdados de matrícula. Por conta do tamanho excessivo dos dados, inicialmente usaremos apenas as informações da capital.
+
+A forma mais rápida de realizar esse procedimento é utilizando o awk no shell do linux para filtrar os arquivos de microdados do censo escolar. Cada macrorregião está em um arquivo, então o processo precisa ser repetido 5 vezes. Basta copiar o código abaixo, substitundo o nome dos arquivos de input / output:
+
+```{bash eval=FALSE}
+awk -F "|" -v OFS=',' '{if ($15 == 1100205 || $15 == 1302603 || $15 == 1200401 || $15 == 5002704 || $15 == 1600303 || $15 == 5300108 || $15 == 1400100 || $15 == 5103403 || $15 == 1721000 || $15 == 3550308 || $15 == 2211001 || $15 == 3304557 || $15 == 1501402 || $15 == 5208707 || $15 == 2927408 || $15 == 4205407 || $15 == 2111300 || $15 == 2704302 || $15 == 4314902 || $15 == 4106902 || $15 == 3106200 || $15 == 2304400 || $15 == 2611606 || $15 == 2507507 || $15 == 2800308 || $15 == 2408102 || $15 == 3205309) {print $3,$70,$82}}' matricula_nordeste.CSV > matriculas_capital_nordeste.csv
+```
+
+Em seguida, é necessário compilar os dados em um só arquivo:
+
+```{bash eval=FALSE}
+cat matriculas_capital_co.csv matriculas_capital_nordeste.csv matriculas_capital_norte.csv matriculas_capital_se.csv matriculas_capital_sul.csv > compilado_matricula.csv
+```
+
+O arquivo está na pasta dados ja compilado para trabalharmos em cima dele. Possui três informações: id da matricula de cada aluno, id da escola e id da turma.
+
+```{r}
+compilado_matricula <- readr::read_csv("../dados/compilado_matricula.csv", col_names = FALSE)
+
+colnames(compilado_matricula) <- c('id_matricula', 'id_turma', 'co_entidade')
+```
+
+Vamos verificar se o numero de ids de matricula de fato é único:
+
+```{r}
+compilado_matricula$id_matricula %>%
+  unique() %>%
+  length()
+
+compilado_matricula %>%
+  nrow()
+```
+
+Parece que sim, então vamos continuar.
+
+# II. Análise do dados de infraestrutura
+
+As colunas mais interessantes para nossa análise são:
+
+* IN_AGUA_POTAVEL (Fornece água potável para o consumo humano)
+* IN_AGUA_INEXISTENTE (Abastecimento de água - Não há abastecimento de água)
+* IN_ESGOTO_INEXISTENTE (Esgoto sanitário - Não há esgotamento sanitário)
+* IN_AREA_VERDE (Dependências físicas existentes e utilizadas na escola - Área Verde)
+* IN_BANHEIRO (Dependências físicas existentes e utilizadas na escola - Banheiro)
+* IN_BANHEIRO_FUNCIONARIOS (Dependências físicas existentes e utilizadas na escola - Banheiro exclusivo para os funcionários)
+* IN_PATIO_COBERTO (Dependências físicas existentes e utilizadas na escola - Pátio Coberto)
+* IN_PATIO_DESCOBERTO (Dependências físicas existentes e utilizadas na escola - Pátio Descoberto)
+* IN_INTERNET_ADMINISTRATIVO (Acesso à Internet - Para uso administrativo)
+* IN_BANDA_LARGA (Internet Banda Larga)
+* QT_PROF_SAUDE	 (Total de profissionais que atuam na escola - Bombeiro(a) brigadista, profissionais de assistência a saúde (urgência e emergência), Enfermeiro(a), Técnico(a) de enfermagem e socorrista)
+
+Vamos fazer um sumário desses dados:
+
+```{r}
+fun_sumar <- function(z) {
+  cache <- as.data.frame(matrix(ncol = 6, nrow = 0))
+  colunas <- c('NAs', 'prop_na', 'zeros', 'prop_zero', 'uns', 'prop_uns')
+  colnames(cache) <- colunas
+  
+  z <- z %>%
+    select(in_agua_potavel, in_agua_inexistente, in_esgoto_inexistente, in_area_verde, in_banheiro, in_banheiro_funcionarios, in_patio_coberto, in_patio_descoberto, in_internet_administrativo, in_banda_larga, qt_prof_saude)
+
+  for (i in names(z)){
+    x <- z %>%
+      select(i)
+    
+    y <- x %>%
+      summarise(coluna = i,
+                NAs = sum(is.na(.)),
+                prop_na = round(sum(is.na(.))/n(), digits = 2),
+                zeros = sum(. ==  0, na.rm = TRUE),
+                prop_zero = round(sum(. ==  0, na.rm = TRUE)/n(), digits = 2),
+                uns = sum(. ==  1, na.rm = TRUE),
+                prop_uns = round(sum(. ==  1, na.rm = TRUE)/n(), digits = 2))
+    cache <- rbind(cache, y)
+  }
+
+  return(cache)
+}
+```
+
+```{r}
+sumario <- fun_sumar(escolas)
+```
+
+```{r}
+sumario %>%
+  knitr::kable("html") %>%
+  kable_styling() %>%
+  scroll_box(width = "100%", height = "500px")
+```
+
+Nenhuma das escolas do censo está com os campos de infraestrutura não preenchido, com exceção da coluna de banda larga, em que 20% das escolas não preencheram a coluna.
+
+Uma observação relevante que vale ser relembrada é que as colunas "in_agua_inexistente" e "in_esgoto_inexistente", por indicarem a ausência de água esgoto, idealmente devem ser "0", enquanto as demais, por indicarem presença, devem ser "1".
+
+Antes de analisarmos mais a fundo o retrato da infraestrutura escolar no Brasil, vamos verificar como fica a distribuição geográfica dessas variáveis:
+
+```{r}
+equivalencia <- data.frame(co_regiao = c(1,2,3,4,5),
+                           regiao = c('norte', 'nordeste', 'sudeste', 'sul', 'centro-oeste'))
+```
+
+
+```{r}
+
+#------- Região
+
+sumario2 <- escolas %>%
+    filter(co_regiao == 1) %>%
+    fun_sumar() %>%
+  mutate(co_regiao = 1)
+
+for (i in 2:5){
+  cache <- escolas %>%
+    filter(co_regiao == i) %>%
+    fun_sumar() %>%
+  mutate(co_regiao = i)
+  
+  sumario2 <- rbind(sumario2, cache)
+}
+
+sumario2 <- sumario2 %>%
+  left_join(equivalencia)
+
+#----- Estados
+
+ufs <- escolas %>%
+  distinct(co_uf) %>%
+  as.list()
+
+
+sumar_estados <- function(x){
+  cont <- 0
+  for (i in ufs[[1]]){
+    cache2 <- x %>%
+      filter(co_uf == i) %>%
+      fun_sumar() %>%
+      mutate(co_uf = toString(i))
+  
+    if (cont == 0){
+      sumario3 <- cache2
+    } else {
+      sumario3 <- rbind(sumario3, cache2)
+    }
+  
+    cont <- 1
+  }
+  return(sumario3)
+}
+
+sumario3 <- sumar_estados(escolas) %>%
+  mutate(code_state = as.double(co_uf))
+```
+
+```{r teste15}
+no_axis <- theme(axis.title=element_blank(),
+                   axis.text=element_blank(),
+                   axis.ticks=element_blank())
+```
+
+```{r teste2, warning=FALSE, results='hide',message=FALSE}
+states <- read_state(year=2019)
+
+states <- left_join(states, sumario3)
+
+sumario_pub <- sumar_estados(escolas_pub) %>%
+  mutate(code_state = as.double(co_uf))
+
+states_pub <- left_join(states, sumario_pub)
+  
+sumario_priv <- sumar_estados(escolas_priv) %>%
+  mutate(code_state = as.double(co_uf))
+
+states_priv <- left_join(states, sumario_priv)
+```
+
+```{r teste0, message=FALSE, warning=FALSE}
+par(mfrow=c(2,2))
+states %>%
+  filter(coluna == 'in_agua_inexistente') %>%
+  mutate(prop_preenchida_sem_agua = 1 - (zeros/(zeros+uns))) %>%
+  ggplot() +
+    geom_sf(aes(fill=prop_preenchida_sem_agua), color= '#000000', size=.15) +
+      labs(subtitle="Proporção em % de escolas sem acesso a água", size=8) +
+      scale_fill_distiller(palette = "Spectral", name="Proporção") +
+      theme_minimal() +
+      no_axis
+
+states %>%
+  filter(coluna == 'in_esgoto_inexistente') %>%
+  mutate(prop_preenchida_sem_agua = 1 - (zeros/(zeros+uns))) %>%
+  ggplot() +
+    geom_sf(aes(fill=prop_preenchida_sem_agua), color= '#000000', size=.15) +
+      labs(subtitle="Proporção em % de escolas sem acesso a esgoto", size=8) +
+      scale_fill_distiller(palette = "Spectral", name="Proporção") +
+      theme_minimal() +
+      no_axis
+
+states %>%
+  filter(coluna == 'in_agua_potavel') %>%
+  mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %>%
+  ggplot() +
+    geom_sf(aes(fill=prop_preenchida_sem_agua), color= '#000000', size=.15) +
+      labs(subtitle="Proporção em % de escolas sem acesso a água potável", size=8) +
+      scale_fill_distiller(palette = "Spectral", name="Proporção") +
+      theme_minimal() +
+      no_axis
+
+states %>%
+  filter(coluna == 'in_area_verde') %>%
+  mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %>%
+  ggplot() +
+    geom_sf(aes(fill=prop_preenchida_sem_agua), color= '#000000', size=.15) +
+      labs(subtitle="Proporção em % de escolas sem área verde", size=8) +
+      scale_fill_distiller(palette = "Spectral", name="Proporção") +
+      theme_minimal() +
+      no_axis
+
+states %>%
+  filter(coluna == 'in_banda_larga') %>%
+  mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %>%
+  ggplot() +
+    geom_sf(aes(fill=prop_preenchida_sem_agua), color= '#000000', size=.15) +
+      labs(subtitle="Proporção em % de escolas sem banda larga (desconsiderando NA)", size=8) +
+      scale_fill_distiller(palette = "Spectral", name="Proporção") +
+      theme_minimal() +
+      no_axis
+
+states %>%
+  filter(coluna == 'in_patio_coberto' | coluna == 'in_patio_coberto') %>%
+  group_by(co_uf) %>%
+  summarise(soma_zeros = sum(zeros),
+            soma_uns = sum(uns)) %>%
+  mutate(prop_preenchida_sem_agua = soma_zeros/(soma_zeros+soma_uns)) %>%
+  ggplot() +
+    geom_sf(aes(fill=prop_preenchida_sem_agua), color= '#000000', size=.15) +
+      labs(subtitle="Proporção em % de escolas sem pátio coberto", size=8) +
+      scale_fill_distiller(palette = "Spectral", name="Proporção") +
+      theme_minimal() +
+      no_axis
+
+states %>%
+  filter(coluna == 'in_patio_descoberto' | coluna == 'in_patio_coberto') %>%
+  group_by(co_uf) %>%
+  summarise(soma_zeros = sum(zeros),
+            soma_uns = sum(uns)) %>%
+  mutate(prop_preenchida_sem_agua = soma_zeros/(soma_zeros+soma_uns)) %>%
+  ggplot() +
+    geom_sf(aes(fill=prop_preenchida_sem_agua), color= '#000000', size=.15) +
+      labs(subtitle="Proporção em % de escolas sem pátio descoberto", size=8) +
+      scale_fill_distiller(palette = "Spectral", name="Proporção") +
+      theme_minimal() +
+      no_axis
+```
+
+```{r}
+save(sumario, file = '../apps/dados/sumario.rdata')
+save(sumario2, file = '../apps/dados/sumario.rdata2')
+save(sumario3, file = '../apps/dados/sumario.rdata3')
+save(states, file = '../apps/dados/states.RData')
+```
+
+A tabela completa com os valores por estados pode ser explorada no endereço:
+https://jcoelho.shinyapps.io/tabela_estados/
+
+Antes de prosseguir, é importante verificar o quão realistas as informações prestadas são. Foram identificados alguns casos que os dados do censo não condizem com a estrutura da instituição.
+
+Por exemplo, o Instituto de Educação de Minas Gerais (cód.: 31001996) diz não possuir pátio coberto ou descoberto bem como não possuir auditório. Porém, sabe-se que o edifício possui pátios, como é possível inclusive observar das imagens:
+
+![Foto aérea](https://i.imgur.com/JmAoBr9.png)
+
+bem como um auditório:
+
+![Foto auditório](https://i.imgur.com/E2fWzsl.png)
+
+Por fim, houve o caso também da escola EE Angelo Correia Viana (cód.: 31317357), que informava possuir apenas uma sala utilizada. Ao ligar para a escola no entanto, a diretora informou que o número de salas utilizadas era 12.
+
+No caso do Rio, foi possível notar que uma escola particular que oferece ensino fundamental ao médio está cadastrada como duas instituições diferentes. Como consequência, o número de salas informadas, mesmo somando, está consideravelmente abaixo do total existente na instituição.
+
+É relevante, portanto, entender que as informações prestadas podem não ser um retrato 100% fiel da situação das escolas.
+
+Feitas essas considerações, passamos para a análise dos dados obtidos:
+
+# III. Análise por estado
+
+Não surpreendentemente, há uma grande disparidade regional no acesso a infraestrutura, com estados do norte e nordeste liderando na falta de água e esgoto. O Rio Grande do Sul se destaca por ser o único estado fora dessas duas regiões entre os 10 estados com maior proporção de escolas sem acesso à água potável. Com 22% de escolas nessa situação, o estado gaúcho é o terceiro pior colocado no Brasil. Se forem consideradas apenas as escolas públicas, esse valor sobe para 29%. Mais alarmante, no entanto, é o estado de Roraima, com quase 40% das escolas sem acesso a água potável.
+
+Ainda assim, ambos estados ao menos possuem acesso à água, o que pode ser fundamental em um contexto de pandemia para questões de higiene. No estado do Acre, porém, 417 escolas (27% do total e 28% das escolas públicas) afirmaram ao censo que não possuem acesso à nenhuma fonte de água. Esse número está consideravelmente acima do segundo estado com a maior proporção de escolas sem água (Maranhão, com 8%).
+
+Há, no entanto, um fato curioso. Algumas escolas estão com "água potavel" marcado como "1" e "in_agua_inexistente" também marcado como "1", ou seja, a escola informa não possuir acesso a nenhuma fonte de água, mas que possui água potável.
+
+A escola NORBERTO ASSUNCAO CAVALCANTE (cód.: 12001104), no catálogo de escolas do INEP consta como "Abastecimento de água" preenchido por "Cacimba/Cisterna/Poço" bem como "Água consumida pelos alunos" preenchido por "Potável". Mais especificamente, 2147 escolas nessa situação. Só no Acre, 127 das 417 escolas sem acesso a água alegam ter água potável.
+
+Não só isso, a [página](http://idebescola.inep.gov.br/ideb/escola/dadosEscola/12001104) de indicadores das Escolas do INEP diz que o abastecimento da escola é feito por "Cacimba/Cisterna/Poço", mesmo com os dados do censo indicando que não há abastecimento em nenhuma forma, nem mesmo os citados:
+
+```{r testy369}
+escolas %>%
+  filter(co_entidade == '12001104') %>%
+  knitr::kable("html") %>%
+  kable_styling() %>%
+  scroll_box(width = "100%", height = "200px")
+```
+
+É uma possibilidade que os valores preenchidos, principalmente no Acre, estejam incorretos, ao menos em parte. Esse ponto deve ser considerado para análises macro usando os dados.
+
+# IV. Salas por alunos
+
+Com a estimativa de alunos por sala gerada anteriormente, vamos poder ter um panorama estimado da lotação física de cada escola. Lembrando que o df "compilado_matrícula" possui uma matrícula por linha.
+
+```{r eval=FALSE}
+matriculas_por_escola <- compilado_matricula %>%
+  group_by(co_entidade) %>%
+  summarise(matriculas = n_distinct(id_matricula))
+```
+
+```{r}
+pib_mun <- sidrar::get_sidra(api = "/t/5938/n6/all/v/37/p/last%201/d/v37%200") %>%
+  janitor::clean_names() %>%
+  select(municipio_codigo, municipio, valor) %>%
+  rename(pib = valor)
+```
+
+```{r eval=FALSE}
+escolas_joined <- escolas %>%
+  right_join(matriculas_por_escola) %>%
+  mutate(aluno_por_sala = matriculas/qt_salas_utilizadas) %>%
+  mutate(co_municipio = as.character(co_municipio)) %>%
+  left_join(pib_mun, by = c('co_municipio' = 'municipio_codigo'))
+```
+
+```{r eval=FALSE}
+escolas_joined %>%
+  write.csv('escolas_joined.csv', row.names = FALSE)
+```
+
+```{r eval = FALSE}
+# sample size
+sample_size = escolas_joined %>% group_by(municipio) %>% summarize(num=n())
+
+# Plot
+escolas_joined %>%
+  left_join(sample_size) %>%
+  mutate(myaxis = paste0(municipio, "\n", "n=", num)) %>%
+  ggplot( aes(x=myaxis, y=aluno_por_sala, fill=municipio)) +
+    geom_violin(width=1.4) +
+    geom_boxplot(width=0.1, color="grey", alpha=0.2) +
+    scale_fill_viridis(discrete = TRUE) +
+    theme_ipsum() +
+    theme(
+      legend.position="none",
+      plot.title = element_text(size=11)
+    ) +
+    ggtitle("A Violin wrapping a boxplot") +
+    xlab("") +
+    coord_flip()
+```
+
+
+
+
+# V. Diferenças públicas x privadas
+
