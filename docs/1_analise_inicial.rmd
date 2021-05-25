@@ -368,3 +368,123 @@ Há 4 opções para a coluna TP_DEPENDENCIA:
 4 - Privada
 
 Vamos criar uma coluna com os equivalentes para facilitar a leitura:
+
+
+```{r}
+escolas2 <- escolas %>%
+  mutate(Tipo = case_when(tp_dependencia == 1 ~ 'Federal', tp_dependencia == 2 ~ 'Estadual', tp_dependencia == 3 ~ 'Municipal', tp_dependencia == 4 ~ 'Privada' ))
+```
+
+```{r}
+escolas2 %>%
+group_by(co_uf) %>%
+  left_join(states, by = c('co_uf' = 'code_state')) %>%
+mutate(total_de_escolas = n()) %>%
+group_by(name_state, Tipo) %>%
+summarise(n_escolas_sem_esgoto = sum(as.numeric(in_esgoto_inexistente)), total_de_escolas = total_de_escolas) %>%
+unique() %>%
+ggplot(aes(fill=Tipo, y=n_escolas_sem_esgoto, x=reorder(name_state, n_escolas_sem_esgoto))) +
+geom_bar(position="stack", stat="identity") +
+coord_flip() +
+xlab('UF') +
+ylab('Escolas sem esgoto') +
+  ggtitle('Número absoluto de escolas sem esgoto')
+
+escolas2 %>%
+group_by(co_uf) %>%
+  left_join(states, by = c('co_uf' = 'code_state')) %>%
+mutate(total_de_escolas = n()) %>%
+group_by(name_state, Tipo) %>%
+summarise(n_escolas_sem_esgoto = sum(as.numeric(in_esgoto_inexistente)), total_de_escolas = total_de_escolas) %>%
+mutate(prop_sem_esgoto = n_escolas_sem_esgoto/total_de_escolas) %>%
+unique() %>%
+  ggplot(aes(fill=Tipo, y=prop_sem_esgoto, x=reorder(name_state, prop_sem_esgoto))) +
+geom_bar(position="stack", stat="identity") +
+coord_flip() +
+xlab('UF') +
+ylab('Escolas sem esgoto') +
+scale_y_continuous(labels = scales::percent) +
+  ggtitle('Proporção de escolas sem esgoto')
+
+escolas2 %>%
+group_by(co_uf) %>%
+  left_join(states, by = c('co_uf' = 'code_state')) %>%
+mutate(total_de_escolas = n()) %>%
+group_by(name_state, Tipo) %>%
+summarise(n_escolas_sem_agua = sum(as.numeric(in_agua_inexistente)), total_de_escolas = total_de_escolas) %>%
+unique() %>%
+ggplot(aes(fill=Tipo, y=n_escolas_sem_agua, x=reorder(name_state, n_escolas_sem_agua))) +
+geom_bar(position="stack", stat="identity") +
+coord_flip() +
+xlab('UF') +
+ylab('Escolas sem água') +
+  ggtitle('Número absoluto de escolas sem água')
+  
+escolas2 %>%
+group_by(co_uf) %>%
+  left_join(states, by = c('co_uf' = 'code_state')) %>%
+mutate(total_de_escolas = n()) %>%
+group_by(name_state, Tipo) %>%
+summarise(n_escolas_sem_agua = sum(as.numeric(in_agua_inexistente)), total_de_escolas = total_de_escolas) %>%
+mutate(prop_sem_esgoto = n_escolas_sem_agua/total_de_escolas) %>%
+unique() %>%
+  ggplot(aes(fill=Tipo, y=prop_sem_esgoto, x=reorder(name_state, prop_sem_esgoto))) +
+geom_bar(position="stack", stat="identity") +
+coord_flip() +
+xlab('UF') +
+ylab('Escolas sem água') +
+scale_y_continuous(labels = scales::percent) +
+  ggtitle('Proporção de escolas sem água')  
+  
+```
+Tabelas com as informações acima
+
+## Número absoluto de escolas sem esgoto
+```{r}
+escolas2 %>%
+group_by(co_uf) %>%
+  left_join(states, by = c('co_uf' = 'code_state')) %>%
+mutate(total_de_escolas = n()) %>%
+group_by(name_state, Tipo) %>%
+summarise(n_escolas_sem_esgoto = sum(as.numeric(in_esgoto_inexistente)), total_de_escolas = total_de_escolas) %>%
+unique()
+```
+
+## Proporção de escolas sem esgoto
+
+```{r}
+escolas2 %>%
+group_by(co_uf) %>%
+  left_join(states, by = c('co_uf' = 'code_state')) %>%
+mutate(total_de_escolas = n()) %>%
+group_by(name_state, Tipo) %>%
+summarise(n_escolas_sem_esgoto = sum(as.numeric(in_esgoto_inexistente)), total_de_escolas = total_de_escolas) %>%
+mutate(prop_sem_esgoto = n_escolas_sem_esgoto/total_de_escolas) %>%
+unique()
+```
+
+## Número absoluto de escolas sem água
+
+```{r}
+escolas2 %>%
+group_by(co_uf) %>%
+  left_join(states, by = c('co_uf' = 'code_state')) %>%
+mutate(total_de_escolas = n()) %>%
+group_by(name_state, Tipo) %>%
+summarise(n_escolas_sem_agua = sum(as.numeric(in_agua_inexistente)), total_de_escolas = total_de_escolas) %>%
+unique()
+```
+
+
+## Proporção de escolas sem água
+```{r}
+escolas2 %>%
+group_by(co_uf) %>%
+  left_join(states, by = c('co_uf' = 'code_state')) %>%
+mutate(total_de_escolas = n()) %>%
+group_by(name_state, Tipo) %>%
+summarise(n_escolas_sem_agua = sum(as.numeric(in_agua_inexistente)), total_de_escolas = total_de_escolas) %>%
+mutate(prop_sem_esgoto = n_escolas_sem_agua/total_de_escolas) %>%
+unique()
+```
+
