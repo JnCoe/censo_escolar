@@ -29,6 +29,8 @@ library(sf)
 
 library(crul)
 
+`%!in%` <- Negate(`%in%`)
+
 ```
 
 # I. Abrindo dados do censo 2020
@@ -57,8 +59,10 @@ dici_escolas %>%
 Por esse motivo, vamos realizar uma filtragem para manter apenas as instituições de ensino regular (creche a ensino médio). Para isso, realizaremos o filtro na coluna "in_regular == 1". Também vamos excluir as escolas que possuem exclusivamente atividade complementar (tp_atividade_complementar != 2). Vamos também criar tabelas separadas de escolas públicas e particulares para facilitar a análise.
 
 ```{r}
-escolas <- data.table::fread('../dados/escolas.CSV', sep = '|') %>%
-  janitor::clean_names() %>%
+escolas_todas <- data.table::fread('../dados/escolas.CSV', sep = '|') %>%
+  janitor::clean_names()
+
+escolas <- escolas_todas %>%
   filter(in_regular == 1 & tp_atividade_complementar != 2)
 
 escolas_pub <- escolas %>%
@@ -68,40 +72,8 @@ escolas_priv <- escolas %>%
   filter(tp_dependencia == 4)
 ```
 
-É necessário também criar uma coluna para variáveis baseadas no número de alunos matriculados. Como não há esse número nas tabelas, vamos ter que calcular com base nos microdados de matrícula. Por conta do tamanho excessivo dos dados, inicialmente usaremos apenas as informações da capital.
+Há um problema nisso, no entanto, essas colunas não estão 100% preenchidas. É possível notar que há escolas não preenchidas nessa coluna com nome como "EMEF" e "EMEI", o que provavelmente indica que se trata de um ensino regular. Vamos analisar como estão os NAs.
 
-A forma mais rápida de realizar esse procedimento é utilizando o awk no shell do linux para filtrar os arquivos de microdados do censo escolar. Cada macrorregião está em um arquivo, então o processo precisa ser repetido 5 vezes. Basta copiar o código abaixo, substitundo o nome dos arquivos de input / output:
-
-```{bash eval=FALSE}
-awk -F "|" -v OFS=',' '{if ($15 == 1100205 || $15 == 1302603 || $15 == 1200401 || $15 == 5002704 || $15 == 1600303 || $15 == 5300108 || $15 == 1400100 || $15 == 5103403 || $15 == 1721000 || $15 == 3550308 || $15 == 2211001 || $15 == 3304557 || $15 == 1501402 || $15 == 5208707 || $15 == 2927408 || $15 == 4205407 || $15 == 2111300 || $15 == 2704302 || $15 == 4314902 || $15 == 4106902 || $15 == 3106200 || $15 == 2304400 || $15 == 2611606 || $15 == 2507507 || $15 == 2800308 || $15 == 2408102 || $15 == 3205309) {print $3,$70,$82}}' matricula_nordeste.CSV > matriculas_capital_nordeste.csv
-```
-
-Em seguida, é necessário compilar os dados em um só arquivo:
-
-```{bash eval=FALSE}
-cat matriculas_capital_co.csv matriculas_capital_nordeste.csv matriculas_capital_norte.csv matriculas_capital_se.csv matriculas_capital_sul.csv > compilado_matricula.csv
-```
-
-O arquivo está na pasta dados ja compilado para trabalharmos em cima dele. Possui três informações: id da matricula de cada aluno, id da escola e id da turma.
-
-```{r}
-compilado_matricula <- readr::read_csv("../dados/compilado_matricula.csv", col_names = FALSE)
-
-colnames(compilado_matricula) <- c('id_matricula', 'id_turma', 'co_entidade')
-```
-
-Vamos verificar se o numero de ids de matricula de fato é único:
-
-```{r}
-compilado_matricula$id_matricula %>%
-  unique() %>%
-  length()
-
-compilado_matricula %>%
-  nrow()
-```
-
-Parece que sim, então vamos continuar.
 
 # II. Análise do dados de infraestrutura
 
@@ -364,7 +336,7 @@ A escola NORBERTO ASSUNCAO CAVALCANTE (cód.: 12001104), no catálogo de escolas
 
 Não só isso, a [página](http://idebescola.inep.gov.br/ideb/escola/dadosEscola/12001104) de indicadores das Escolas do INEP diz que o abastecimento da escola é feito por "Cacimba/Cisterna/Poço", mesmo com os dados do censo indicando que não há abastecimento em nenhuma forma, nem mesmo os citados:
 
-```{r testy369}
+```{r}
 escolas %>%
   filter(co_entidade == '12001104') %>%
   knitr::kable("html") %>%
@@ -374,60 +346,25 @@ escolas %>%
 
 É uma possibilidade que os valores preenchidos, principalmente no Acre, estejam incorretos, ao menos em parte. Esse ponto deve ser considerado para análises macro usando os dados.
 
-# IV. Salas por alunos
+# V. Dados apenas públicas
 
-Com a estimativa de alunos por sala gerada anteriormente, vamos poder ter um panorama estimado da lotação física de cada escola. Lembrando que o df "compilado_matrícula" possui uma matrícula por linha.
-
-```{r eval=FALSE}
-matriculas_por_escola <- compilado_matricula %>%
-  group_by(co_entidade) %>%
-  summarise(matriculas = n_distinct(id_matricula))
+```{r}
+sumario_pub <- fun_sumar(escolas_pub)
 ```
 
 ```{r}
-pib_mun <- sidrar::get_sidra(api = "/t/5938/n6/all/v/37/p/last%201/d/v37%200") %>%
-  janitor::clean_names() %>%
-  select(municipio_codigo, municipio, valor) %>%
-  rename(pib = valor)
+sumario_pub %>%
+  knitr::kable("html") %>%
+  kable_styling() %>%
+  scroll_box(width = "100%", height = "500px")
 ```
-
-```{r eval=FALSE}
-escolas_joined <- escolas %>%
-  right_join(matriculas_por_escola) %>%
-  mutate(aluno_por_sala = matriculas/qt_salas_utilizadas) %>%
-  mutate(co_municipio = as.character(co_municipio)) %>%
-  left_join(pib_mun, by = c('co_municipio' = 'municipio_codigo'))
-```
-
-```{r eval=FALSE}
-escolas_joined %>%
-  write.csv('escolas_joined.csv', row.names = FALSE)
-```
-
-```{r eval = FALSE}
-# sample size
-sample_size = escolas_joined %>% group_by(municipio) %>% summarize(num=n())
-
-# Plot
-escolas_joined %>%
-  left_join(sample_size) %>%
-  mutate(myaxis = paste0(municipio, "\n", "n=", num)) %>%
-  ggplot( aes(x=myaxis, y=aluno_por_sala, fill=municipio)) +
-    geom_violin(width=1.4) +
-    geom_boxplot(width=0.1, color="grey", alpha=0.2) +
-    scale_fill_viridis(discrete = TRUE) +
-    theme_ipsum() +
-    theme(
-      legend.position="none",
-      plot.title = element_text(size=11)
-    ) +
-    ggtitle("A Violin wrapping a boxplot") +
-    xlab("") +
-    coord_flip()
-```
-
-
-
 
 # V. Diferenças públicas x privadas
 
+Há 4 opções para a coluna TP_DEPENDENCIA:
+1 - Federal
+2 - Estadual
+3 - Municipal
+4 - Privada
+
+Vamos criar uma coluna com os equivalentes para facilitar a leitura:

@@ -17757,8 +17757,10 @@ NA
 </ul>
 <p>É possível notar que há diversas colunas. Pelas colunas, é possível notar que a base também é bastante extensa, possuindo escolas de EJA, Ensino Fundamental, Médio, Instituições de Atividades Complementares (como clubes), EAD, entre outras, além de instituições públicas e privadas.Como consequência, um comparativo entre estados/municípios sem levar em conta essas particularidades poderia acabar sendo espúrio.</p>
 <p>Por esse motivo, vamos realizar uma filtragem para manter apenas as instituições de ensino regular (creche a ensino médio). Para isso, realizaremos o filtro na coluna “in_regular == 1”. Também vamos excluir as escolas que possuem exclusivamente atividade complementar (tp_atividade_complementar != 2). Vamos também criar tabelas separadas de escolas públicas e particulares para facilitar a análise.</p>
-<pre class="r"><code>escolas &lt;- data.table::fread(&#39;../dados/escolas.CSV&#39;, sep = &#39;|&#39;) %&gt;%
-  janitor::clean_names() %&gt;%
+<pre class="r"><code>escolas_todas &lt;- data.table::fread(&#39;../dados/escolas.CSV&#39;, sep = &#39;|&#39;) %&gt;%
+  janitor::clean_names()
+
+escolas &lt;- escolas_todas %&gt;%
   filter(in_regular == 1 &amp; tp_atividade_complementar != 2)
 
 escolas_pub &lt;- escolas %&gt;%
@@ -17766,30 +17768,7 @@ escolas_pub &lt;- escolas %&gt;%
 
 escolas_priv &lt;- escolas %&gt;%
   filter(tp_dependencia == 4)</code></pre>
-<p>É necessário também criar uma coluna para variáveis baseadas no número de alunos matriculados. Como não há esse número nas tabelas, vamos ter que calcular com base nos microdados de matrícula. Por conta do tamanho excessivo dos dados, inicialmente usaremos apenas as informações da capital.</p>
-<p>A forma mais rápida de realizar esse procedimento é utilizando o awk no shell do linux para filtrar os arquivos de microdados do censo escolar. Cada macrorregião está em um arquivo, então o processo precisa ser repetido 5 vezes. Basta copiar o código abaixo, substitundo o nome dos arquivos de input / output:</p>
-<pre class="bash"><code>awk -F &quot;|&quot; -v OFS=&#39;,&#39; &#39;{if ($15 == 1100205 || $15 == 1302603 || $15 == 1200401 || $15 == 5002704 || $15 == 1600303 || $15 == 5300108 || $15 == 1400100 || $15 == 5103403 || $15 == 1721000 || $15 == 3550308 || $15 == 2211001 || $15 == 3304557 || $15 == 1501402 || $15 == 5208707 || $15 == 2927408 || $15 == 4205407 || $15 == 2111300 || $15 == 2704302 || $15 == 4314902 || $15 == 4106902 || $15 == 3106200 || $15 == 2304400 || $15 == 2611606 || $15 == 2507507 || $15 == 2800308 || $15 == 2408102 || $15 == 3205309) {print $3,$70,$82}}&#39; matricula_nordeste.CSV &gt; matriculas_capital_nordeste.csv</code></pre>
-<p>Em seguida, é necessário compilar os dados em um só arquivo:</p>
-<pre class="bash"><code>cat matriculas_capital_co.csv matriculas_capital_nordeste.csv matriculas_capital_norte.csv matriculas_capital_se.csv matriculas_capital_sul.csv &gt; compilado_matricula.csv</code></pre>
-<p>O arquivo está na pasta dados ja compilado para trabalharmos em cima dele. Possui três informações: id da matricula de cada aluno, id da escola e id da turma.</p>
-<pre class="r"><code>compilado_matricula &lt;- readr::read_csv(&quot;../dados/compilado_matricula.csv&quot;, col_names = FALSE)</code></pre>
-<pre><code>## 
-## -- Column specification --------------------------------------------------------
-## cols(
-##   X1 = col_double(),
-##   X2 = col_double(),
-##   X3 = col_double()
-## )</code></pre>
-<pre class="r"><code>colnames(compilado_matricula) &lt;- c(&#39;id_matricula&#39;, &#39;id_turma&#39;, &#39;co_entidade&#39;)</code></pre>
-<p>Vamos verificar se o numero de ids de matricula de fato é único:</p>
-<pre class="r"><code>compilado_matricula$id_matricula %&gt;%
-  unique() %&gt;%
-  length()</code></pre>
-<pre><code>## [1] 6635324</code></pre>
-<pre class="r"><code>compilado_matricula %&gt;%
-  nrow()</code></pre>
-<pre><code>## [1] 6635324</code></pre>
-<p>Parece que sim, então vamos continuar.</p>
+<p>Há um problema nisso, no entanto, essas colunas não estão 100% preenchidas. É possível notar que há escolas não preenchidas nessa coluna com nome como “EMEF” e “EMEI”, o que provavelmente indica que se trata de um ensino regular. Vamos analisar como estão os NAs.</p>
 </div>
 <div id="ii.-análise-do-dados-de-infraestrutura" class="section level1">
 <h1>II. Análise do dados de infraestrutura</h1>
@@ -19745,46 +19724,302 @@ NA
 </div>
 <p>É uma possibilidade que os valores preenchidos, principalmente no Acre, estejam incorretos, ao menos em parte. Esse ponto deve ser considerado para análises macro usando os dados.</p>
 </div>
-<div id="iv.-salas-por-alunos" class="section level1">
-<h1>IV. Salas por alunos</h1>
-<p>Com a estimativa de alunos por sala gerada anteriormente, vamos poder ter um panorama estimado da lotação física de cada escola. Lembrando que o df “compilado_matrícula” possui uma matrícula por linha.</p>
-<pre class="r"><code>matriculas_por_escola &lt;- compilado_matricula %&gt;%
-  group_by(co_entidade) %&gt;%
-  summarise(matriculas = n_distinct(id_matricula))</code></pre>
-<pre class="r"><code>pib_mun &lt;- sidrar::get_sidra(api = &quot;/t/5938/n6/all/v/37/p/last%201/d/v37%200&quot;) %&gt;%
-  janitor::clean_names() %&gt;%
-  select(municipio_codigo, municipio, valor) %&gt;%
-  rename(pib = valor)</code></pre>
-<pre><code>## All others arguments are desconsidered when &#39;api&#39; is informed</code></pre>
-<pre class="r"><code>escolas_joined &lt;- escolas %&gt;%
-  right_join(matriculas_por_escola) %&gt;%
-  mutate(aluno_por_sala = matriculas/qt_salas_utilizadas) %&gt;%
-  mutate(co_municipio = as.character(co_municipio)) %&gt;%
-  left_join(pib_mun, by = c(&#39;co_municipio&#39; = &#39;municipio_codigo&#39;))</code></pre>
-<pre class="r"><code>escolas_joined %&gt;%
-  write.csv(&#39;escolas_joined.csv&#39;, row.names = FALSE)</code></pre>
-<pre class="r"><code># sample size
-sample_size = escolas_joined %&gt;% group_by(municipio) %&gt;% summarize(num=n())
-
-# Plot
-escolas_joined %&gt;%
-  left_join(sample_size) %&gt;%
-  mutate(myaxis = paste0(municipio, &quot;\n&quot;, &quot;n=&quot;, num)) %&gt;%
-  ggplot( aes(x=myaxis, y=aluno_por_sala, fill=municipio)) +
-    geom_violin(width=1.4) +
-    geom_boxplot(width=0.1, color=&quot;grey&quot;, alpha=0.2) +
-    scale_fill_viridis(discrete = TRUE) +
-    theme_ipsum() +
-    theme(
-      legend.position=&quot;none&quot;,
-      plot.title = element_text(size=11)
-    ) +
-    ggtitle(&quot;A Violin wrapping a boxplot&quot;) +
-    xlab(&quot;&quot;) +
-    coord_flip()</code></pre>
+<div id="v.-dados-apenas-públicas" class="section level1">
+<h1>V. Dados apenas públicas</h1>
+<pre class="r"><code>sumario_pub &lt;- fun_sumar(escolas_pub)</code></pre>
+<pre class="r"><code>sumario_pub %&gt;%
+  knitr::kable(&quot;html&quot;) %&gt;%
+  kable_styling() %&gt;%
+  scroll_box(width = &quot;100%&quot;, height = &quot;500px&quot;)</code></pre>
+<div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:500px; overflow-x: scroll; width:100%; ">
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+coluna
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+NAs
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+prop_na
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+zeros
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+prop_zero
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+uns
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+prop_uns
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+in_agua_potavel
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+9494
+</td>
+<td style="text-align:right;">
+0.07
+</td>
+<td style="text-align:right;">
+126929
+</td>
+<td style="text-align:right;">
+0.93
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+in_agua_inexistente
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+133027
+</td>
+<td style="text-align:right;">
+0.98
+</td>
+<td style="text-align:right;">
+3396
+</td>
+<td style="text-align:right;">
+0.02
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+in_esgoto_inexistente
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+127966
+</td>
+<td style="text-align:right;">
+0.94
+</td>
+<td style="text-align:right;">
+8457
+</td>
+<td style="text-align:right;">
+0.06
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+in_area_verde
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+93697
+</td>
+<td style="text-align:right;">
+0.69
+</td>
+<td style="text-align:right;">
+42726
+</td>
+<td style="text-align:right;">
+0.31
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+in_banheiro
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+5829
+</td>
+<td style="text-align:right;">
+0.04
+</td>
+<td style="text-align:right;">
+130594
+</td>
+<td style="text-align:right;">
+0.96
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+in_banheiro_funcionarios
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+71342
+</td>
+<td style="text-align:right;">
+0.52
+</td>
+<td style="text-align:right;">
+65081
+</td>
+<td style="text-align:right;">
+0.48
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+in_patio_coberto
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+68598
+</td>
+<td style="text-align:right;">
+0.50
+</td>
+<td style="text-align:right;">
+67825
+</td>
+<td style="text-align:right;">
+0.50
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+in_patio_descoberto
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+77776
+</td>
+<td style="text-align:right;">
+0.57
+</td>
+<td style="text-align:right;">
+58647
+</td>
+<td style="text-align:right;">
+0.43
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+in_internet_administrativo
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+38172
+</td>
+<td style="text-align:right;">
+0.28
+</td>
+<td style="text-align:right;">
+98251
+</td>
+<td style="text-align:right;">
+0.72
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+in_banda_larga
+</td>
+<td style="text-align:right;">
+34834
+</td>
+<td style="text-align:right;">
+0.26
+</td>
+<td style="text-align:right;">
+19021
+</td>
+<td style="text-align:right;">
+0.14
+</td>
+<td style="text-align:right;">
+82568
+</td>
+<td style="text-align:right;">
+0.61
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+qt_prof_saude
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+134810
+</td>
+<td style="text-align:right;">
+0.99
+</td>
+<td style="text-align:right;">
+718
+</td>
+<td style="text-align:right;">
+0.01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 <div id="v.-diferenças-públicas-x-privadas" class="section level1">
 <h1>V. Diferenças públicas x privadas</h1>
+<p>Há 4 opções para a coluna TP_DEPENDENCIA: 1 - Federal 2 - Estadual 3 - Municipal 4 - Privada</p>
+<p>Vamos criar uma coluna com os equivalentes para facilitar a leitura:</p>
 </div>
 
 
