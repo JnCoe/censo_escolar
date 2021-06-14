@@ -147,7 +147,6 @@ equivalencia <- data.frame(co_regiao = c(1,2,3,4,5),
 ```{r}
 
 #------- Região
-
 sumario2 <- escolas %>%
     filter(co_regiao == 1) %>%
     fun_sumar() %>%
@@ -371,12 +370,15 @@ Vamos criar uma coluna com os equivalentes para facilitar a leitura:
 
 
 ```{r}
-escolas2 <- escolas %>%
+escolas_original <- escolas
+rm(escolas)
+
+escolas <- escolas_original %>%
   mutate(Tipo = case_when(tp_dependencia == 1 ~ 'Federal', tp_dependencia == 2 ~ 'Estadual', tp_dependencia == 3 ~ 'Municipal', tp_dependencia == 4 ~ 'Privada' ))
 ```
 
 ```{r}
-escolas2 %>%
+escolas %>%
 group_by(co_uf) %>%
   left_join(states, by = c('co_uf' = 'code_state')) %>%
 mutate(total_de_escolas = n()) %>%
@@ -390,7 +392,7 @@ xlab('UF') +
 ylab('Escolas sem esgoto') +
   ggtitle('Número absoluto de escolas sem esgoto')
 
-escolas2 %>%
+escolas %>%
 group_by(co_uf) %>%
   left_join(states, by = c('co_uf' = 'code_state')) %>%
 mutate(total_de_escolas = n()) %>%
@@ -406,7 +408,7 @@ ylab('Escolas sem esgoto') +
 scale_y_continuous(labels = scales::percent) +
   ggtitle('Proporção de escolas sem esgoto')
 
-escolas2 %>%
+escolas %>%
 group_by(co_uf) %>%
   left_join(states, by = c('co_uf' = 'code_state')) %>%
 mutate(total_de_escolas = n()) %>%
@@ -420,7 +422,7 @@ xlab('UF') +
 ylab('Escolas sem água') +
   ggtitle('Número absoluto de escolas sem água')
   
-escolas2 %>%
+escolas %>%
 group_by(co_uf) %>%
   left_join(states, by = c('co_uf' = 'code_state')) %>%
 mutate(total_de_escolas = n()) %>%
@@ -441,7 +443,7 @@ Tabelas com as informações acima
 
 ## Número absoluto de escolas sem esgoto
 ```{r}
-escolas2 %>%
+escolas %>%
 group_by(co_uf) %>%
   left_join(states, by = c('co_uf' = 'code_state')) %>%
 mutate(total_de_escolas = n()) %>%
@@ -453,7 +455,7 @@ unique()
 ## Proporção de escolas sem esgoto
 
 ```{r}
-escolas2 %>%
+escolas %>%
 group_by(co_uf) %>%
   left_join(states, by = c('co_uf' = 'code_state')) %>%
 mutate(total_de_escolas = n()) %>%
@@ -466,7 +468,7 @@ unique()
 ## Número absoluto de escolas sem água
 
 ```{r}
-escolas2 %>%
+escolas %>%
 group_by(co_uf) %>%
   left_join(states, by = c('co_uf' = 'code_state')) %>%
 mutate(total_de_escolas = n()) %>%
@@ -478,7 +480,7 @@ unique()
 
 ## Proporção de escolas sem água
 ```{r}
-escolas2 %>%
+escolas %>%
 group_by(co_uf) %>%
   left_join(states, by = c('co_uf' = 'code_state')) %>%
 mutate(total_de_escolas = n()) %>%
@@ -596,14 +598,18 @@ cache %>%
 ```
 Todos os valores estão batendo, então parece seguro usar os dados da Base Dos Dados.
 
+```{r}
+escolas <- escolas %>%
+  left_join()
+```
 
 
 
 
 ## V. Alunos por turmas
-Podemos aproveitar e também fazer uma consulta do número de matrículas por turmas. Entretanto, há um problema nessa análise porque estamos falando de quase 30 milhões de turmas no Brasil, o que torna impraticável uma importação para o ambiente do R. O que pode ser feito é uma filtragem dessas turmas. Como estamos vendo apenas escolas de ensino fundamental e médio, podemos excluir por exemplo ensino técnico ou EJA. Esse filtro será feito pela coluna "etapa_ensino".
+Podemos aproveitar e também fazer uma consulta do número de matrículas por turmas. Como estamos vendo apenas escolas de ensino fundamental e médio, podemos excluir por exemplo ensino técnico ou EJA. Esse filtro será feito pela coluna "etapa_ensino".
 
-Vamos ver com quantas ficamos
+Vamos ver com quantas turmas ficamos
 
 ---
 OBSERVAÇÃO: Explorando a base, percebeu-se que há um código de etapa de ensino "48" na tabela de turmas que não possui nenhuma referência na tabela anexa ao dicionário. Talvez seja o caso de solicitar por pedido de acesso uma explicação.
@@ -614,12 +620,13 @@ COUNT(*)
 FROM
   `basedosdados.br_inep_censo_escolar.turma`
 WHERE
-  SAFE_CAST(etapa_ensino AS INT64) < 39"
+  ano = 2020
+  AND SAFE_CAST(etapa_ensino as int64) BETWEEN 4 AND 38;"
 turmas_2020 <- read_sql(query)
 turmas_2020
 ```
 
-Ainda são 22 milhões de turmas. Em uma exploração externa da base, é possível notar que há turmas com centenas de alunos, o que não parece factível para essas etapas de educação. Vamos ver como está a distribuição desses valores por etapa.
+Temos 1.309.287 de turmas nesse filtro. Para ter um melhor panorama, vamos visualizar como está a distribuição de turmas com números altos de matriculados (>50) por etapas.
 
 ```{r}
 # Criando tabela com o siginificado de cada código com base no arquivo de dicionário fornecido pelo INEP
@@ -635,26 +642,28 @@ dici_turmas <- data.frame(etapa_ensino, etapa_legenda)
 query <- "SELECT
   etapa_ensino,
   COUNT(*) AS TotalTurmas,
-  COUNT(CASE
-      WHEN quantidade_matriculas > 80 THEN id_turma
+  COUNT(DISTINCT id_turma) AS TotalTurmas,
+  COUNT(DISTINCT CASE
+      WHEN quantidade_matriculas > 50 THEN id_turma
   END
-    ) AS MaisQue80,
-  COUNT(CASE
+    ) AS EscolasMaisQue50,
+  COUNT(DISTINCT CASE
+      WHEN quantidade_matriculas > 70 THEN id_turma
+  END
+    ) AS EscolasMaisQue70,
+  COUNT(DISTINCT CASE
+      WHEN quantidade_matriculas > 90 THEN id_turma
+  END
+    ) AS EscolasMaisQue90,
+  COUNT(DISTINCT CASE
       WHEN quantidade_matriculas > 100 THEN id_turma
   END
-    ) AS MaisQue100,
-  COUNT(CASE
-      WHEN quantidade_matriculas > 150 THEN id_turma
-  END
-    ) AS MaisQue150,
-  COUNT(CASE
-      WHEN quantidade_matriculas > 200 THEN id_turma
-  END
-    ) AS MaisQue200
+    ) AS EscolasMaisQue100
 FROM
   `basedosdados.br_inep_censo_escolar.turma`
 WHERE
-  SAFE_CAST(etapa_ensino AS INT64) < 39
+  SAFE_CAST(etapa_ensino AS INT64) BETWEEN 4 AND 38
+  AND ano = 2020
 GROUP BY
   etapa_ensino
 ORDER BY
@@ -673,7 +682,123 @@ outliers_turmas_2020 <- dici_turmas %>%
 outliers_turmas_2020
 ```
 
-O que a tabela nos revela é que só na educação infantil (creche e pré-escola) são mais de 5 milhões de turmas. Como estamos analisando apenas fundamental e ensino médio, essas turmas poderão ser desconsideradas das ana´
+Há uma concentração de turmas populosas no Ensino Médio, mas no geral, esses casos são raros. Turmas com mais de 70 alunos, em especial, são excepcionalmente raros. Analisando externamente essas turmas, percebe-se que as poucas que existem são - em quase sua totalidade - escolas privadas.
+
+Aproveitando, vamos verificar se é possível identificar alguma agregação por UF.
+
+```{r}
+  query <- "SELECT
+    sigla_uf,
+    COUNT(*) AS TotalTurmas,
+    COUNT(DISTINCT CASE
+        WHEN quantidade_matriculas > 50 THEN id_turma
+    END
+      ) AS TurmasMaisQue50,
+    COUNT(DISTINCT CASE
+        WHEN quantidade_matriculas > 70 THEN id_turma
+    END
+      ) AS TurmasMaisQue70,
+    COUNT(DISTINCT CASE
+        WHEN quantidade_matriculas > 90 THEN id_turma
+    END
+      ) AS TurmasMaisQue90,
+    COUNT(DISTINCT CASE
+        WHEN quantidade_matriculas > 100 THEN id_turma
+    END
+      ) AS TurmasMaisQue100
+  FROM
+    `basedosdados.br_inep_censo_escolar.turma`
+  WHERE
+    SAFE_CAST(etapa_ensino AS INT64) BETWEEN 4 AND 38
+    AND ano = 2020
+  GROUP BY
+    sigla_uf
+  ORDER BY
+    sigla_uf
+    ASC;"
+
+outliers_turmas_2020_uf <- read_sql(query)
+```
+
+```{r}
+outliers_turmas_2020_uf
+```
+
+Três estados apresentam boa parcela das turmas superpopulosas (>70): RJ, PR e PA. O Paraná se destaca por possuir 40 turmas com mais de 40 matrículas mesmo quando outros estados não alcançam sequer um quarto desse valor.
+
+Ao verificar manualmente as escolas com esses valores extravagantes, foi possível notar que a praticamente todas consistem em escolas particulares federais, com raríssimas exceções.
+
+Vamos verificar então como fica a distribuição ao excluir as escolas particulares da análise. Aproveitando, vamos também utilizar o número de escolas com turmas assim ao invés do número de turmas puramente:
+
+```{r}
+query <- "SELECT
+  etapa_ensino,
+  COUNT(*) AS TotalTurmas,
+  COUNT(DISTINCT id_escola) AS TotalEscolas,
+  COUNT(DISTINCT CASE
+      WHEN quantidade_matriculas > 50 THEN id_escola
+  END
+    ) AS EscolasMaisQue50,
+  COUNT(DISTINCT CASE
+      WHEN quantidade_matriculas > 70 THEN id_escola
+  END
+    ) AS EscolasMaisQue70,
+  COUNT(DISTINCT CASE
+      WHEN quantidade_matriculas > 90 THEN id_escola
+  END
+    ) AS EscolasMaisQue90,
+  COUNT(DISTINCT CASE
+      WHEN quantidade_matriculas > 100 THEN id_escola
+  END
+    ) AS EscolasMaisQue100
+FROM
+  `basedosdados.br_inep_censo_escolar.turma`
+WHERE
+  SAFE_CAST(etapa_ensino AS INT64) BETWEEN 4 AND 38
+  AND rede != 'privada'
+  AND ano = 2020
+GROUP BY
+  etapa_ensino
+ORDER BY
+  SAFE_CAST(etapa_ensino AS INT64)
+  ASC;"
+
+outliers_turmas_2020_pub <- read_sql(query)
+```
+
+```{r}
+outliers_turmas_2020_pub <- dici_turmas %>%
+  left_join(outliers_turmas_2020_pub)
+```
+
+```{r}
+outliers_turmas_2020_pub
+```
+
+O número de escolas com turmas outliers é consideravelmente pequeno. Por esse motivo, não iremos buscar excluir esses valores da análise. A próxima etapa então é calcular a média e mediana das turmas em cada escola. Para ficar mais distinto, iremos separar por etapa de ensino (fundamental e médio).
+
+
+```{r}
+query <- "SELECT
+  id_escola,
+  COUNT(*) AS TotalTurmas,
+  AVG(case when SAFE_CAST(etapa_ensino AS INT64) BETWEEN 4 AND 24 then quantidade_matriculas end) AS MediaFund,
+  SUM(case when SAFE_CAST(etapa_ensino AS INT64) BETWEEN 4 AND 24 then quantidade_matriculas end) AS TotalMatFund,
+  AVG(case when SAFE_CAST(etapa_ensino AS INT64) BETWEEN 25 AND 38 then quantidade_matriculas end) AS MediaEM,
+  SUM(case when SAFE_CAST(etapa_ensino AS INT64) BETWEEN 25 AND 38 then quantidade_matriculas end) AS TotalMatEM
+FROM
+  `basedosdados.br_inep_censo_escolar.turma`
+WHERE
+  SAFE_CAST(etapa_ensino AS INT64) BETWEEN 4 AND 39
+GROUP BY
+  id_escola;"
+
+medias_turmas <- read_sql(query)
+```
+
+Agora que temos essa tabela vamos juntar com a anterior e fazer uma análise geral.
+
+
 
 
 ```{r}
