@@ -488,3 +488,227 @@ mutate(prop_sem_esgoto = n_escolas_sem_agua/total_de_escolas) %>%
 unique()
 ```
 
+
+# IV. Salas por alunos
+
+Para calcularmos o número de alunos por escolas vamos ter que utilizar os arquivos de microdados de matrícula. Por conta do tamanho excessivo dos dados, inicialmente usaremos apenas as informações das capitais.
+
+A forma mais rápida de realizar esse procedimento é utilizando o awk no shell do linux para filtrar os arquivos de microdados do censo escolar. Cada macrorregião está em um arquivo, então o processo precisa ser repetido 5 vezes. Basta copiar o código abaixo, substitundo o nome dos arquivos de input / output:
+
+```{bash eval=FALSE}
+awk -F "|" -v OFS=',' '{if ($87 == 1100205 || $87 == 1302603 || $87 == 1200401 || $87 == 5002704 || $87 == 1600303 || $87 == 5300108 || $87 == 1400100 || $87 == 5103403 || $87 == 1721000 || $87 == 3550308 || $87 == 2211001 || $87 == 3304557 || $87 == 1501402 || $87 == 5208707 || $87 == 2927408 || $87 == 4205407 || $87 == 2111300 || $87 == 2704302 || $87 == 4314902 || $87 == 4106902 || $87 == 3106200 || $87 == 2304400 || $87 == 2611606 || $87 == 2507507 || $87 == 2800308 || $87 == 2408102 || $87 == 3205309) {print $3,$70,$82}}' matricula_nordeste.CSV > matriculas_capital_nordeste.csv
+```
+
+Em seguida, é necessário compilar os dados em um só arquivo:
+
+```{bash eval=FALSE}
+cat matriculas_capital_co.csv matriculas_capital_nordeste.csv matriculas_capital_norte.csv matriculas_capital_sudeste.csv matriculas_capital_sul.csv > compilado_matricula.csv
+```
+
+O arquivo está na pasta dados ja compilado para trabalharmos em cima dele. Possui três informações: id da matricula de cada aluno, id da escola e id da turma.
+
+```{r}
+compilado_matricula <- readr::read_csv("../dados/compilado_matricula.csv", col_names = FALSE)
+
+colnames(compilado_matricula) <- c('id_matricula', 'id_turma', 'co_entidade')
+```
+
+Vamos verificar se o número de ids de matrícula de fato é único:
+
+```{r}
+compilado_matricula$id_matricula %>%
+  unique() %>%
+  length()
+
+compilado_matricula %>%
+  nrow()
+```
+
+Parece que sim, então vamos continuar.
+
+Com a estimativa de alunos por sala gerada anteriormente, vamos poder ter um panorama estimado da lotação física de cada escola. Lembrando que o df "compilado_matrícula" possui uma matrícula por linha.
+
+```{r}
+matriculas_por_escola <- compilado_matricula %>%
+  group_by(co_entidade) %>%
+  summarise(matriculas = n_distinct(id_matricula))
+```
+
+```{r}
+pib_mun <- sidrar::get_sidra(api = "/t/5938/n6/all/v/37/p/last%201/d/v37%200") %>%
+  janitor::clean_names() %>%
+  select(municipio_codigo, municipio, valor) %>%
+  rename(pib = valor)
+```
+
+```{r}
+escolas_joined <- matriculas_por_escola %>%
+  left_join(select(escolas, co_entidade, no_entidade, co_municipio, tp_dependencia, qt_salas_utilizadas)) %>%
+  mutate(aluno_por_sala = matriculas/qt_salas_utilizadas) %>%
+  mutate(co_municipio = as.character(co_municipio)) %>%
+  left_join(pib_mun, by = c('co_municipio' = 'municipio_codigo'))
+```
+
+Vamos deixar os resultados salvos em um csv para facilitar.
+```{r}
+escolas_joined %>%
+  write.csv('../dados/escolas_joined.csv', row.names = FALSE, fileEncoding = 'UTF-8')
+```
+
+Esse método, entretanto, é muito limitado e custoso em termos de processamento. O [Base dos Dados](https://basedosdados.org/dataset/br-inep-censo-escolar) fornece as informações do Censo Escolar para todos os anos, podendo processar diretamente da fonte em SQL usando o Google Cloud. Dessa forma, ao invés de fazer apenas para as capitais, podemos replica esse processo para todas as escolas do país.
+
+Ao rodar o código abaixo pela primeira vez, ele irá salvar no cache a autenticação, que será feita pelo navegador. Se for a primeira vez, é aconselhável rodar o código separado para evitar que o knitr não conclua a tarefa.
+
+```{r}
+library("basedosdados")
+# Defina o seu projeto no Google Cloud
+set_billing_id("base-dos-dados-316520")
+```
+
+Exemplo de um query coletando o número de matrícula por escola (tempo estimado de 2 minutos):
+```{r}
+query <- "SELECT
+	id_escola,
+	COUNT(DISTINCT id_matricula)
+FROM
+	`basedosdados.br_inep_censo_escolar.matricula`
+WHERE
+    ano = 2020
+GROUP BY
+	id_escola;"
+matriculas_2020 <- read_sql(query)
+```
+
+Vamos ajustar os nomes das colunas e verificar se os valores batem com o que obtemos com o cálculo a partir dos csvs.
+
+```{r}
+colnames(matriculas_2020) <- c('co_entidade', 'matriculas_bdd')
+
+cache <- matriculas_2020 %>%
+  mutate(co_entidade = as.numeric(co_entidade)) %>%
+  left_join(escolas_joined) %>%
+  mutate(diferenca = matriculas-matriculas_bdd) %>%
+  tidyr::drop_na()
+
+cache %>%
+  filter(diferenca!=0) %>%
+  nrow()
+```
+Todos os valores estão batendo, então parece seguro usar os dados da Base Dos Dados.
+
+
+
+
+
+## V. Alunos por turmas
+Podemos aproveitar e também fazer uma consulta do número de matrículas por turmas. Entretanto, há um problema nessa análise porque estamos falando de quase 30 milhões de turmas no Brasil, o que torna impraticável uma importação para o ambiente do R. O que pode ser feito é uma filtragem dessas turmas. Como estamos vendo apenas escolas de ensino fundamental e médio, podemos excluir por exemplo ensino técnico ou EJA. Esse filtro será feito pela coluna "etapa_ensino".
+
+Vamos ver com quantas ficamos
+
+---
+OBSERVAÇÃO: Explorando a base, percebeu-se que há um código de etapa de ensino "48" na tabela de turmas que não possui nenhuma referência na tabela anexa ao dicionário. Talvez seja o caso de solicitar por pedido de acesso uma explicação.
+
+```{r}
+query <- "SELECT
+COUNT(*)
+FROM
+  `basedosdados.br_inep_censo_escolar.turma`
+WHERE
+  SAFE_CAST(etapa_ensino AS INT64) < 39"
+turmas_2020 <- read_sql(query)
+turmas_2020
+```
+
+Ainda são 22 milhões de turmas. Em uma exploração externa da base, é possível notar que há turmas com centenas de alunos, o que não parece factível para essas etapas de educação. Vamos ver como está a distribuição desses valores por etapa.
+
+```{r}
+# Criando tabela com o siginificado de cada código com base no arquivo de dicionário fornecido pelo INEP
+
+etapa_ensino <- c('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38')
+etapa_legenda <- c('Educação Infantil - Creche (0 a 3 anos)', 'Educação Infantil - Pré-escola (4 e 5 anos)', 'Educação Infantil - Unificada (0 a 5 anos)', 'Ensino Fundamental de 8 anos - 1ª Série', 'Ensino Fundamental de 8 anos - 2ª Série', 'Ensino Fundamental de 8 anos - 3ª Série', 'Ensino Fundamental de 8 anos - 4ª Série', 'Ensino Fundamental de 8 anos - 5ª Série', 'Ensino Fundamental de 8 anos - 6ª Série', 'Ensino Fundamental de 8 anos - 7ª Série', 'Ensino Fundamental de 8 anos - 8ª Série', 'Ensino Fundamental de 8 anos - Multi', 'Ensino Fundamental de 8 anos - Correção de Fluxo', 'Ensino Fundamental de 9 anos - 1º Ano', 'Ensino Fundamental de 9 anos - 2º Ano', 'Ensino Fundamental de 9 anos - 3º Ano', 'Ensino Fundamental de 9 anos - 4º Ano', 'Ensino Fundamental de 9 anos - 5º Ano', 'Ensino Fundamental de 9 anos - 6º Ano', 'Ensino Fundamental de 9 anos - 7º Ano', 'Ensino Fundamental de 9 anos - 8º Ano', 'Ensino Fundamental de 9 anos - Multi', 'Ensino Fundamental de 9 anos - Correção de Fluxo', 'Ensino Fundamental de 8 e 9 anos - Multi 8 e 9 anos', 'Ensino Médio - 1ª Série', 'Ensino Médio - 2ª Série', 'Ensino Médio - 3ª Série', 'Ensino Médio - 4ª Série', 'Ensino Médio - Não Seriada', 'Curso Técnico Integrado (Ensino Médio Integrado) 1ª Série', 'Curso Técnico Integrado (Ensino Médio Integrado) 2ª Série', 'Curso Técnico Integrado (Ensino Médio Integrado) 3ª Série', 'Curso Técnico Integrado (Ensino Médio Integrado) 4ª Série', 'Curso Técnico Integrado (Ensino Médio Integrado) Não Seriada', 'Ensino Médio - Normal/Magistério 1ª Série', 'Ensino Médio - Normal/Magistério 2ª Série', 'Ensino Médio - Normal/Magistério 3ª Série', 'Ensino Médio - Normal/Magistério 4ª Série')
+
+dici_turmas <- data.frame(etapa_ensino, etapa_legenda)
+
+```
+
+```{r}
+query <- "SELECT
+  etapa_ensino,
+  COUNT(*) AS TotalTurmas,
+  COUNT(CASE
+      WHEN quantidade_matriculas > 80 THEN id_turma
+  END
+    ) AS MaisQue80,
+  COUNT(CASE
+      WHEN quantidade_matriculas > 100 THEN id_turma
+  END
+    ) AS MaisQue100,
+  COUNT(CASE
+      WHEN quantidade_matriculas > 150 THEN id_turma
+  END
+    ) AS MaisQue150,
+  COUNT(CASE
+      WHEN quantidade_matriculas > 200 THEN id_turma
+  END
+    ) AS MaisQue200
+FROM
+  `basedosdados.br_inep_censo_escolar.turma`
+WHERE
+  SAFE_CAST(etapa_ensino AS INT64) < 39
+GROUP BY
+  etapa_ensino
+ORDER BY
+  SAFE_CAST(etapa_ensino AS INT64)
+  ASC;"
+
+outliers_turmas_2020 <- read_sql(query)
+```
+
+```{r}
+outliers_turmas_2020 <- dici_turmas %>%
+  left_join(outliers_turmas_2020)
+```
+
+```{r}
+outliers_turmas_2020
+```
+
+O que a tabela nos revela é que só na educação infantil (creche e pré-escola) são mais de 5 milhões de turmas. Como estamos analisando apenas fundamental e ensino médio, essas turmas poderão ser desconsideradas das ana´
+
+
+```{r}
+query <- "SELECT
+  etapa_ensino,
+  id_turma,
+  quantidade_matriculas
+FROM
+  `basedosdados.br_inep_censo_escolar.turma`
+WHERE
+  SAFE_CAST(etapa_ensino AS INT64) < 39"
+turmas_2020 <- read_sql(query)
+```
+
+
+
+
+```{r eval = FALSE}
+# sample size
+sample_size = escolas_joined %>% group_by(municipio) %>% summarize(num=n())
+
+# Plot
+escolas_joined %>%
+  left_join(sample_size) %>%
+  mutate(myaxis = paste0(municipio, "\n", "n=", num)) %>%
+  ggplot( aes(x=myaxis, y=aluno_por_sala, fill=municipio)) +
+    geom_violin(width=1.4) +
+    geom_boxplot(width=0.1, color="grey", alpha=0.2) +
+    scale_fill_viridis(discrete = TRUE) +
+    theme_ipsum() +
+    theme(
+      legend.position="none",
+      plot.title = element_text(size=11)
+    ) +
+    ggtitle("A Violin wrapping a boxplot") +
+    xlab("") +
+    coord_flip()
+```
