@@ -77,6 +77,8 @@ Há um problema nisso, no entanto, essas colunas não estão 100% preenchidas. �
 
 # II. Análise do dados de infraestrutura
 
+## II.a. Explorando a base
+
 As colunas mais interessantes para nossa análise são:
 
 * IN_AGUA_POTAVEL (Fornece água potável para o consumo humano)
@@ -194,13 +196,13 @@ sumario3 <- sumar_estados(escolas) %>%
   mutate(code_state = as.double(co_uf))
 ```
 
-```{r teste15}
+```{r}
 no_axis <- theme(axis.title=element_blank(),
                    axis.text=element_blank(),
                    axis.ticks=element_blank())
 ```
 
-```{r teste2, warning=FALSE, results='hide',message=FALSE}
+```{r, warning=FALSE, results='hide',message=FALSE}
 states <- read_state(year=2019)
 
 states <- left_join(states, sumario3)
@@ -216,7 +218,7 @@ sumario_priv <- sumar_estados(escolas_priv) %>%
 states_priv <- left_join(states, sumario_priv)
 ```
 
-```{r teste0, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE}
 par(mfrow=c(2,2))
 states %>%
   filter(coluna == 'in_agua_inexistente') %>%
@@ -323,7 +325,7 @@ No caso do Rio, foi possível notar que uma escola particular que oferece ensino
 
 Feitas essas considerações, passamos para a análise dos dados obtidos:
 
-# III. Análise por estado
+## II.b. Análise por estado
 
 Não surpreendentemente, há uma grande disparidade regional no acesso a infraestrutura, com estados do norte e nordeste liderando na falta de água e esgoto. O Rio Grande do Sul se destaca por ser o único estado fora dessas duas regiões entre os 10 estados com maior proporção de escolas sem acesso à água potável. Com 22% de escolas nessa situação, o estado gaúcho é o terceiro pior colocado no Brasil. Se forem consideradas apenas as escolas públicas, esse valor sobe para 29%. Mais alarmante, no entanto, é o estado de Roraima, com quase 40% das escolas sem acesso a água potável.
 
@@ -345,7 +347,7 @@ escolas %>%
 
 É uma possibilidade que os valores preenchidos, principalmente no Acre, estejam incorretos, ao menos em parte. Esse ponto deve ser considerado para análises macro usando os dados.
 
-# V. Dados apenas públicas
+## II.c. Dados apenas públicas
 
 ```{r}
 sumario_pub <- fun_sumar(escolas_pub)
@@ -357,8 +359,6 @@ sumario_pub %>%
   kable_styling() %>%
   scroll_box(width = "100%", height = "500px")
 ```
-
-# V. Diferenças públicas x privadas
 
 Há 4 opções para a coluna TP_DEPENDENCIA:
 1 - Federal
@@ -374,7 +374,7 @@ escolas_original <- escolas
 rm(escolas)
 
 escolas <- escolas_original %>%
-  mutate(Tipo = case_when(tp_dependencia == 1 ~ 'Federal', tp_dependencia == 2 ~ 'Estadual', tp_dependencia == 3 ~ 'Municipal', tp_dependencia == 4 ~ 'Privada' ))
+  mutate(tipo = case_when(tp_dependencia == 1 ~ 'Federal', tp_dependencia == 2 ~ 'Estadual', tp_dependencia == 3 ~ 'Municipal', tp_dependencia == 4 ~ 'Privada' ))
 ```
 
 ```{r}
@@ -382,10 +382,10 @@ escolas %>%
 group_by(co_uf) %>%
   left_join(states, by = c('co_uf' = 'code_state')) %>%
 mutate(total_de_escolas = n()) %>%
-group_by(name_state, Tipo) %>%
+group_by(name_state, tipo) %>%
 summarise(n_escolas_sem_esgoto = sum(as.numeric(in_esgoto_inexistente)), total_de_escolas = total_de_escolas) %>%
 unique() %>%
-ggplot(aes(fill=Tipo, y=n_escolas_sem_esgoto, x=reorder(name_state, n_escolas_sem_esgoto))) +
+ggplot(aes(fill=tipo, y=n_escolas_sem_esgoto, x=reorder(name_state, n_escolas_sem_esgoto))) +
 geom_bar(position="stack", stat="identity") +
 coord_flip() +
 xlab('UF') +
@@ -396,11 +396,11 @@ escolas %>%
 group_by(co_uf) %>%
   left_join(states, by = c('co_uf' = 'code_state')) %>%
 mutate(total_de_escolas = n()) %>%
-group_by(name_state, Tipo) %>%
+group_by(name_state, tipo) %>%
 summarise(n_escolas_sem_esgoto = sum(as.numeric(in_esgoto_inexistente)), total_de_escolas = total_de_escolas) %>%
 mutate(prop_sem_esgoto = n_escolas_sem_esgoto/total_de_escolas) %>%
 unique() %>%
-  ggplot(aes(fill=Tipo, y=prop_sem_esgoto, x=reorder(name_state, prop_sem_esgoto))) +
+  ggplot(aes(fill=tipo, y=prop_sem_esgoto, x=reorder(name_state, prop_sem_esgoto))) +
 geom_bar(position="stack", stat="identity") +
 coord_flip() +
 xlab('UF') +
@@ -412,10 +412,10 @@ escolas %>%
 group_by(co_uf) %>%
   left_join(states, by = c('co_uf' = 'code_state')) %>%
 mutate(total_de_escolas = n()) %>%
-group_by(name_state, Tipo) %>%
+group_by(name_state, tipo) %>%
 summarise(n_escolas_sem_agua = sum(as.numeric(in_agua_inexistente)), total_de_escolas = total_de_escolas) %>%
 unique() %>%
-ggplot(aes(fill=Tipo, y=n_escolas_sem_agua, x=reorder(name_state, n_escolas_sem_agua))) +
+ggplot(aes(fill=tipo, y=n_escolas_sem_agua, x=reorder(name_state, n_escolas_sem_agua))) +
 geom_bar(position="stack", stat="identity") +
 coord_flip() +
 xlab('UF') +
@@ -426,11 +426,11 @@ escolas %>%
 group_by(co_uf) %>%
   left_join(states, by = c('co_uf' = 'code_state')) %>%
 mutate(total_de_escolas = n()) %>%
-group_by(name_state, Tipo) %>%
+group_by(name_state, tipo) %>%
 summarise(n_escolas_sem_agua = sum(as.numeric(in_agua_inexistente)), total_de_escolas = total_de_escolas) %>%
 mutate(prop_sem_esgoto = n_escolas_sem_agua/total_de_escolas) %>%
 unique() %>%
-  ggplot(aes(fill=Tipo, y=prop_sem_esgoto, x=reorder(name_state, prop_sem_esgoto))) +
+  ggplot(aes(fill=tipo, y=prop_sem_esgoto, x=reorder(name_state, prop_sem_esgoto))) +
 geom_bar(position="stack", stat="identity") +
 coord_flip() +
 xlab('UF') +
@@ -441,57 +441,59 @@ scale_y_continuous(labels = scales::percent) +
 ```
 Tabelas com as informações acima
 
-## Número absoluto de escolas sem esgoto
+### Número absoluto de escolas sem esgoto
 ```{r}
 escolas %>%
 group_by(co_uf) %>%
   left_join(states, by = c('co_uf' = 'code_state')) %>%
 mutate(total_de_escolas = n()) %>%
-group_by(name_state, Tipo) %>%
+group_by(name_state, tipo) %>%
 summarise(n_escolas_sem_esgoto = sum(as.numeric(in_esgoto_inexistente)), total_de_escolas = total_de_escolas) %>%
 unique()
 ```
 
-## Proporção de escolas sem esgoto
+### Proporção de escolas sem esgoto
 
 ```{r}
 escolas %>%
 group_by(co_uf) %>%
   left_join(states, by = c('co_uf' = 'code_state')) %>%
 mutate(total_de_escolas = n()) %>%
-group_by(name_state, Tipo) %>%
+group_by(name_state, tipo) %>%
 summarise(n_escolas_sem_esgoto = sum(as.numeric(in_esgoto_inexistente)), total_de_escolas = total_de_escolas) %>%
 mutate(prop_sem_esgoto = n_escolas_sem_esgoto/total_de_escolas) %>%
 unique()
 ```
 
-## Número absoluto de escolas sem água
+### Número absoluto de escolas sem água
 
 ```{r}
 escolas %>%
 group_by(co_uf) %>%
   left_join(states, by = c('co_uf' = 'code_state')) %>%
 mutate(total_de_escolas = n()) %>%
-group_by(name_state, Tipo) %>%
+group_by(name_state, tipo) %>%
 summarise(n_escolas_sem_agua = sum(as.numeric(in_agua_inexistente)), total_de_escolas = total_de_escolas) %>%
 unique()
 ```
 
 
-## Proporção de escolas sem água
+### Proporção de escolas sem água
 ```{r}
 escolas %>%
 group_by(co_uf) %>%
   left_join(states, by = c('co_uf' = 'code_state')) %>%
 mutate(total_de_escolas = n()) %>%
-group_by(name_state, Tipo) %>%
+group_by(name_state, tipo) %>%
 summarise(n_escolas_sem_agua = sum(as.numeric(in_agua_inexistente)), total_de_escolas = total_de_escolas) %>%
 mutate(prop_sem_esgoto = n_escolas_sem_agua/total_de_escolas) %>%
 unique()
 ```
 
 
-# IV. Salas por alunos
+# III. Lotação das escolas
+
+## III.a. Salas por alunos
 
 Para calcularmos o número de alunos por escolas vamos ter que utilizar os arquivos de microdados de matrícula. Por conta do tamanho excessivo dos dados, inicialmente usaremos apenas as informações das capitais.
 
@@ -596,17 +598,16 @@ cache %>%
   filter(diferenca!=0) %>%
   nrow()
 ```
-Todos os valores estão batendo, então parece seguro usar os dados da Base Dos Dados.
+Todos os valores estão batendo, então parece seguro usar os dados da Base Dos Dados. Vamos criar uma coluna com o número de alunos por sala.
 
 ```{r}
-escolas <- escolas %>%
-  left_join()
+escolas_com_matri <- escolas %>%
+  mutate(co_entidade = as.character(co_entidade)) %>%
+  left_join(matriculas_2020) %>%
+  mutate(aluno_sala = matriculas_bdd/qt_salas_utilizadas)
 ```
 
-
-
-
-## V. Alunos por turmas
+## III.b. Alunos por turmas
 Podemos aproveitar e também fazer uma consulta do número de matrículas por turmas. Como estamos vendo apenas escolas de ensino fundamental e médio, podemos excluir por exemplo ensino técnico ou EJA. Esse filtro será feito pela coluna "etapa_ensino".
 
 Vamos ver com quantas turmas ficamos
@@ -789,29 +790,91 @@ query <- "SELECT
 FROM
   `basedosdados.br_inep_censo_escolar.turma`
 WHERE
-  SAFE_CAST(etapa_ensino AS INT64) BETWEEN 4 AND 39
+  SAFE_CAST(etapa_ensino AS INT64) BETWEEN 4 AND 38
+  AND ano = 2020
 GROUP BY
   id_escola;"
 
-medias_turmas <- read_sql(query)
+medias_turmas <- read_sql(query) %>%
+  mutate(co_entidade = id_escola)
 ```
 
 Agora que temos essa tabela vamos juntar com a anterior e fazer uma análise geral.
 
 
+## III.c. Análise comparativa
+
+Primeiramente, vamos unificar as tabelas de alunos por sala e depois a média por turma para gerar um sumário dessas variáveis.
+
+```{r}
+escolas_final <- escolas_com_matri %>%
+  left_join(medias_turmas)
+```
 
 
 ```{r}
-query <- "SELECT
-  etapa_ensino,
-  id_turma,
-  quantidade_matriculas
-FROM
-  `basedosdados.br_inep_censo_escolar.turma`
-WHERE
-  SAFE_CAST(etapa_ensino AS INT64) < 39"
-turmas_2020 <- read_sql(query)
+analise_salas <- escolas_final %>%
+  select(co_entidade, co_municipio, co_uf, tail(names(.), 9))
 ```
+
+```{r}
+analise_salas %>%
+  filter(Tipo != 'Privada') %>%
+  summary()
+```
+
+Uma breve descrição do significado de cada coluna:
+* aluno_sala: razão entre o total de alunos matriculados naquela escola e o número de salas utilizadas, feito a partir das tabelas "escolas" e "matriculas"
+* TotalTurmas: total de turmas de ensino fundamental e médio na escola, com base na tabela "turmas"
+* MediaFund: média de matrículas por turma do ensino fundamental naquela escola.
+* MediaEM: média de matrículas por turma do ensino médio naquela escola.
+
+Há 50 mil NAs na coluna "TotalTurmas", o que significa que ou essas escolas não preencheram essa informação corretamente ou não possuem nem ensino fundamental ou médio no ensino. Algo a ser explorado futuramente.
+
+É possível notar que a média das médias permanece por volta de 28 alunos por turma no Ensino Médio e 20 no ensino fundamental, próximo à média geral de 32 alunos por sala. Importante lembrar que o cálculo de alunos por sala não considera, por exemplo, horários diferentes em que a mesma sala possa estar sendo ocupada (alunos de manhã e alunos da tarde). Nesse sentido, a estimativa de média de matriculados nas turmas parece ser mais adequada para verificar a lotação das salas.
+
+Vamos verificar se há diferença geográfica nesses valores:
+
+```{r}
+sumario_lotacao <- analise_salas %>%
+  filter(Tipo != "Privada") %>%
+  summarise(avg_fund = mean(MediaFund), avg_em = mean(MediaEM), avg_alunosala = mean(aluno_sala) )
+```
+
+
+```{r, warning=FALSE, results='hide',message=FALSE}
+states <- read_state(year=2019)
+
+states <- left_join(states, sumario3)
+
+sumario_pub <- sumar_estados(escolas_pub) %>%
+  mutate(code_state = as.double(co_uf))
+
+states_pub <- left_join(states, sumario_pub)
+  
+sumario_priv <- sumar_estados(escolas_priv) %>%
+  mutate(code_state = as.double(co_uf))
+
+states_priv <- left_join(states, sumario_priv)
+```
+
+```{r, message=FALSE, warning=FALSE}
+par(mfrow=c(2,2))
+states %>%
+  filter(coluna == 'in_agua_inexistente') %>%
+  mutate(prop_preenchida_sem_agua = 1 - (zeros/(zeros+uns))) %>%
+  ggplot() +
+    geom_sf(aes(fill=prop_preenchida_sem_agua), color= '#000000', size=.15) +
+      labs(subtitle="Proporção em % de escolas sem acesso a água", size=8) +
+      scale_fill_distiller(palette = "Spectral", name="Proporção") +
+      theme_minimal() +
+      no_axis
+
+
+
+
+
+
 
 
 
