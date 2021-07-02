@@ -10,7 +10,7 @@ output:
       collapsed: false
     number_sections: true
     df_print: paged
-    code_folding: hide
+    code_folding: show
     self_contained: false
 ---
 
@@ -28,7 +28,7 @@ library("basedosdados")
 library('dplyr')
 ```
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 # Definindo o projeto do BigQuery
 set_billing_id("base-dos-dados-316520")
 ```
@@ -187,7 +187,7 @@ compilado_mun <- pop %>%
 
 ```{r}
 compilado_mun_total %>%
-  arrange(desc(compilado_mun_total))
+  arrange(desc(segun_dose))
 ```
 
 Comparando com os dados do [Vacinômetro Paulista](https://vacinaja.sp.gov.br/vacinometro/), é possível notar que os dados parecem estar corretos. Há uma divergência considerando que o BigQuery é atualizado semanalmente e possui uma diferença de 4 dias entre ambos, mas os valores estão aproximados o suficiente para parecerem corretos. Vamos prosseguir para os dados dos profissionais de educação.
@@ -240,7 +240,7 @@ num_docentes
 
 É possível notar que a soma das colunas privada + pública não corresponde ao total. Isso é consequência de professores que atuam na mesma rede. Como é possível filtrar por IDs de identificação únicas, obtemos o valor real total de docentes em cada município. Importante observar, no entanto, que professores que lecionam em mais de um município serão contabilizados em ambos, visto que os dados estão agrupados por cidade.
 
-Se desconsiderarmos inclusive o agrupamento por município, podemos obter o número de 1.654.446 docentes em todo o país ao executar o código abaixo:
+Se desconsiderarmos inclusive o agrupamento por município, podemos obter o número de 2.539.853 docentes em todo o país ao executar o código abaixo:
 
 ```{r eval=FALSE}
 # Código R para importar dados do BigQuery (não executado)
@@ -266,7 +266,7 @@ tabela_final <- compilado_mun %>%
 Primeiramente, vamos ver quantos docentes já estão com a primeira e segunda dose em comparação ao total no Brasil.
 
 ```{r}
-dump <- tabela_final %>%
+tabela_final %>%
   summarise(total_pr = sum(prim_dose, na.rm=TRUE), prop_prim = total_pr/	
 2539853, total_seg = sum(segun_dose, na.rm=TRUE), prop_seg = total_seg/	
 2539853)
