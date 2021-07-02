@@ -1,0 +1,280 @@
+---
+title: "Análise vacinação"
+author: "Jonas Coelho"
+date: "01/07/2021"
+output: 
+  html_document:
+    theme: cosmo
+    toc: true
+    toc_float:
+      collapsed: false
+    number_sections: true
+    df_print: paged
+    code_folding: hide
+    self_contained: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introdução
+
+Esse documento pretende analisar a vacinação nos municípios brasileiros dos profissionais da educação. Serão utilizadas as bases do Ministério da Saúde sobre vacina contra covid, a base do FNDE sobre remuneração dos servidores da educação e a base do INEP do Censo Escolar. Para o INEP e MS, será utilizada a API da [Base dos dados](https://basedosdados.org/) no BigQuery, enquanto para os dados do FNDE serão utilizados os CSVs disponibilizados pela autarquia.
+
+O primeiro passo consiste em carregar as bibliotecas necessárias.
+```{r message=FALSE, warning=FALSE}
+library("basedosdados")
+library('dplyr')
+```
+
+```{r}
+# Definindo o projeto do BigQuery
+set_billing_id("base-dos-dados-316520")
+```
+
+## Carregar dados de vacinação
+Para evitar processamentos repetitivos, os códigos de execução no BigQuery serão explicitados aqui apenas para elucidação. As informações carregadas virão, de fato, do arquivo .RData com os dados salvos do resultado desse processamento.
+
+Os dados de vacinação estão organizados em três tabelas diferentes: estabelecimento, paciente e vacinação. A tabela de estabelecimentos não nos é necessária nessa análise. Ela contém identificação sobre os postos de saúde e demais pontos de vacinação. A tabela de pacientes possui uma id aleatória para cada paciente, sua idade, data de nascimento, sexo, raça/cor, endereço (cep, município e UF) bem como nacionalidade. Por fim, a tabela de vacinação consiste em dados sobre o paciente que foi vacinado, qual a dose em questão, lote, fabricante, data de aplicação, o estabelecimento onde foi distribuída e o grupo de atendimento - ou seja - a razão pela pessoa ter tido acesso à vacina.
+
+O grupo de atendimento é a classificação mais detalhada, enquanto a categoria é uma categorização mais abrangente entre 9 classes distintas. Os dados podem ser consultados na tabela de dicionário da base, disponibilizada abaixo:
+
+```{r eval=FALSE}
+# Código R para importar dados do BigQuery (não executado)
+query <- "SELECT * FROM `basedosdados.br_ms_vacinacao_covid19.dicionario` LIMIT 1000"
+dicionario <- read_sql(query)
+```
+
+```{r}
+load('../dados/basedosdados/dicionario_vacinacao.rdata')
+dicionario
+```
+
+O grupo que nos interessa nessa análise é o '801 - Ensino Básico'. Antes de filtrá-lo, porém, vamos realizar umas análises na base para verificar como está a integridade dos dados no geral e identificar possíveis falhas.
+
+
+### Integridade da tabela de vacinação
+
+Um erro que já foi relatado por outros pesquisadores em relação à base do MS consiste na presença de múltiplas doses para apenas um paciente. Vamos ver quais são os casos em que há mais de duas doses registradas para um mesmo paciente. Assim como antes, o resultado da query virá de um RData já salvo, mas pode ser gerado com o código disponibilizado abaixo.
+
+```{r eval=FALSE}
+# Código R para importar dados do BigQuery (não executado)
+query <- "SELECT id_paciente, COUNT(id_documento)
+FROM `basedosdados.br_ms_vacinacao_covid19.microdados_vacinacao`
+GROUP BY id_paciente
+HAVING COUNT(id_documento)>2;"
+
+super_doses <- read_sql(query)
+```
+
+```{r}
+load('../dados/basedosdados/super_doses.rdata')
+```
+
+```{r}
+super_doses %>%
+  arrange(desc(f0_))
+```
+Há 1,4 milhões de pacientes com mais de 2 doses registradas. Em um caso, 462 doses foram registradas como se inoculadas em uma mesma pessoa. Uma observação relevante que deve ser feita, no entanto, é que o caso dos 462 registros ocorreram no Rio Grande do Norte, mas em prefeitura diferentes. Seria interessante, em outra oportunidade, investigar a causa para isso.
+
+Apesar da id de pacientes não ter sido inserida corretamente, é possível observar, ao se explorar a base, que outras colunas foram preenchidas com dados diferentes, tais como data de aplicação, dose, fabricante e, o mais importante, categoria e grupo de atendimento. Por esse motivo, vamos fazer a análise sem desconsiderar essas duplicatas. Os dados, portanto, podem estar sobreinclusivos, visto que não é possível garantir que as doses registradas incorretamente de fato foram administradas da forma como estão registradas.
+
+## Obter dados de vacinação por município
+
+Para obter os dados consolidados por município, é necessário fazer uma escolha: o município referência consiste no local onde foi aplicada a dose ou de residência do paciente? No primeiro caso, utilizaremos a tabela de estabelecimentos, enquanto no segundo usaremos a de pacientes. Entretanto, como o registro dos dados possui falhas como as apontadas anterioremente, a utilização dos dados dos pacientes poderia gerar distorções.
+
+Por esse motivo, vamos considerar quantas doses cada município administrou em seus postos de vacinação para comparar, posteriormente, com os funcionários da educação que atuam no mesmo município. Essa análise não é 100% precisa, porém fornece valores aproximados o suficiente para nosso objetivo.
+
+Outro nuance que deve ser observado consiste em casos onde um indivíduo tomou a primeira dose em um município e a segunda em outro. Como não vamos utilizar a id do paciente, serão analisados apenas os quantitativos de cada dose por município, calculando o deficit faltante com base na diferença. Ainda assim, por ser pouco provável que haja um número considerável de casos nesse estilo, a análise será feita com a premissa de que todos que tomaram a segunda dose em um determinado município também tomaram a primeira no mesmo município. Vamos aproveitar e gerar uma tabela com os dados totais e com os dados filtrados, assim poderemos checar se os valores estão condizentes com outras fontes.
+
+```{r eval=FALSE}
+# Código R para importar dados do BigQuery (não executado)
+query <- "SELECT
+  est.id_municipio,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose = 1 THEN id_documento
+  END
+    ) AS prim_dose,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose = 2 THEN id_documento
+  END
+    ) AS segun_dose,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose IS NULL THEN id_documento
+  END
+    ) AS dose_nula,
+  COUNT(DISTINCT id_paciente) AS num_pacientes
+FROM
+  `basedosdados.br_ms_vacinacao_covid19.microdados_vacinacao` AS vac
+LEFT JOIN
+  `basedosdados.br_ms_vacinacao_covid19.microdados_estabelecimento` AS est
+ON
+  vac.id_estabelecimento = est.id_estabelecimento
+WHERE
+  grupo_atendimento = '801'
+GROUP BY
+  est.id_municipio;"
+
+compilado_mun <- read_sql(query)
+
+query <- "SELECT
+  est.id_municipio,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose = 1 THEN id_documento
+  END
+    ) AS prim_dose,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose = 2 THEN id_documento
+  END
+    ) AS segun_dose,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose IS NULL THEN id_documento
+  END
+    ) AS dose_nula,
+  COUNT(DISTINCT id_paciente) AS num_pacientes
+FROM
+  `basedosdados.br_ms_vacinacao_covid19.microdados_vacinacao` AS vac
+LEFT JOIN
+  `basedosdados.br_ms_vacinacao_covid19.microdados_estabelecimento` AS est
+ON
+  vac.id_estabelecimento = est.id_estabelecimento
+WHERE
+  grupo_atendimento = '801'
+GROUP BY
+  est.id_municipio;"
+
+compilado_mun_total <- read_sql(query)
+```
+
+```{r}
+load('../dados/basedosdados/compilado_mun.rdata')
+```
+
+Vamos agora juntar as tabelas com os dados do IBGE para população, além de obter informações sobre o municipio.
+
+```{r eval=FALSE}
+# Código R para importar dados do SIDRA (não executado)
+pop <- sidrar::get_sidra(6579,
+                         period = '2020',
+                         variable = 9324,
+                         geo = "City") %>%
+  janitor::clean_names() %>%
+  select(municipio_codigo, municipio, valor) %>%
+  rename(pop = valor)
+```
+
+```{r}
+load('../dados/basedosdados/pop.rdata')
+```
+
+```{r}
+compilado_mun_total_old <- compilado_mun_total
+compilado_mun_old <- compilado_mun
+
+compilado_mun_total <- pop %>%
+  left_join(compilado_mun_total_old, by = c('municipio_codigo' = 'id_municipio'))
+
+compilado_mun <- pop %>%
+  left_join(compilado_mun_old, by = c('municipio_codigo' = 'id_municipio'))
+```
+
+```{r}
+compilado_mun_total %>%
+  arrange(desc(compilado_mun_total))
+```
+
+Comparando com os dados do [Vacinômetro Paulista](https://vacinaja.sp.gov.br/vacinometro/), é possível notar que os dados parecem estar corretos. Há uma divergência considerando que o BigQuery é atualizado semanalmente e possui uma diferença de 4 dias entre ambos, mas os valores estão aproximados o suficiente para parecerem corretos. Vamos prosseguir para os dados dos profissionais de educação.
+
+Uma observação relevante é que há casos em que a dose não foi preenchida. Não se trata das vacinas de dose única porque São Paulo já administrou quase 100 mil doses desse tipo segundo o Vacinômetro Paulista, enquanto o município com o maior número de doses sem preenchimento (Caruaru - PE) possui 396. Por serem valores muito baixos perto do total, iremos desconsiderar essa coluna.
+
+## Carregar dados de profissionais da educação
+Para saber o quantitativo de profissionais da educação por município, temos dois caminhos diferentes: o censo escolar e os dados do SIOPE. O Censo Escolar tem a vantagem de ser de rápido processamento e conter dados de professores tanto da rede pública quanto privada, no entanto, não possui informações sobre outros profissionais da educação (merendeiras, inspetores, coordenadores etc).
+
+Os dados do SIOPE possuem informações para todos esses profissionais, mas somente na rede pública. Além disso, o processamento de dados do SIOPE é consideravelmente mais demorado, porque envolve baixar CSVS individuais para cada estado, compilar e subir no BigQuery. Por conta dessa limitação, vamos optar por utilizar os dados do censo na análise. Como consequência, os números apresentados de funcionários da educação em cada município estarão aquém do valor real. Posteriormente, uma análise do SIOPE pode ajudar a aperfeiçoar esses números.
+
+O código abaixo gera uma tabela com a soma de IDs distintas de docentes por município, categorizando em três colunas: rede privada, rede pública e o total de ambas. Os dados não foram filtrados por etapa, então inclui docentes de ensino técnico, EJA e outras modalidades que não estão inseridas no ensino superior.
+
+```{r eval=FALSE}
+# Código R para importar dados do BigQuery (não executado)
+query <- "SELECT
+  id_municipio,
+  COUNT(DISTINCT
+    CASE
+      WHEN rede = 'privada' THEN id_docente
+  END
+    ) AS total_privada,
+  COUNT(DISTINCT
+    CASE
+      WHEN rede != 'privada' THEN id_docente
+  END
+    ) AS total_publica,
+  COUNT(DISTINCT id_docente) AS total_municipio,
+FROM
+  `basedosdados.br_inep_censo_escolar.docente`
+WHERE
+ ano = 2020
+GROUP BY
+  id_municipio
+ORDER BY
+  total_municipio DESC;"
+
+num_docentes <- read_sql(query)
+```
+
+```{r}
+load('../dados/basedosdados/num_docentes.rdata')
+```
+
+Vamos dar uma olhada nos dados:
+
+```{r}
+num_docentes
+```
+
+É possível notar que a soma das colunas privada + pública não corresponde ao total. Isso é consequência de professores que atuam na mesma rede. Como é possível filtrar por IDs de identificação únicas, obtemos o valor real total de docentes em cada município. Importante observar, no entanto, que professores que lecionam em mais de um município serão contabilizados em ambos, visto que os dados estão agrupados por cidade.
+
+Se desconsiderarmos inclusive o agrupamento por município, podemos obter o número de 1.654.446 docentes em todo o país ao executar o código abaixo:
+
+```{r eval=FALSE}
+# Código R para importar dados do BigQuery (não executado)
+query <- "SELECT
+  COUNT(DISTINCT id_docente)
+FROM
+  `basedosdados.br_inep_censo_escolar.docente`
+WHERE
+  ano = 2020;"
+
+total_docentes_brasil <- read_sql(query)
+```
+
+## Unificação das tabelas
+
+```{r}
+tabela_final <- compilado_mun %>%
+  left_join(num_docentes, by = c('municipio_codigo' = 'id_municipio'))
+```
+
+# Análise
+
+Primeiramente, vamos ver quantos docentes já estão com a primeira e segunda dose em comparação ao total no Brasil.
+
+```{r}
+dump <- tabela_final %>%
+  summarise(total_pr = sum(prim_dose, na.rm=TRUE), prop_prim = total_pr/	
+2539853, total_seg = sum(segun_dose, na.rm=TRUE), prop_seg = total_seg/	
+2539853)
+```
+
+Já de imediato temos um problema: o valor de funcionários da educação básica que receberam a primeira dose é maior que o valor de funcionários da educação básica que existem no Brasil. Ou seja, o número de funcionários além dos professores importa bastante.
+
+Uma forma de contornar esse problema pode estar no próprio Censo Escolar: na tabela de escolas, há uma coluna com a quantidade de funcionários. É possível imaginar um modelo preditivo que calcule o número de funcionários numa escola com base no número de docentes e aplicar esse modelo para todo o município. Ocorre que esse dado é preenchido pelos diretores, de forma completa arbitrária, e não é verificado posteriormente de nenhuma forma.
+
+Outra possível solução seria analisar os dados do RAIS, que pode contar essa informação.
+
