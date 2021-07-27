@@ -300,13 +300,91 @@ load('../dados/basedosdados/sumario_rais_2019.rdata')
 
 ```{r eval=FALSE}
 # Código R para importar dados do BigQuery (não executado)
-query <- "SELECT cnae_2, cbo_2002, COUNT(*) as total FROM `base-dos-dados-316520.rais2018.selecao2019` WHERE vinculo_ativo_3112 = '1' GROUP BY cnae_2, cbo_2002;"
+query <- "SELECT cnae_2_subclasse, cbo_2002, COUNT(*) as total FROM `base-dos-dados-316520.rais2018.selecao2019` WHERE vinculo_ativo_3112 = '1' GROUP BY cnae_2_subclasse, cbo_2002;"
 cnaes_cbo <- read_sql(query)
 ```
+
+```{r}
+load('../dados/basedosdados/cnaes_cbo.rdata')
+```
+
+
 
 Vamos precisar um dicionário de CNAEs também visto que só temos o número.
 
 ```{r}
-dici_cnae <- data.table::fread('../dados/dici_cnae.csv', encoding = 'UTF-8')
+dici_cnae <- data.table::fread('../dados/dici_cnae.csv', encoding = 'UTF-8', colClasses = 'character') %>%
+  mutate(id_classe = gsub('\\.|-',"", cod_classe)) %>%
+  rename(cnae_2_subclasse = id_cnae)
 ```
+
+```{r}
+dici_cbo <- data.table::fread('../dados/CBO_map.csv', encoding = 'UTF-8', colClasses = 'character') %>%
+  janitor::clean_names()
+ 
+colnames(dici_cbo)[1:2] <- c('ocupacao', 'cbo_2002')
+```
+
+```{r}
+cnaes_cbo2 <- cnaes_cbo %>%
+  left_join(select(dici_cnae, cnae_2_subclasse, nm_cnae)) %>%
+  left_join(dici_cbo)
+```
+
+Vamos dar uma olhada nos CNAEs para ver se encontramos algum atípico que possivelmente não foi coberto pela vacinação dos grupos que estamos avaliando.
+
+```{r}
+cnaes_cbo2 %>%
+  group_by(cnae_2_subclasse, nm_cnae) %>%
+  summarise(total = sum(total)) %>%
+  arrange(desc(total)) %>%
+  View()
+```
+
+Como estamos avaliando apenas o grupo 801 (profissionais da educação básica) das vacinações, temos que excluir todos aqueles vínculos que não se referem a essa categoria. Analisando os 300 CNAEs com maior número de vínculos, podemos selecionar algumas categorias que se encaixam nesse grupo:
+
+- Administração pública em geral
+- Ensino fundamental
+- Educação infantil - pré-escola
+- Ensino médio
+- Educação infantil - creche
+- Atividades de associações de defesa de direitos sociais
+- Outras atividades de ensino não especificadas anteriormente
+- Serviços de assistência social sem alojamento
+- Atividades associativas não especificadas anteriormente
+- Atividades de organizações religiosas ou filosóficas
+- Atividades de apoio à educação exceto caixas escolares
+- Regulação das atividades de saúde educação serviços culturais e outros serviços sociais
+- Transporte escolar
+- Lanchonetes casas de chá de sucos e similares
+- Atividades de organizações associativas ligadas à cultura e à arte
+- Ensino de esportes
+- Locação de mão de obra temporária
+- Fornecimento e gestão de recursos humanos para terceiros
+- Limpeza em prédios e em domicílios
+- Administração de caixas escolares
+- Atividades de bibliotecas e arquivos
+- Suporte técnico manutenção e outros serviços em tecnologia da informação
+- Serviço de transporte de passageiros - locação de automóveis com motorista
+
+
+Estamos fazendo uma seleção abrangente porque temos a possibilidade de filtrar isso junto com o CBO, obtendo um valor preciso. Antes, porém, vamos ver que tipos de CBO estão associados apenas a esses CNAEs.
+
+```{r}
+cnaes_cbo2 %>%
+  filter(cnae_2_subclasse %in% c('8411600', '8513900', '8512100', '8520100', '8511200', '9430800', '8599699', '8800600', '9499500', '9491000', '8550302', '8412400', '4924800', '5611203', '9493600', '8591100', '7820500', '7830200', '8121400', '8550301')) %>%
+  group_by(ocupacao, cnae_2_subclasse, nm_cnae) %>%
+  summarise(total = sum(total)) %>%
+  arrange(desc(total)) %>%
+  View()
+```
+
+É possível notar que há uma série de CBOs relevantes para nossa análise associados a CNAEs atípicos. Por exemplo, temos o CBO "Inspetor de Alunos de Escola Publica" com 127 vínculos a instituições com o CNAE "Atividades de organizações associativas ligadas à cultura e à arte". Entre outros exemplos similares podemos citar:
+- "Professor de Historia no Ensino Medio" em CNAEs "Atividades de organizações religiosas ou filosóficas"
+- "Professor de Educacao Fisica do Ensino Fundamental" em CNAEs "Ensino de esportes"
+- "Inspetor de Alunos de Escola Publica" em CNAEs "Fornecimento e gestão de recursos humanos para terceiros"
+
+Quais as possíveis explicações para isso? Primeiramente, é possível imaginar instituições de ensino vinculadas à pessoas jurídicas com CNAEs diferentes (por exemplo, escolas religiosas ou então de associações). Há também os casos evidentes de terceirização. Mas como seria inevitável, parecem existir casos em que há apenas inserção incorreta dos dados. Por exemplo, no CNAE "Lanchonetes casas de chá de sucos e similares" há uma série de CBOS como "Coordenador Pedagogico" ou "Inspetor de Alunos de Escola Publica". Pode ser que haja uma explicação para isso, mas como é possível encontrar diversos CBOs parecidos em CNAEs sem nenhuma relação aparente, deve se ter em mente as limitações dos dados.
+
+Ainda assim, vamos estipular com base em dois critérios alternativos: CBOs e CNAEs. Ou seja, na tabela de vínculos, vamos manter cada linha que o CBO ou CNAE esteja dentre o selecionado. Se por exemplo o CBO for "Inspetor de Alunos de Escola Publica", o vínculo será contabilizado mesmo que o CNAE seja "Colheita de frutas". Similarmente, se o CNAE for "Escola fundamental", todos os vínculos serão contabilizados mesmo que o CBO seja "Assistente de reprografia". Mas caso o CBO seja "Garçom" e o CNAE seja "Casa de sucos", o vínculo não será considerado.
 
