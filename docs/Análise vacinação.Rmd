@@ -26,8 +26,12 @@ O primeiro passo consiste em carregar as bibliotecas necessárias.
 ```{r message=FALSE, warning=FALSE}
 library("basedosdados")
 library('dplyr')
+library(knitr)
+library(kableExtra)
+options(scipen = 9999)
 ```
 
+E definir o projeto do BigQuery
 ```{r message=FALSE, warning=FALSE}
 # Definindo o projeto do BigQuery
 set_billing_id("base-dos-dados-316520")
@@ -51,7 +55,7 @@ load('../dados/basedosdados/dicionario_vacinacao.rdata')
 dicionario
 ```
 
-O grupo que nos interessa nessa análise é o '801 - Ensino Básico'. Antes de filtrá-lo, porém, vamos realizar umas análises na base para verificar como está a integridade dos dados no geral e identificar possíveis falhas.
+Existem dois grupos de atendimento que nos interessam: o '801 - Ensino Básico' e . Antes de filtrá-lo, porém, vamos realizar umas análises na base para verificar como está a integridade dos dados no geral e identificar possíveis falhas.
 
 
 ### Integridade da tabela de vacinação
@@ -278,26 +282,26 @@ Uma forma de contornar esse problema pode estar no próprio Censo Escolar: na ta
 
 Outra possível solução seria analisar os dados do RAIS, que pode contar essa informação.
 
-Vamos utilizar a base do RAIS do Base dos Dados para obter esse quantitativo. Para diminuir os dados processados, vamos criar uma tabela ativa apenas com os dados de 2019 de funcionários com CBO pré-selecionado.
+# RAIS
+
+# Elaborando a melhor estratégia
+
+Na tabela da RAIS, cada linha representa um vínculo empregatício, ativo ou não. Os dados não possuem identificador único, apenas informações gerais como tipo de vínculo (CBO), atividade econômica do empregador (CNAE), gênero, raça e idade do empregado entre outros.
+
+Antes de mais nada, nós precisamos fragmentar a base para não sobrecarregar as queries do BigQuery desnecessariamente. Para isso, vamos criar uma tabela ativa clonando apenas os dados de 2019 e filtrando os CBOs que possam estar minimamente relacionados à educação, incluindo por exemplo Limpeza de prédios ou outros serviços de auxílio.
+
+O código usado para isso foi o seguinte:
 
 ```{sql eval=FALSE}
---Código para gerar a tabela ativa
+--Código para gerar a tabela ativa (não executado neste doc)
 SELECT * FROM `basedosdados.br_me_rais.microdados_vinculos` WHERE ano = 2019 AND cbo_2002 IN ('333110', '233115', '233120', '233125', '233130', '233135', '233205', '233210', '233215', '233220', '233225', '234105', '234110', '234115', '234120', '234125', '234205', '234210', '234215', '234305', '234310', '234315', '234320', '234405', '234410', '234415', '234420', '234425', '234435', '234445', '234450', '234455', '234460', '234505', '234510', '234515', '234520', '234705', '234710', '234715', '234720', '234725', '234730', '234735', '234740', '234745', '234750', '234755', '234760', '234765', '234770', '234805', '234810', '234815', '234905', '234910', '234915', '239420', '239435', '252320', '262830', '333105', '334115', '371105', '371110', '515305', '515325', '231105', '231110', '231205', '231210', '231305', '231310', '231315', '231320', '231325', '231330', '231335', '231340', '232105', '232110', '232115', '232120', '232125', '232130', '232135', '232140', '232145', '232150', '232155', '232160', '232165', '232170', '233105', '234604', '234612', '234616', '234620', '234624', '234628', '234632', '234640', '234644', '234652', '234660', '234664', '234668', '234672', '234676', '234684', '239405', '239410', '239415', '239425', '239430', '331305', '332105', '334105', '334110', '234608', '331105', '331110', '331205', '239205', '239210', '239215', '239220', '239225', '332205', '233110', '251505', '333115')
 ```
 
-Agora vamos importar essa tabela, filtrando para manter apenas aqueles funcionários com vínculo ativo em 31/12/2019.
-
-```{r eval=FALSE}
-# Código R para importar dados do BigQuery (não executado)
-query <- "SELECT id_municipio, idade, sexo_trabalhador, raca_cor, cbo_2002, COUNT(*) as total_funcionarios FROM `base-dos-dados-316520.rais2018.selecao2019` WHERE vinculo_ativo_3112 = '1' GROUP BY id_municipio, idade, sexo_trabalhador, raca_cor, cbo_2002"
-sumario_rais_2019 <- read_sql(query)
-```
-
-```{r}
-load('../dados/basedosdados/sumario_rais_2019.rdata')
-```
+Agora vamos importar essa tabela, filtrando para manter apenas aqueles funcionários com vínculo ativo em 31/12/2019. Para reduzir a carga no R, vamos agregar os resultados por municipio, cbo e informações sobre o trabalhador
 
 
+
+Agora vamos importar as informações relevantes para o R, para analisarmos os resultados obtidos. Iremos agregar o total de vínculos por CBO e CNAE, mantendo apenas aqueles ativos em 31/12/2019.
 ```{r eval=FALSE}
 # Código R para importar dados do BigQuery (não executado)
 query <- "SELECT cnae_2_subclasse, cbo_2002, COUNT(*) as total FROM `base-dos-dados-316520.rais2018.selecao2019` WHERE vinculo_ativo_3112 = '1' GROUP BY cnae_2_subclasse, cbo_2002;"
@@ -305,25 +309,28 @@ cnaes_cbo <- read_sql(query)
 ```
 
 ```{r}
+# Código para carregar o arquivo RData com as informações já salvas
 load('../dados/basedosdados/cnaes_cbo.rdata')
 ```
 
-
-
-Vamos precisar um dicionário de CNAEs também visto que só temos o número.
+Vamos precisar um dicionário de CNAEs e CBOs também visto que só temos o número.
 
 ```{r}
+# Dicionário de CNAEs
 dici_cnae <- data.table::fread('../dados/dici_cnae.csv', encoding = 'UTF-8', colClasses = 'character') %>%
   mutate(id_classe = gsub('\\.|-',"", cod_classe)) %>%
   rename(cnae_2_subclasse = id_cnae)
 ```
 
 ```{r}
+# Dicionário de CBOs
 dici_cbo <- data.table::fread('../dados/CBO_map.csv', encoding = 'UTF-8', colClasses = 'character') %>%
   janitor::clean_names()
  
 colnames(dici_cbo)[1:2] <- c('ocupacao', 'cbo_2002')
 ```
+
+Juntando a tabela com os dicionários:
 
 ```{r}
 cnaes_cbo2 <- cnaes_cbo %>%
@@ -331,52 +338,15 @@ cnaes_cbo2 <- cnaes_cbo %>%
   left_join(dici_cbo)
 ```
 
-Vamos dar uma olhada nos CNAEs para ver se encontramos algum atípico que possivelmente não foi coberto pela vacinação dos grupos que estamos avaliando.
+Para entendermos qual a melhor estratégia que podemos adotar, auxilia observar como estão distribuídos os CNAEs e CBOs. Um gráfico interativo pode ser encontrado em [Gráfico Cbo CNAE](Grafico-CBO-CNAE.html).
+
+Os resultados também podem ser diretamente explorados (de forma menos intuitiva) na tabela abaixo:
 
 ```{r}
 cnaes_cbo2 %>%
-  group_by(cnae_2_subclasse, nm_cnae) %>%
-  summarise(total = sum(total)) %>%
   arrange(desc(total)) %>%
-  View()
-```
-
-Como estamos avaliando apenas o grupo 801 (profissionais da educação básica) das vacinações, temos que excluir todos aqueles vínculos que não se referem a essa categoria. Analisando os 300 CNAEs com maior número de vínculos, podemos selecionar algumas categorias que se encaixam nesse grupo:
-
-- Administração pública em geral
-- Ensino fundamental
-- Educação infantil - pré-escola
-- Ensino médio
-- Educação infantil - creche
-- Atividades de associações de defesa de direitos sociais
-- Outras atividades de ensino não especificadas anteriormente
-- Serviços de assistência social sem alojamento
-- Atividades associativas não especificadas anteriormente
-- Atividades de organizações religiosas ou filosóficas
-- Atividades de apoio à educação exceto caixas escolares
-- Regulação das atividades de saúde educação serviços culturais e outros serviços sociais
-- Transporte escolar
-- Lanchonetes casas de chá de sucos e similares
-- Atividades de organizações associativas ligadas à cultura e à arte
-- Ensino de esportes
-- Locação de mão de obra temporária
-- Fornecimento e gestão de recursos humanos para terceiros
-- Limpeza em prédios e em domicílios
-- Administração de caixas escolares
-- Atividades de bibliotecas e arquivos
-- Suporte técnico manutenção e outros serviços em tecnologia da informação
-- Serviço de transporte de passageiros - locação de automóveis com motorista
-
-
-Estamos fazendo uma seleção abrangente porque temos a possibilidade de filtrar isso junto com o CBO, obtendo um valor preciso. Antes, porém, vamos ver que tipos de CBO estão associados apenas a esses CNAEs.
-
-```{r}
-cnaes_cbo2 %>%
-  filter(cnae_2_subclasse %in% c('8411600', '8513900', '8512100', '8520100', '8511200', '9430800', '8599699', '8800600', '9499500', '9491000', '8550302', '8412400', '4924800', '5611203', '9493600', '8591100', '7820500', '7830200', '8121400', '8550301')) %>%
-  group_by(ocupacao, cnae_2_subclasse, nm_cnae) %>%
-  summarise(total = sum(total)) %>%
-  arrange(desc(total)) %>%
-  View()
+  select(nm_cnae, ocupacao, total) %>%
+  DT::datatable(filter = 'top', options = list(scrollX='600px'))
 ```
 
 É possível notar que há uma série de CBOs relevantes para nossa análise associados a CNAEs atípicos. Por exemplo, temos o CBO "Inspetor de Alunos de Escola Publica" com 127 vínculos a instituições com o CNAE "Atividades de organizações associativas ligadas à cultura e à arte". Entre outros exemplos similares podemos citar:
@@ -386,5 +356,189 @@ cnaes_cbo2 %>%
 
 Quais as possíveis explicações para isso? Primeiramente, é possível imaginar instituições de ensino vinculadas à pessoas jurídicas com CNAEs diferentes (por exemplo, escolas religiosas ou então de associações). Há também os casos evidentes de terceirização. Mas como seria inevitável, parecem existir casos em que há apenas inserção incorreta dos dados. Por exemplo, no CNAE "Lanchonetes casas de chá de sucos e similares" há uma série de CBOS como "Coordenador Pedagogico" ou "Inspetor de Alunos de Escola Publica". Pode ser que haja uma explicação para isso, mas como é possível encontrar diversos CBOs parecidos em CNAEs sem nenhuma relação aparente, deve se ter em mente as limitações dos dados.
 
+De qualquer forma, para a educação básica, parece seguro incluir todas as instituições que possuem CNAE "Ensino fundamental" ou "Ensino médio", por exemplo.
+
+As complicações giram em torno dos inúmeros casos em que o CNAE é "Administração pública em geral" ou alguma das associações citadas anteriormente, que podem ou não se referir a escolas. Embora alguns CBOs (como por exemplo Professor de Matematica no Ensino Medio) claramente sejam do ensino básico, há diversos vínculos com o ensino superior, por exemplo, demonstrando a fragilidade do CBO.
+
+Há também casos ainda mais cinzentos como "Professor de dança", que pode estar atuando tanto em escolas como fora delas. Por esse motivo, vamos adotar uma estratégia de relativização. Todos os CNAEs tipicamente escolares terão seus vínculos considerados. Já os que podem ou não estar relacionados à atividade escolar só terão seus vínculos considerados se associados a CBOs que façam sentido.
+
+Essa estratégia tem como vantagem a inclusão de vínculos de auxiliares que operam em escolas privadas com CNAE "Ensino Fundamental", por exemplo, mas como desvantagem a exclusão de outros funcionários que operem em escolas públicas ou escolas com CNAE diferente.
+
+Os selecionados são:
+
+CNAEs absolutos:
+- Ensino fundamental (8513900)
+- Educação infantil - pré-escola (8512100)
+- Ensino médio (8520100)
+- Educação infantil - creche (8511200)
+- Atividades de apoio à educação exceto caixas escolares (8550302)
+- Transporte escolar (4924800)
+- Administração de caixas escolares (8550301)
+
+CNAEs relativos:
+- Administração pública em geral (8411600)
+- Atividades de associações de direitos sociais (9430800)
+- Serviços de assistência social sem alojamento (8800600)
+- Outras atividades de ensino não especificadas anteriormente (	
+8599699)
+- Atividades de organizações religiosas ou filosóficas (9491000)
+- Regulação das atividades de saúde educação serviços culturais e outros serviços sociais (8412400)
+
+CBOs relativos:
+- Auxiliar de Biblioteca (371105)
+- Designer Educacional (239435)
+- Educador Social (515305)
+- Orientador Educacional (239410)
+- Professor da Area de Meio Ambiente (233105)
+- Professor de Danca (262830)
+- Professor de Lingua Alema (234604)
+- Professor de Lingua Espanhola (234620)
+- Professor de Lingua Francesa (234612)
+- Professor de Lingua Inglesa (234616)
+- Professor de Lingua Italiana (234608)
+- Professor de Linguas Estrangeiras Modernas (234668)
+- Professor de Literatura Comparada (234640)
+- Professor de Literatura de Linguas Estrangeiras Modernas (234660)
+- Professor de Outras Linguas e Literaturas (234664)
+- Socioeducador (515325)
+- Supervisor de Ensino (239430)
+- Coordenador Pedagogico (239405)
+- Inspetor de Alunos de Escola Publica (334110)
+- Professor da  Educacao de Jovens e Adultos do Ensino Fundamental (Primeira a Quarta Serie) (231205)
+- Professor de Alunos com Deficiencia Fisica (239210)
+- Professor de Alunos com Deficiencia Multipla (239220)
+- Professor de Ciencias Exatas e Naturais do Ensino Fundamental (231305)
+- Professor de Educacao Fisica do Ensino Fundamental (231315)
+- Professor de Geografia do Ensino Fundamental (231320)
+- Professor de Geografia no Ensino Medio (232135)
+- Professor de Historia do Ensino Fundamental (231325)
+- Professor de Historia no Ensino Medio (232140)
+- Professor de Lingua Estrangeira Moderna no Ensino Medio (232150)
+- Professor de Lingua Portuguesa (234624)
+- Professor de Literatura Brasileira (234628)
+- Professor de Literatura Inglesa (234652)
+- Professor de Matematica no Ensino Medio (232155)
+- Professor de Nivel Medio no Ensino Fundamental (331205)
+- Professor de Nivel Superior do Ensino Fundamental (Primeira a Quarta Serie) (231210)
+- Professor de Nivel Superior na Educacao Infantil (Zero a Tres Anos) (231110)
+- Professor de Psicologia no Ensino Medio (232160)
+- Professor de Quimica no Ensino Medio (232165)
+- Psicologo Educacional (251505)
+- Auxiliar de Desenvolvimento Infantil (331110)
+- Inspetor de Alunos de Escola Privada (334105)
+- Monitor de Transporte Escolar (334115)
+- Pedagogo (239415)
+- Professor de Alunos com Deficiencia Auditiva e Surdos (239205)
+- Professor de Alunos com Deficiencia Mental (239215)
+- Professor de Alunos com Deficiencia Visual (239225)
+- Professor de Artes no Ensino Medio (232105)
+- Professor de Biologia no Ensino Medio (232110)
+- Professor de Disciplinas Pedagogicas no Ensino Medio (232115)
+- Professor de Educacao Artistica do Ensino Fundamental (231310)
+- Professor de Educacao Fisica no Ensino Medio (232120)
+- Professor de Filologia e Critica Textual (234676)
+- Professor de Filosofia no Ensino Medio (232125)
+- Professor de Fisica no Ensino Medio (232130)
+- Professor de Lingua e Literatura Brasileira no Ensino Medio (232145)
+- Professor de Lingua Estrangeira Moderna do Ensino Fundamental (231330)
+- Professor de Lingua Portuguesa do Ensino Fundamental (231335)
+- Professor de Linguistica e Linguistica Aplicada (234672)
+- Professor de Literatura Espanhola (234644)
+- Professor de Literatura Portuguesa (234632)
+- Professor de Matematica do Ensino Fundamental (231340)
+- Professor de Nivel Medio na Educacao Infantil (331105)
+- Professor de Nivel Medio no Ensino Profissionalizante (331305)
+- Professor de Nivel Superior na Educacao Infantil (Quatro a Seis Anos) (231105)
+- Professor de Sociologia no Ensino Medio (232170)
+- Professor Leigo no Ensino Fundamental (332105)
+- Psicopedagogo (239425)
+- Tecnólogo em Secretariado Escolar (252320)
+
+Vamos gerar a tabela ativa e importar os dados para o R.
+
+```{sql eval=FALSE}
+--Código para gerar a tabela ativa (não executado neste doc)
+SELECT * FROM `basedosdados.br_me_rais.microdados_vinculos` WHERE ano = 2019 AND vinculo_ativo_3112 = '1' AND (cnae_2_subclasse IN ('8513900', '8512100', '8520100', '8511200', '8550302', '4924800', '8550301') OR (cnae_2_subclasse IN ('8411600', '9430800', '8800600', '8599699', '9491000', '8412400') AND cbo_2002 IN ('371105', '239435', '515305', '239410', '233105', '262830', '234604', '234620', '234612', '234616', '234608', '234668', '234640', '234660', '234664', '515325', '239430', '239405', '334110', '231205', '239210', '239220', '231305', '231315', '231320', '232135', '231325', '232140', '232150', '234624', '234628', '234652', '232155', '331205', '231210', '231110', '232160', '232165', '251505', '331110', '334105', '334115', '239415', '239205', '239215', '239225', '232105', '232110', '232115', '231310', '232120', '234676', '232125', '232130', '232145', '231330', '231335', '234672', '234644', '234632', '231340', '331105', '331305', '231105', '232170', '332105', '239425', '252320')))
+```
+
+Isso gera uma tabela com 3411085. Podemos, então, começar a análise propriamente dita.
+
+
+
+-----
+Trecho anterior a ser excluído
+
+```{r}
+cnaes_cbo2 %>%
+  filter(cnae_2_subclasse %in% c('8411600', '8513900', '8512100', '8520100', '8511200', '9430800', '8599699', '8800600', '9499500', '9491000', '8550302', '8412400', '4924800', '5611203', '9493600', '8591100', '7820500', '7830200', '8121400', '8550301')) %>%
+  group_by(ocupacao, cnae_2_subclasse, nm_cnae) %>%
+  summarise(total = sum(total)) %>%
+  arrange(desc(total)) %>%
+  DT::datatable(filter = 'top', options = list(scrollX='600px'))
+```
+
+
+
+Qual será a extensão desses casos atípicos? Vamos verificar manualmente:
+
+```{r}
+cnaes_cbo2 %>%
+  group_by(ocupacao, nm_cnae) %>%
+  summarise(total = sum(total)) %>%
+  arrange(ocupacao) %>%
+  DT::datatable(filter = 'top', options = list(scrollX='600px'))
+```
+
+
+
+
+```{r}
+cnaes_cbo2 %>%
+  select(nm_cnae, ocupacao, total) %>%
+  mutate(total = as.numeric(total)) %>%
+  tidyr::spread(key = nm_cnae, value = total, fill = 0) %>%
+  googleVis::gvisBarChart(xvar= "ocupacao", options=list(height=10000, isStacked='percent')) %>%
+  plot()
+```
+
 Ainda assim, vamos estipular com base em dois critérios alternativos: CBOs e CNAEs. Ou seja, na tabela de vínculos, vamos manter cada linha que o CBO ou CNAE esteja dentre o selecionado. Se por exemplo o CBO for "Inspetor de Alunos de Escola Publica", o vínculo será contabilizado mesmo que o CNAE seja "Colheita de frutas". Similarmente, se o CNAE for "Escola fundamental", todos os vínculos serão contabilizados mesmo que o CBO seja "Assistente de reprografia". Mas caso o CBO seja "Garçom" e o CNAE seja "Casa de sucos", o vínculo não será considerado.
+
+
+
+
+
+
+
+Apesar de outros CNAEs possivelmente terem um grande volume de escolas, por não ser uma abrangência absoluta, iremos coletar apenas os vínculos dessas instituições com base nos CBOs. O problema são os CBOs com alta participação de "Administração pública em geral", pois não sabemos do que se trata. Por exemplo, pedagogos nessa categoria podem estar contratadosOs CBOS selecionados:
+
+-----
+
+O processo vai ser assim:
+
+etapa 1: filtragem de CNAEs relevantes (incluindo terceirizados, excluindo ensino superior por ex)
+
+etapa 2: Seleção de CNAEs em que todos os vínculos serão obtidos (ensino fundamental)
+
+etapa 3: Seleção de CNAEs em que apenas alguns vinculos serão mantidos com base no CBO
+
+Vamos fazer duas contagens:
+educação basica
+Educação geral
+
+Incluir
+('239405', '334110', '231205', '239210', '239220', '231305', '262830', '231315', '231320', '232135', '231325', '232140', '232150', '234624', '234628', '234652', '232155', '331205', '231210', '231110', '232160', '232165', '251505') 
+
+# anexo
+----
+```{r eval=FALSE}
+# Código R para importar dados do BigQuery (não executado)
+query <- "SELECT id_municipio, idade, sexo_trabalhador, raca_cor, cbo_2002, COUNT(*) as total_funcionarios FROM `base-dos-dados-316520.rais2018.selecao2019` WHERE vinculo_ativo_3112 = '1' GROUP BY id_municipio, idade, sexo_trabalhador, raca_cor, cbo_2002"
+sumario_rais_2019 <- read_sql(query)
+```
+
+```{r}
+# Código para carregar o arquivo RData com as informações já salvas
+#load('../dados/basedosdados/sumario_rais_2019.rdata')
+```
+----
 
