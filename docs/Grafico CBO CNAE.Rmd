@@ -1,0 +1,51 @@
+---
+title: "Gráfico CBOs/CNAEs"
+author: "Jonas Coelho"
+date: "27/07/2021"
+output: 
+  html_document:
+    theme: cosmo
+    toc: false
+    number_sections: true
+    df_print: paged
+    code_folding: hide
+    self_contained: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+library("basedosdados")
+library('dplyr')
+library(knitr)
+library(kableExtra)
+options(scipen = 9999)
+
+load('../dados/basedosdados/cnaes_cbo.rdata')
+
+dici_cnae <- data.table::fread('../dados/dici_cnae.csv', encoding = 'UTF-8', colClasses = 'character') %>%
+  mutate(id_classe = gsub('\\.|-',"", cod_classe)) %>%
+  rename(cnae_2_subclasse = id_cnae)
+
+dici_cbo <- data.table::fread('../dados/CBO_map.csv', encoding = 'UTF-8', colClasses = 'character') %>%
+  janitor::clean_names()
+ 
+colnames(dici_cbo)[1:2] <- c('ocupacao', 'cbo_2002')
+
+cnaes_cbo2 <- cnaes_cbo %>%
+  left_join(select(dici_cnae, cnae_2_subclasse, nm_cnae)) %>%
+  left_join(dici_cbo)
+```
+
+```{r, results='asis'}
+dump <- cnaes_cbo2 %>%
+  select(nm_cnae, ocupacao, total) %>%
+  mutate(total = as.numeric(total)) %>%
+  tidyr::spread(key = nm_cnae, value = total, fill = 0) %>%
+  googleVis::gvisBarChart(xvar= "ocupacao", options=list(height=5400, fontSize=11,  isStacked='percent', chartArea= "{height:\"100%\"}" ))
+
+print(dump, 'chart')
+```
+
