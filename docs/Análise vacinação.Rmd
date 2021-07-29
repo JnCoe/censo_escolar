@@ -626,3 +626,8 @@ print(dump, 'chart')
 
 No caso do município de São Paulo, o número de vacinados fica consideravelmente abaixo do número de trabalhadores. Pode ser que o município tenha adotado regras mais rigídas de vacinação que acabaram limitando o acesso ou então realizou os registros de alguma forma diferente. Importante observar que esses dados levam em conta qualquer vacinação, seja primeira ou segunda dose, então já está próximo ao valor máximo que deve atingir.
 
+A tabela final que possuímos é a seguinte:
+```{r}
+compilado_mun_det
+```
+
