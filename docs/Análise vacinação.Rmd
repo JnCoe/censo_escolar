@@ -284,7 +284,7 @@ Outra possível solução seria analisar os dados do RAIS, que pode contar essa 
 
 # RAIS
 
-# Elaborando a melhor estratégia
+## Elaborando a melhor estratégia
 
 Na tabela da RAIS, cada linha representa um vínculo empregatício, ativo ou não. Os dados não possuem identificador único, apenas informações gerais como tipo de vínculo (CBO), atividade econômica do empregador (CNAE), gênero, raça e idade do empregado entre outros.
 
@@ -477,9 +477,9 @@ load('../dados/basedosdados/sumario_basica.rdata')
 
 Podemos agora começar.
 
-# Análise
+## Análise
 
-## Brasil - RAIS e vacinação
+### Brasil - RAIS e vacinação
 Primeiramente, vamos fazer uma análise a nível nacional comparando os dados calculados pela RAIS com aqueles calculados pela vacinação para verificar se fazem algum sentido.
 
 A primeira comparação será uma distribuição etária por gênero
@@ -538,7 +538,7 @@ Há uma separação por gênero, conforme mulheres a partir dos 35 tendem a esta
 
 Como estamos analisando no nível nacional, são diversas regras de vacinação diferentes adotadas, o que pode tornar a análise um pouco turva. Vamos verificar no Município de São Paulo como fica essa distribuição, visto que há maior controle sobre as vacinações.
 
-## São Paulo - RAIS e vacinação
+### São Paulo - RAIS e vacinação
 
 Para obter os dados por municípios, genero e idade, teremos que executar o código abaixo:
 
