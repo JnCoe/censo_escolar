@@ -23,6 +23,7 @@ knitr::opts_chunk$set(echo = TRUE)
 Esse documento pretende analisar a vacinação nos municípios brasileiros dos profissionais da educação. Serão utilizadas as bases do Ministério da Saúde sobre vacina contra covid, a base do FNDE sobre remuneração dos servidores da educação e a base do INEP do Censo Escolar. Para o INEP e MS, será utilizada a API da [Base dos dados](https://basedosdados.org/) no BigQuery, enquanto para os dados do FNDE serão utilizados os CSVs disponibilizados pela autarquia.
 
 O primeiro passo consiste em carregar as bibliotecas necessárias.
+
 ```{r message=FALSE, warning=FALSE}
 library("basedosdados")
 library('dplyr')
@@ -32,15 +33,23 @@ options(scipen = 9999)
 ```
 
 E definir o projeto do BigQuery
+
 ```{r message=FALSE, warning=FALSE}
 # Definindo o projeto do BigQuery
 set_billing_id("base-dos-dados-316520")
 ```
 
-## Carregar dados de vacinação
+Vamos também criar uma função de "not in" para facilitar algumas operações.
+
+```{r}
+'%!in%' <- function(x,y)!('%in%'(x,y))
+```
+
 Para evitar processamentos repetitivos, os códigos de execução no BigQuery serão explicitados aqui apenas para elucidação. As informações carregadas virão, de fato, do arquivo .RData com os dados salvos do resultado desse processamento.
 
-Os dados de vacinação estão organizados em três tabelas diferentes: estabelecimento, paciente e vacinação. A tabela de estabelecimentos não nos é necessária nessa análise. Ela contém identificação sobre os postos de saúde e demais pontos de vacinação. A tabela de pacientes possui uma id aleatória para cada paciente, sua idade, data de nascimento, sexo, raça/cor, endereço (cep, município e UF) bem como nacionalidade. Por fim, a tabela de vacinação consiste em dados sobre o paciente que foi vacinado, qual a dose em questão, lote, fabricante, data de aplicação, o estabelecimento onde foi distribuída e o grupo de atendimento - ou seja - a razão pela pessoa ter tido acesso à vacina.
+# Dados de vacinação
+
+Os dados de vacinação estão organizados em três tabelas diferentes: estabelecimento, paciente e vacinação. A tabela de estabelecimentos contém identificação sobre os postos de saúde e demais pontos de vacinação, o que nos será útil para saber onde foi aplicada a dose. A tabela de pacientes possui uma id aleatória única para cada paciente, sua idade, data de nascimento, sexo, raça/cor, endereço (cep, município e UF) bem como nacionalidade. Por fim, a tabela de vacinação consiste em dados sobre o paciente que foi vacinado, qual a dose em questão, lote, fabricante, data de aplicação, o estabelecimento onde foi distribuída e o grupo de atendimento - ou seja - a razão pela pessoa ter tido acesso à vacina.
 
 O grupo de atendimento é a classificação mais detalhada, enquanto a categoria é uma categorização mais abrangente entre 9 classes distintas. Os dados podem ser consultados na tabela de dicionário da base, disponibilizada abaixo:
 
@@ -55,10 +64,9 @@ load('../dados/basedosdados/dicionario_vacinacao.rdata')
 dicionario
 ```
 
-Existem dois grupos de atendimento que nos interessam: o '801 - Ensino Básico' e . Antes de filtrá-lo, porém, vamos realizar umas análises na base para verificar como está a integridade dos dados no geral e identificar possíveis falhas.
+O grupo de atendimento que nos interessa é o '801 - Ensino Básico'. Antes de filtrá-lo, porém, vamos realizar umas análises na base para verificar como está a integridade dos dados no geral e identificar possíveis falhas.
 
-
-### Integridade da tabela de vacinação
+## Integridade da tabela de vacinação
 
 Um erro que já foi relatado por outros pesquisadores em relação à base do MS consiste na presença de múltiplas doses para apenas um paciente. Vamos ver quais são os casos em que há mais de duas doses registradas para um mesmo paciente. Assim como antes, o resultado da query virá de um RData já salvo, mas pode ser gerado com o código disponibilizado abaixo.
 
@@ -80,6 +88,7 @@ load('../dados/basedosdados/super_doses.rdata')
 super_doses %>%
   arrange(desc(f0_))
 ```
+
 Há 1,4 milhões de pacientes com mais de 2 doses registradas. Em um caso, 462 doses foram registradas como se inoculadas em uma mesma pessoa. Uma observação relevante que deve ser feita, no entanto, é que o caso dos 462 registros ocorreram no Rio Grande do Norte, mas em prefeitura diferentes. Seria interessante, em outra oportunidade, investigar a causa para isso.
 
 Apesar da id de pacientes não ter sido inserida corretamente, é possível observar, ao se explorar a base, que outras colunas foram preenchidas com dados diferentes, tais como data de aplicação, dose, fabricante e, o mais importante, categoria e grupo de atendimento. Por esse motivo, vamos fazer a análise sem desconsiderar essas duplicatas. Os dados, portanto, podem estar sobreinclusivos, visto que não é possível garantir que as doses registradas incorretamente de fato foram administradas da forma como estão registradas.
@@ -91,6 +100,8 @@ Para obter os dados consolidados por município, é necessário fazer uma escolh
 Por esse motivo, vamos considerar quantas doses cada município administrou em seus postos de vacinação para comparar, posteriormente, com os funcionários da educação que atuam no mesmo município. Essa análise não é 100% precisa, porém fornece valores aproximados o suficiente para nosso objetivo.
 
 Outro nuance que deve ser observado consiste em casos onde um indivíduo tomou a primeira dose em um município e a segunda em outro. Como não vamos utilizar a id do paciente, serão analisados apenas os quantitativos de cada dose por município, calculando o deficit faltante com base na diferença. Ainda assim, por ser pouco provável que haja um número considerável de casos nesse estilo, a análise será feita com a premissa de que todos que tomaram a segunda dose em um determinado município também tomaram a primeira no mesmo município. Vamos aproveitar e gerar uma tabela com os dados totais e com os dados filtrados, assim poderemos checar se os valores estão condizentes com outras fontes.
+
+O código abaixa gera uma tabela com o total de doses administradas em cada município.
 
 ```{r eval=FALSE}
 # Código R para importar dados do BigQuery (não executado)
@@ -124,37 +135,6 @@ GROUP BY
   est.id_municipio;"
 
 compilado_mun <- read_sql(query)
-
-query <- "SELECT
-  est.id_municipio,
-  COUNT(DISTINCT
-    CASE
-      WHEN dose = 1 THEN id_documento
-  END
-    ) AS prim_dose,
-  COUNT(DISTINCT
-    CASE
-      WHEN dose = 2 THEN id_documento
-  END
-    ) AS segun_dose,
-  COUNT(DISTINCT
-    CASE
-      WHEN dose IS NULL THEN id_documento
-  END
-    ) AS dose_nula,
-  COUNT(DISTINCT id_paciente) AS num_pacientes
-FROM
-  `basedosdados.br_ms_vacinacao_covid19.microdados_vacinacao` AS vac
-LEFT JOIN
-  `basedosdados.br_ms_vacinacao_covid19.microdados_estabelecimento` AS est
-ON
-  vac.id_estabelecimento = est.id_estabelecimento
-WHERE
-  grupo_atendimento = '801'
-GROUP BY
-  est.id_municipio;"
-
-compilado_mun_total <- read_sql(query)
 ```
 
 ```{r}
@@ -179,31 +159,257 @@ load('../dados/basedosdados/pop.rdata')
 ```
 
 ```{r}
-compilado_mun_total_old <- compilado_mun_total
-compilado_mun_old <- compilado_mun
-
-compilado_mun_total <- pop %>%
-  left_join(compilado_mun_total_old, by = c('municipio_codigo' = 'id_municipio'))
-
 compilado_mun <- pop %>%
-  left_join(compilado_mun_old, by = c('municipio_codigo' = 'id_municipio'))
+  left_join(compilado_mun, by = c('municipio_codigo' = 'id_municipio'))
 ```
 
 ```{r}
-compilado_mun_total %>%
+compilado_mun %>%
   arrange(desc(segun_dose))
 ```
 
 Comparando com os dados do [Vacinômetro Paulista](https://vacinaja.sp.gov.br/vacinometro/), é possível notar que os dados parecem estar corretos. Há uma divergência considerando que o BigQuery é atualizado semanalmente e possui uma diferença de 4 dias entre ambos, mas os valores estão aproximados o suficiente para parecerem corretos. Vamos prosseguir para os dados dos profissionais de educação.
 
-Uma observação relevante é que há casos em que a dose não foi preenchida. Não se trata das vacinas de dose única porque São Paulo já administrou quase 100 mil doses desse tipo segundo o Vacinômetro Paulista, enquanto o município com o maior número de doses sem preenchimento (Caruaru - PE) possui 396. Por serem valores muito baixos perto do total, iremos desconsiderar essa coluna.
+~~Uma observação relevante é que há casos em que a dose não foi preenchida. Não se trata das vacinas de dose única porque São Paulo já administrou quase 100 mil doses desse tipo segundo o Vacinômetro Paulista, enquanto o município com o maior número de doses sem preenchimento (Caruaru - PE) possui 396. Por serem valores muito baixos perto do total, iremos desconsiderar essa coluna.~~ \*
 
-## Carregar dados de profissionais da educação
-Para saber o quantitativo de profissionais da educação por município, temos dois caminhos diferentes: o censo escolar e os dados do SIOPE. O Censo Escolar tem a vantagem de ser de rápido processamento e conter dados de professores tanto da rede pública quanto privada, no entanto, não possui informações sobre outros profissionais da educação (merendeiras, inspetores, coordenadores etc).
+\*Isso foi posteriormente corrigido na base do MS.
+
+# Profissionais da educação
+
+Para saber o quantitativo de profissionais da educação por município, temos três caminhos diferentes: o censo escolar, os dados do SIOPE e a RAIS. O Censo Escolar tem a vantagem de ser de rápido processamento e conter dados de professores tanto da rede pública quanto privada, no entanto, não possui informações sobre outros profissionais da educação (merendeiras, inspetores, coordenadores etc).
 
 Os dados do SIOPE possuem informações para todos esses profissionais, mas somente na rede pública. Além disso, o processamento de dados do SIOPE é consideravelmente mais demorado, porque envolve baixar CSVS individuais para cada estado, compilar e subir no BigQuery. Por conta dessa limitação, vamos optar por utilizar os dados do censo na análise. Como consequência, os números apresentados de funcionários da educação em cada município estarão aquém do valor real. Posteriormente, uma análise do SIOPE pode ajudar a aperfeiçoar esses números.
 
-O código abaixo gera uma tabela com a soma de IDs distintas de docentes por município, categorizando em três colunas: rede privada, rede pública e o total de ambas. Os dados não foram filtrados por etapa, então inclui docentes de ensino técnico, EJA e outras modalidades que não estão inseridas no ensino superior.
+Já os dados da RAIS supostamente permitem analisar todos os funcionários de escolas, mas somente aquelas cujo CNAE está marcado como ensino fundamental ou médio, o que exclui escolas públicas e instituições com CNAEs de associação, por exemplo. Ainda assim, é possível filtrar por algumas profissões escolares, independente do CNAE, como inspetor, por exemplo. Outra vantagem da RAIS, no entanto, é que não será possível distinguir entre professores que atuam em mais de uma escola, contabilizando-os mais de uma vez.
+
+Vamos iniciar com uma análise da RAIS e posteriormente compará-la com dados obtidos pelo censo para checar o que foi obtido.
+
+## RAIS
+
+### Elaborando a melhor estratégia
+
+Na tabela da RAIS, cada linha representa um vínculo empregatício, ativo ou não. Os dados não possuem identificador único, apenas informações gerais como tipo de vínculo (CBO), atividade econômica do empregador (CNAE), gênero, raça e idade do empregado entre outros.
+
+Antes de mais nada, nós precisamos fragmentar a base para não sobrecarregar as queries do BigQuery desnecessariamente. Para isso, vamos criar uma tabela ativa clonando apenas os dados de 2019 e filtrando os CBOs que possam estar minimamente relacionados à educação, incluindo por exemplo Limpeza de prédios ou outros serviços de auxílio.
+
+O código usado para isso foi o seguinte:
+
+```{sql eval=FALSE}
+--Código para gerar a tabela ativa (não executado neste doc)
+SELECT * FROM `basedosdados.br_me_rais.microdados_vinculos` WHERE ano = 2019 AND cbo_2002 IN ('333110', '233115', '233120', '233125', '233130', '233135', '233205', '233210', '233215', '233220', '233225', '234105', '234110', '234115', '234120', '234125', '234205', '234210', '234215', '234305', '234310', '234315', '234320', '234405', '234410', '234415', '234420', '234425', '234435', '234445', '234450', '234455', '234460', '234505', '234510', '234515', '234520', '234705', '234710', '234715', '234720', '234725', '234730', '234735', '234740', '234745', '234750', '234755', '234760', '234765', '234770', '234805', '234810', '234815', '234905', '234910', '234915', '239420', '239435', '252320', '262830', '333105', '334115', '371105', '371110', '515305', '515325', '231105', '231110', '231205', '231210', '231305', '231310', '231315', '231320', '231325', '231330', '231335', '231340', '232105', '232110', '232115', '232120', '232125', '232130', '232135', '232140', '232145', '232150', '232155', '232160', '232165', '232170', '233105', '234604', '234612', '234616', '234620', '234624', '234628', '234632', '234640', '234644', '234652', '234660', '234664', '234668', '234672', '234676', '234684', '239405', '239410', '239415', '239425', '239430', '331305', '332105', '334105', '334110', '234608', '331105', '331110', '331205', '239205', '239210', '239215', '239220', '239225', '332205', '233110', '251505', '333115')
+```
+
+Agora vamos importar essa tabela, filtrando para manter apenas aqueles funcionários com vínculo ativo em 31/12/2019. Para reduzir a carga no R, vamos agregar os resultados por municipio, cbo e informações sobre o trabalhador
+
+Agora vamos importar as informações relevantes para o R, para analisarmos os resultados obtidos. Iremos agregar o total de vínculos por CBO e CNAE, mantendo apenas aqueles ativos em 31/12/2019.
+
+```{r eval=FALSE}
+# Código R para importar dados do BigQuery (não executado)
+query <- "SELECT cnae_2_subclasse, cbo_2002, COUNT(*) as total FROM `base-dos-dados-316520.rais2018.selecao2019` WHERE vinculo_ativo_3112 = '1' GROUP BY cnae_2_subclasse, cbo_2002;"
+cnaes_cbo <- read_sql(query)
+```
+
+```{r}
+# Código para carregar o arquivo RData com as informações já salvas
+load('../dados/basedosdados/cnaes_cbo.rdata')
+```
+
+Vamos precisar um dicionário de CNAEs e CBOs também visto que só temos o número.
+
+```{r}
+# Dicionário de CNAEs
+dici_cnae <- data.table::fread('../dados/dici_cnae.csv', encoding = 'UTF-8', colClasses = 'character') %>%
+  mutate(id_classe = gsub('\\.|-',"", cod_classe)) %>%
+  rename(cnae_2_subclasse = id_cnae)
+```
+
+```{r}
+# Dicionário de CBOs
+dici_cbo <- data.table::fread('../dados/CBO_map.csv', encoding = 'UTF-8', colClasses = 'character') %>%
+  janitor::clean_names()
+ 
+colnames(dici_cbo)[1:2] <- c('ocupacao', 'cbo_2002')
+```
+
+Juntando a tabela com os dicionários:
+
+```{r}
+cnaes_cbo2 <- cnaes_cbo %>%
+  left_join(select(dici_cnae, cnae_2_subclasse, nm_cnae)) %>%
+  left_join(dici_cbo)
+```
+
+Agora nós temos uma tabela com o número de vínculos registrados na RAIS de cada um dos CBO pré-selecionados em cada CNAE que eles estão presentes.
+
+Para entendermos qual a melhor estratégia que podemos adotar, auxilia observar como estão distribuídos os CNAEs e CBOs. Um gráfico interativo pode ser encontrado em [Gráfico Cbo CNAE](Grafico-CBO-CNAE.html).
+
+Os resultados também podem ser diretamente explorados (de forma menos intuitiva) na tabela abaixo:
+
+```{r}
+cnaes_cbo2 %>%
+  arrange(desc(total)) %>%
+  select(nm_cnae, ocupacao, total) %>%
+  DT::datatable(filter = 'top', options = list(scrollX='600px'))
+```
+
+É possível notar que há uma série de CBOs relevantes para nossa análise associados a CNAEs atípicos. Por exemplo, temos o CBO "*Inspetor de Alunos de Escola Publica*" com 127 vínculos a instituições com o CNAE "*Atividades de organizações associativas ligadas à cultura e à arte*". Entre outros exemplos similares podemos citar: - "*Professor de Historia no Ensino Medio*" em CNAEs "*Atividades de organizações religiosas ou filosóficas*" - "*Professor de Educacao Fisica do Ensino Fundamental*" em CNAEs "*Ensino de esportes*" - "*Inspetor de Alunos de Escola Publica*" em CNAEs "*Fornecimento e gestão de recursos humanos para terceiros*"
+
+Quais as possíveis explicações para isso? Primeiramente, é possível imaginar instituições de ensino vinculadas à pessoas jurídicas com CNAEs diferentes (por exemplo, escolas religiosas ou então de associações). Há também os casos evidentes de terceirização. Mas como seria inevitável, parecem existir casos em que há apenas inserção incorreta dos dados. Por exemplo, no CNAE "*Lanchonetes casas de chá de sucos e similares*" há uma série de CBOS como "*Coordenador Pedagogico*" ou "*Inspetor de Alunos de Escola Publica*". Pode ser que haja uma explicação para isso, mas como é possível encontrar diversos CBOs parecidos em CNAEs sem nenhuma relação aparente, deve se ter em mente as limitações dos dados.
+
+De qualquer forma, para a educação básica, **parece seguro incluir todas as instituições que possuem CNAE "*Ensino fundamental*" ou "E*nsino médio*",** por exemplo.
+
+As complicações giram em torno dos inúmeros casos em que o CNAE é "*Administração pública em geral*" ou alguma das associações citadas anteriormente, que podem ou não se referir a escolas. Embora alguns CBOs (como por exemplo "*Professor de Matematica no Ensino Medio*") claramente sejam do ensino básico, há diversos vínculos com o ensino superior, por exemplo, demonstrando a fragilidade do CBO.
+
+Há também casos ainda mais cinzentos como "*Professor de dança*", que pode estar atuando tanto em escolas como fora delas. Por esse motivo, **vamos adotar uma estratégia de relativização: todos os CNAEs tipicamente escolares terão seus vínculos considerados. Já os que podem ou não estar relacionados à atividade escolar só terão seus vínculos considerados se associados a CBOs que façam sentido.**
+
+Essa estratégia simultaneamente é sub e super inclusiva. Todos os Auxiliares de Biblioteca associados a CNAEs da Administração Pública serão considerados, por exemplo. Mas profissionais de limpeza só terão seus vínculos contabilizados caso estejam associados a CNAEs de Ensino Fundamental ou Ensino Médio (ou seja, escolas privadas). A seleção dos CNAEs e CBOS foi feita com base no [Gráfico Cbo CNAE](Grafico-CBO-CNAE.html) citado anteriormente, favorecendo aqueles CBOs com maior participação de CNAEs do ensino básico.
+
+Os selecionados são:
+
+CNAEs absolutos:
+
+-   Ensino fundamental (8513900)
+-   Educação infantil - pré-escola (8512100)
+-   Ensino médio (8520100)
+-   Educação infantil - creche (8511200)
+-   Atividades de apoio à educação exceto caixas escolares (8550302)
+-   Transporte escolar (4924800)
+-   Administração de caixas escolares (8550301)
+
+CNAEs relativos:
+
+-   Administração pública em geral (8411600)
+-   Atividades de associações de direitos sociais (9430800)
+-   Serviços de assistência social sem alojamento (8800600)
+-   Outras atividades de ensino não especificadas anteriormente (
+
+8599699) 
+
+-   Atividades de organizações religiosas ou filosóficas (9491000)
+-   Regulação das atividades de saúde educação serviços culturais e outros serviços sociais (8412400)
+
+CBOs relativos:
+
+-   Auxiliar de Biblioteca (371105)
+-   Designer Educacional (239435)
+-   Educador Social (515305)
+-   Orientador Educacional (239410)
+-   Professor da Area de Meio Ambiente (233105)
+-   Professor de Danca (262830)
+-   Professor de Lingua Alema (234604)
+-   Professor de Lingua Espanhola (234620)
+-   Professor de Lingua Francesa (234612)
+-   Professor de Lingua Inglesa (234616)
+-   Professor de Lingua Italiana (234608)
+-   Professor de Linguas Estrangeiras Modernas (234668)
+-   Professor de Literatura Comparada (234640)
+-   Professor de Literatura de Linguas Estrangeiras Modernas (234660)
+-   Professor de Outras Linguas e Literaturas (234664)
+-   Socioeducador (515325)
+-   Supervisor de Ensino (239430)
+-   Coordenador Pedagogico (239405)
+-   Inspetor de Alunos de Escola Publica (334110)
+-   Professor da Educacao de Jovens e Adultos do Ensino Fundamental (Primeira a Quarta Serie) (231205)
+-   Professor de Alunos com Deficiencia Fisica (239210)
+-   Professor de Alunos com Deficiencia Multipla (239220)
+-   Professor de Ciencias Exatas e Naturais do Ensino Fundamental (231305)
+-   Professor de Educacao Fisica do Ensino Fundamental (231315)
+-   Professor de Geografia do Ensino Fundamental (231320)
+-   Professor de Geografia no Ensino Medio (232135)
+-   Professor de Historia do Ensino Fundamental (231325)
+-   Professor de Historia no Ensino Medio (232140)
+-   Professor de Lingua Estrangeira Moderna no Ensino Medio (232150)
+-   Professor de Lingua Portuguesa (234624)
+-   Professor de Literatura Brasileira (234628)
+-   Professor de Literatura Inglesa (234652)
+-   Professor de Matematica no Ensino Medio (232155)
+-   Professor de Nivel Medio no Ensino Fundamental (331205)
+-   Professor de Nivel Superior do Ensino Fundamental (Primeira a Quarta Serie) (231210)
+-   Professor de Nivel Superior na Educacao Infantil (Zero a Tres Anos) (231110)
+-   Professor de Psicologia no Ensino Medio (232160)
+-   Professor de Quimica no Ensino Medio (232165)
+-   Psicologo Educacional (251505)
+-   Auxiliar de Desenvolvimento Infantil (331110)
+-   Inspetor de Alunos de Escola Privada (334105)
+-   Monitor de Transporte Escolar (334115)
+-   Pedagogo (239415)
+-   Professor de Alunos com Deficiencia Auditiva e Surdos (239205)
+-   Professor de Alunos com Deficiencia Mental (239215)
+-   Professor de Alunos com Deficiencia Visual (239225)
+-   Professor de Artes no Ensino Medio (232105)
+-   Professor de Biologia no Ensino Medio (232110)
+-   Professor de Disciplinas Pedagogicas no Ensino Medio (232115)
+-   Professor de Educacao Artistica do Ensino Fundamental (231310)
+-   Professor de Educacao Fisica no Ensino Medio (232120)
+-   Professor de Filologia e Critica Textual (234676)
+-   Professor de Filosofia no Ensino Medio (232125)
+-   Professor de Fisica no Ensino Medio (232130)
+-   Professor de Lingua e Literatura Brasileira no Ensino Medio (232145)
+-   Professor de Lingua Estrangeira Moderna do Ensino Fundamental (231330)
+-   Professor de Lingua Portuguesa do Ensino Fundamental (231335)
+-   Professor de Linguistica e Linguistica Aplicada (234672)
+-   Professor de Literatura Espanhola (234644)
+-   Professor de Literatura Portuguesa (234632)
+-   Professor de Matematica do Ensino Fundamental (231340)
+-   Professor de Nivel Medio na Educacao Infantil (331105)
+-   Professor de Nivel Medio no Ensino Profissionalizante (331305)
+-   Professor de Nivel Superior na Educacao Infantil (Quatro a Seis Anos) (231105)
+-   Professor de Sociologia no Ensino Medio (232170)
+-   Professor Leigo no Ensino Fundamental (332105)
+-   Psicopedagogo (239425)
+-   Tecnólogo em Secretariado Escolar (252320)
+
+Vamos gerar a tabela ativa:
+
+```{sql eval=FALSE}
+--Código para gerar a tabela ativa (não executado neste doc)
+SELECT * FROM `basedosdados.br_me_rais.microdados_vinculos` WHERE ano = 2019 AND vinculo_ativo_3112 = '1' AND (cnae_2_subclasse IN ('8513900', '8512100', '8520100', '8511200', '8550302', '4924800', '8550301') OR (cnae_2_subclasse IN ('8411600', '9430800', '8800600', '8599699', '9491000', '8412400') AND cbo_2002 IN ('371105', '239435', '515305', '239410', '233105', '262830', '234604', '234620', '234612', '234616', '234608', '234668', '234640', '234660', '234664', '515325', '239430', '239405', '334110', '231205', '239210', '239220', '231305', '231315', '231320', '232135', '231325', '232140', '232150', '234624', '234628', '234652', '232155', '331205', '231210', '231110', '232160', '232165', '251505', '331110', '334105', '334115', '239415', '239205', '239215', '239225', '232105', '232110', '232115', '231310', '232120', '234676', '232125', '232130', '232145', '231330', '231335', '234672', '234644', '234632', '231340', '331105', '331305', '231105', '232170', '332105', '239425', '252320')))
+```
+
+Isso gera uma tabela com 3.411.085 registros. Vamos agregar os resultados para facilitar a importação para o R.
+
+```{r eval=FALSE}
+query <- "SELECT id_municipio, idade, sexo_trabalhador, raca_cor, cbo_2002, COUNT(*) as total_funcionarios FROM `base-dos-dados-316520.rais2018.basica2019` GROUP BY id_municipio, idade, sexo_trabalhador, raca_cor, cbo_2002"
+sumario_basica <- read_sql(query)
+```
+
+```{r}
+# Código para carregar o arquivo RData com as informações já salvas
+load('../dados/basedosdados/sumario_basica.rdata')
+```
+
+Com os dados da RAIS computados, vamos passar à análise dos dados do Censo Escolar, para comparar as duas bases.
+
+## Censo escolar
+
+A tabela de docente do censo apresenta uma linha para cada vínculo do professor com a escola. O censo escolar possui uma coluna "Id Docente" com 11.538.371 de vínculos registrados em 2019 e registros 2.599.532 únicos no mesmo ano.
+
+Vamos gerar um somatório com base no gênero, idade e municipio de atuação de cada profissional.
+
+```{r eval=FALSE}
+# Código R para importar dados do BigQuery (não executado)
+query <- "SELECT
+  id_municipio,
+  idade,
+  sexo,
+  COUNT(DISTINCT id_docente) AS total_profissionais
+FROM
+  `basedosdados.br_inep_censo_escolar.docente`
+WHERE
+  ano = 2019
+GROUP BY
+  id_municipio,
+  idade,
+  sexo;"
+
+compilado_censo <- read_sql(query)
+```
+
+```{r}
+load('../dados/basedosdados/compilado_censo.rdata')
+```
+
+Vamos aproveitar e também verificar como fica a distribuição de docentes por rede (pública ou privada). Os dados não foram filtrados por etapa, então inclui docentes de ensino técnico, EJA e outras modalidades que não estão inseridas no ensino superior.
 
 ```{r eval=FALSE}
 # Código R para importar dados do BigQuery (não executado)
@@ -258,228 +464,105 @@ WHERE
 total_docentes_brasil <- read_sql(query)
 ```
 
-## Unificação das tabelas
+## Comparativo RAIS x Censo
+
+Vamos ver como os número da RAIS batem com os do Censo. Para isso, será necessário obter os CBOS de todas as profissões de professor, visto que o Censo possui apenas docentes.
 
 ```{r}
-tabela_final <- compilado_mun %>%
-  left_join(num_docentes, by = c('municipio_codigo' = 'id_municipio'))
+sumario_basica %>%
+    select(cbo_2002, total_funcionarios) %>%
+    group_by(cbo_2002) %>%
+    summarise(total = sum(total_funcionarios)) %>%
+    left_join(dici_cbo) %>%
+    filter(stringr::str_detect(ocupacao, 'rofessor')) %>%
+  select(cbo_2002) %>%
+  as.list() %>%
+  paste(collapse = ',') %>%
+  cat()
 ```
+
+A essas, vamos adicionar outras três que também podem ser consideradas atividade docente: Auxiliar de Desenvolvimento Infantil, Coordenador Pedagogico e Pedagogo.
+
+Vamos gerar gráficos etários comparando a soma por ambos os métodos (RAIS e Censo).
+
+```{r}
+piramide_professores_rais <- sumario_basica %>%
+  mutate(sexo = case_when(sexo_trabalhador == '1' ~ 'M', sexo_trabalhador == '2' ~ 'F'), id = paste0(idade, sexo)) %>%
+  filter(cbo_2002 %in% c("231105", "231110", "231205", "231210", "231305", "231310", "231315", "231320", "231325", "231330", "231335", "231340", "232105", "232110", "232115", "232120", "232125", "232130", "232135", "232140", "232145", "232150", "232155", "232160", "232165", "232170", "233105", "233110", "233115", "233120", "233125", "233130", "233135", "233215", "233220", "233225", "234105", "234110", "234115", "234120", "234125", "234205", "234210", "234215", "234305", "234310", "234315", "234320", "234405", "234410", "234415", "234420", "234425", "234430", "234435", "234440", "234445", "234450", "234455", "234505", "234510", "234515", "234520", "234604", "234608", "234612", "234616", "234620", "234624", "234628", "234632", "234636", "234640", "234644", "234648", "234652", "234660", "234664", "234668", "234672", "234676", "234680", "234684", "234705", "234715", "234720", "234725", "234730", "234735", "234740", "234745", "234750", "234755", "234760", "234765", "234770", "234805", "234810", "234815", "234905", "234910", "234915", "239205", "239210", "239215", "239220", "239225", "239420", "262830", "331105", "331205", "331305", "332105", "332205", "333115", '331110', '239405', '239415')) %>%
+  mutate(id = paste0(idade, sexo)) %>%
+  group_by(id) %>%
+  summarise(total_rais = sum(total_funcionarios))
+
+piramide_professores_censo <- compilado_censo %>%
+  mutate(sexo = case_when(sexo == '1' ~ 'M', sexo == '2' ~ 'F'), id = paste0(idade, sexo)) %>%
+  mutate(id = paste0(idade, sexo)) %>%
+  group_by(id) %>%
+  summarise(total_censo = sum(total_profissionais))
+
+graf_comp <- piramide_professores_rais %>%
+  left_join(piramide_professores_censo, by = 'id')
+```
+
+```{r warning=FALSE, results='asis'}
+dump <- graf_comp %>%
+  filter(stringr::str_detect(id, 'F')) %>%
+  mutate(idade = stringr::str_sub(id, 1, -2)) %>%
+  mutate(idade = as.numeric(idade), rais = as.numeric(total_rais), censo = as.numeric(total_censo)) %>%
+  filter(idade > 17 & idade < 66) %>%
+  googleVis::gvisColumnChart(xvar = 'idade', yvar = c('rais', 'censo'), options=list(hAxis = "{title: 'Idade'}", vAxis = "{title: 'Total do segmento'}", title = 'Distribuição de trabalhadores e vacinados da educação básica por idade (apenas mulheres)'))
+
+print(dump, 'chart')
+```
+
+```{r, results='asis'}
+dump <- graf_comp %>%
+  filter(stringr::str_detect(id, 'M')) %>%
+  mutate(idade = stringr::str_sub(id, 1, -2)) %>%
+  mutate(idade = as.numeric(idade), rais = as.numeric(total_rais), censo = as.numeric(total_censo)) %>%
+  filter(idade > 17 & idade < 66) %>%
+  googleVis::gvisColumnChart(xvar = 'idade', yvar = c('rais', 'censo'), options=list(hAxis = "{title: 'Idade'}", vAxis = "{title: 'Total do segmento'}", title = 'Distribuição de trabalhadores e vacinados da educação básica por idade (apenas mulheres)'))
+
+print(dump, 'chart')
+```
+
+Há um deslocamento etário conforme o RAIS apresenta mais docentes a partir dos 40 anos quando comparado ao censo, porém menos docentes abaixo dessa idade. Por serem bases consideravelmente grandes, é inevitável que haja alguma diferença entre ambas. O que chama atenção, no entanto, é o deslocamento observado, que pode ser indício de alguma contagem incorreta.
+
+### Dados do Estado de São Paulo
+
+Para investigarmos mais a fundo, vamos usar o estado de São Paulo como métrica. Segundo [essa matéria](https://www.uol.com.br/vivabem/noticias/redacao/2021/06/09/doria-vacinacao-professores-sao-paulo.htm), o estado contabilizou 363 mil profissionais da educação básica de 18 a 44 anos. Usando o modelo utilizado até agora pela RAIS nós chegamos ao seguinte valor:
+
+```{r}
+sumario_basica %>%
+  mutate(sexo = case_when(sexo_trabalhador == '1' ~ 'M', sexo_trabalhador == '2' ~ 'F'), id = paste0(idade, sexo)) %>%
+  filter(stringr::str_detect(id_municipio, "^35") & idade > 17 & idade < 45) %>%
+  summarise(sum(total_funcionarios)) %>%
+  print()
+```
+Mais de 500 mil funcionários, muito além do valor obtido. Vamos tentar mitigar isso excluindo professores pela RAIS e inserindo o cálculo pelo censo, que é mais preciso:
+
+```{r}
+sp_rais <- sumario_basica %>%
+  mutate(sexo = case_when(sexo_trabalhador == '1' ~ 'M', sexo_trabalhador == '2' ~ 'F'), id = paste0(idade, sexo)) %>%
+  filter(cbo_2002 %!in% c("231105", "231110", "231205", "231210", "231305", "231310", "231315", "231320", "231325", "231330", "231335", "231340", "232105", "232110", "232115", "232120", "232125", "232130", "232135", "232140", "232145", "232150", "232155", "232160", "232165", "232170", "233105", "233110", "233115", "233120", "233125", "233130", "233135", "233215", "233220", "233225", "234105", "234110", "234115", "234120", "234125", "234205", "234210", "234215", "234305", "234310", "234315", "234320", "234405", "234410", "234415", "234420", "234425", "234430", "234435", "234440", "234445", "234450", "234455", "234505", "234510", "234515", "234520", "234604", "234608", "234612", "234616", "234620", "234624", "234628", "234632", "234636", "234640", "234644", "234648", "234652", "234660", "234664", "234668", "234672", "234676", "234680", "234684", "234705", "234715", "234720", "234725", "234730", "234735", "234740", "234745", "234750", "234755", "234760", "234765", "234770", "234805", "234810", "234815", "234905", "234910", "234915", "239205", "239210", "239215", "239220", "239225", "239420", "262830", "331105", "331205", "331305", "332105", "332205", "333115", '331110', '239405', '239415')) %>%
+  filter(stringr::str_detect(id_municipio, "^35") & idade > 17 & idade < 45) %>%
+  summarise(total_rais = sum(total_funcionarios))
+
+sp_censo <- compilado_censo %>%
+  mutate(sexo = case_when(sexo == '1' ~ 'M', sexo == '2' ~ 'F'), id = paste0(idade, sexo)) %>%
+  filter(stringr::str_detect(id_municipio, "^35") & idade > 17 & idade < 45) %>%
+  summarise(total_censo = sum(total_profissionais))
+
+print(glue::glue('Funcionários não-docentes SP (RAIS): {sp_rais$total_rais}\nFuncionários docentes (Censo): {sp_censo$total_censo}\nTotal: {sp_rais$total_rais+sp_censo$total_censo}'))
+```
+
+Temos mais de 454 mil funcionários da educação básica no estado de São Paulo segundo nosso método, muito acima dos 363 mil estimados pelo governo. Pode ser que a contagem do governo não tenha considerado terceirizados ou excluiu da análise funcionários já vacinados por outros motivos. Um pedido de acesso foi realizado para buscar compreender melhor.
+
+Enquanto não obtemos resposta, no entanto, vamos verificar como esses dados se relacionam com as vacinações.
 
 # Análise
 
-Primeiramente, vamos ver quantos docentes já estão com a primeira e segunda dose em comparação ao total no Brasil.
+## Brasil
 
-```{r}
-tabela_final %>%
-  summarise(total_pr = sum(prim_dose, na.rm=TRUE), prop_prim = total_pr/	
-2539853, total_seg = sum(segun_dose, na.rm=TRUE), prop_seg = total_seg/	
-2539853)
-```
-
-Já de imediato temos um problema: o valor de funcionários da educação básica que receberam a primeira dose é maior que o valor de funcionários da educação básica que existem no Brasil. Ou seja, o número de funcionários além dos professores importa bastante.
-
-Uma forma de contornar esse problema pode estar no próprio Censo Escolar: na tabela de escolas, há uma coluna com a quantidade de funcionários. É possível imaginar um modelo preditivo que calcule o número de funcionários numa escola com base no número de docentes e aplicar esse modelo para todo o município. Ocorre que esse dado é preenchido pelos diretores, de forma completa arbitrária, e não é verificado posteriormente de nenhuma forma.
-
-Outra possível solução seria analisar os dados do RAIS, que pode contar essa informação.
-
-# RAIS
-
-## Elaborando a melhor estratégia
-
-Na tabela da RAIS, cada linha representa um vínculo empregatício, ativo ou não. Os dados não possuem identificador único, apenas informações gerais como tipo de vínculo (CBO), atividade econômica do empregador (CNAE), gênero, raça e idade do empregado entre outros.
-
-Antes de mais nada, nós precisamos fragmentar a base para não sobrecarregar as queries do BigQuery desnecessariamente. Para isso, vamos criar uma tabela ativa clonando apenas os dados de 2019 e filtrando os CBOs que possam estar minimamente relacionados à educação, incluindo por exemplo Limpeza de prédios ou outros serviços de auxílio.
-
-O código usado para isso foi o seguinte:
-
-```{sql eval=FALSE}
---Código para gerar a tabela ativa (não executado neste doc)
-SELECT * FROM `basedosdados.br_me_rais.microdados_vinculos` WHERE ano = 2019 AND cbo_2002 IN ('333110', '233115', '233120', '233125', '233130', '233135', '233205', '233210', '233215', '233220', '233225', '234105', '234110', '234115', '234120', '234125', '234205', '234210', '234215', '234305', '234310', '234315', '234320', '234405', '234410', '234415', '234420', '234425', '234435', '234445', '234450', '234455', '234460', '234505', '234510', '234515', '234520', '234705', '234710', '234715', '234720', '234725', '234730', '234735', '234740', '234745', '234750', '234755', '234760', '234765', '234770', '234805', '234810', '234815', '234905', '234910', '234915', '239420', '239435', '252320', '262830', '333105', '334115', '371105', '371110', '515305', '515325', '231105', '231110', '231205', '231210', '231305', '231310', '231315', '231320', '231325', '231330', '231335', '231340', '232105', '232110', '232115', '232120', '232125', '232130', '232135', '232140', '232145', '232150', '232155', '232160', '232165', '232170', '233105', '234604', '234612', '234616', '234620', '234624', '234628', '234632', '234640', '234644', '234652', '234660', '234664', '234668', '234672', '234676', '234684', '239405', '239410', '239415', '239425', '239430', '331305', '332105', '334105', '334110', '234608', '331105', '331110', '331205', '239205', '239210', '239215', '239220', '239225', '332205', '233110', '251505', '333115')
-```
-
-Agora vamos importar essa tabela, filtrando para manter apenas aqueles funcionários com vínculo ativo em 31/12/2019. Para reduzir a carga no R, vamos agregar os resultados por municipio, cbo e informações sobre o trabalhador
-
-
-
-Agora vamos importar as informações relevantes para o R, para analisarmos os resultados obtidos. Iremos agregar o total de vínculos por CBO e CNAE, mantendo apenas aqueles ativos em 31/12/2019.
-```{r eval=FALSE}
-# Código R para importar dados do BigQuery (não executado)
-query <- "SELECT cnae_2_subclasse, cbo_2002, COUNT(*) as total FROM `base-dos-dados-316520.rais2018.selecao2019` WHERE vinculo_ativo_3112 = '1' GROUP BY cnae_2_subclasse, cbo_2002;"
-cnaes_cbo <- read_sql(query)
-```
-
-```{r}
-# Código para carregar o arquivo RData com as informações já salvas
-load('../dados/basedosdados/cnaes_cbo.rdata')
-```
-
-Vamos precisar um dicionário de CNAEs e CBOs também visto que só temos o número.
-
-```{r}
-# Dicionário de CNAEs
-dici_cnae <- data.table::fread('../dados/dici_cnae.csv', encoding = 'UTF-8', colClasses = 'character') %>%
-  mutate(id_classe = gsub('\\.|-',"", cod_classe)) %>%
-  rename(cnae_2_subclasse = id_cnae)
-```
-
-```{r}
-# Dicionário de CBOs
-dici_cbo <- data.table::fread('../dados/CBO_map.csv', encoding = 'UTF-8', colClasses = 'character') %>%
-  janitor::clean_names()
- 
-colnames(dici_cbo)[1:2] <- c('ocupacao', 'cbo_2002')
-```
-
-Juntando a tabela com os dicionários:
-
-```{r}
-cnaes_cbo2 <- cnaes_cbo %>%
-  left_join(select(dici_cnae, cnae_2_subclasse, nm_cnae)) %>%
-  left_join(dici_cbo)
-```
-
-Para entendermos qual a melhor estratégia que podemos adotar, auxilia observar como estão distribuídos os CNAEs e CBOs. Um gráfico interativo pode ser encontrado em [Gráfico Cbo CNAE](Grafico-CBO-CNAE.html).
-
-Os resultados também podem ser diretamente explorados (de forma menos intuitiva) na tabela abaixo:
-
-```{r}
-cnaes_cbo2 %>%
-  arrange(desc(total)) %>%
-  select(nm_cnae, ocupacao, total) %>%
-  DT::datatable(filter = 'top', options = list(scrollX='600px'))
-```
-
-É possível notar que há uma série de CBOs relevantes para nossa análise associados a CNAEs atípicos. Por exemplo, temos o CBO "Inspetor de Alunos de Escola Publica" com 127 vínculos a instituições com o CNAE "Atividades de organizações associativas ligadas à cultura e à arte". Entre outros exemplos similares podemos citar:
-- "Professor de Historia no Ensino Medio" em CNAEs "Atividades de organizações religiosas ou filosóficas"
-- "Professor de Educacao Fisica do Ensino Fundamental" em CNAEs "Ensino de esportes"
-- "Inspetor de Alunos de Escola Publica" em CNAEs "Fornecimento e gestão de recursos humanos para terceiros"
-
-Quais as possíveis explicações para isso? Primeiramente, é possível imaginar instituições de ensino vinculadas à pessoas jurídicas com CNAEs diferentes (por exemplo, escolas religiosas ou então de associações). Há também os casos evidentes de terceirização. Mas como seria inevitável, parecem existir casos em que há apenas inserção incorreta dos dados. Por exemplo, no CNAE "Lanchonetes casas de chá de sucos e similares" há uma série de CBOS como "Coordenador Pedagogico" ou "Inspetor de Alunos de Escola Publica". Pode ser que haja uma explicação para isso, mas como é possível encontrar diversos CBOs parecidos em CNAEs sem nenhuma relação aparente, deve se ter em mente as limitações dos dados.
-
-De qualquer forma, para a educação básica, parece seguro incluir todas as instituições que possuem CNAE "Ensino fundamental" ou "Ensino médio", por exemplo.
-
-As complicações giram em torno dos inúmeros casos em que o CNAE é "Administração pública em geral" ou alguma das associações citadas anteriormente, que podem ou não se referir a escolas. Embora alguns CBOs (como por exemplo Professor de Matematica no Ensino Medio) claramente sejam do ensino básico, há diversos vínculos com o ensino superior, por exemplo, demonstrando a fragilidade do CBO.
-
-Há também casos ainda mais cinzentos como "Professor de dança", que pode estar atuando tanto em escolas como fora delas. Por esse motivo, vamos adotar uma estratégia de relativização. Todos os CNAEs tipicamente escolares terão seus vínculos considerados. Já os que podem ou não estar relacionados à atividade escolar só terão seus vínculos considerados se associados a CBOs que façam sentido.
-
-Essa estratégia tem como vantagem a inclusão de vínculos de auxiliares que operam em escolas privadas com CNAE "Ensino Fundamental", por exemplo, mas como desvantagem a exclusão de outros funcionários que operem em escolas públicas ou escolas com CNAE diferente.
-
-Os selecionados são:
-
-CNAEs absolutos:
-
-- Ensino fundamental (8513900)
-- Educação infantil - pré-escola (8512100)
-- Ensino médio (8520100)
-- Educação infantil - creche (8511200)
-- Atividades de apoio à educação exceto caixas escolares (8550302)
-- Transporte escolar (4924800)
-- Administração de caixas escolares (8550301)
-
-CNAEs relativos:
-
-- Administração pública em geral (8411600)
-- Atividades de associações de direitos sociais (9430800)
-- Serviços de assistência social sem alojamento (8800600)
-- Outras atividades de ensino não especificadas anteriormente (	
-8599699)
-- Atividades de organizações religiosas ou filosóficas (9491000)
-- Regulação das atividades de saúde educação serviços culturais e outros serviços sociais (8412400)
-
-CBOs relativos:
-
-- Auxiliar de Biblioteca (371105)
-- Designer Educacional (239435)
-- Educador Social (515305)
-- Orientador Educacional (239410)
-- Professor da Area de Meio Ambiente (233105)
-- Professor de Danca (262830)
-- Professor de Lingua Alema (234604)
-- Professor de Lingua Espanhola (234620)
-- Professor de Lingua Francesa (234612)
-- Professor de Lingua Inglesa (234616)
-- Professor de Lingua Italiana (234608)
-- Professor de Linguas Estrangeiras Modernas (234668)
-- Professor de Literatura Comparada (234640)
-- Professor de Literatura de Linguas Estrangeiras Modernas (234660)
-- Professor de Outras Linguas e Literaturas (234664)
-- Socioeducador (515325)
-- Supervisor de Ensino (239430)
-- Coordenador Pedagogico (239405)
-- Inspetor de Alunos de Escola Publica (334110)
-- Professor da  Educacao de Jovens e Adultos do Ensino Fundamental (Primeira a Quarta Serie) (231205)
-- Professor de Alunos com Deficiencia Fisica (239210)
-- Professor de Alunos com Deficiencia Multipla (239220)
-- Professor de Ciencias Exatas e Naturais do Ensino Fundamental (231305)
-- Professor de Educacao Fisica do Ensino Fundamental (231315)
-- Professor de Geografia do Ensino Fundamental (231320)
-- Professor de Geografia no Ensino Medio (232135)
-- Professor de Historia do Ensino Fundamental (231325)
-- Professor de Historia no Ensino Medio (232140)
-- Professor de Lingua Estrangeira Moderna no Ensino Medio (232150)
-- Professor de Lingua Portuguesa (234624)
-- Professor de Literatura Brasileira (234628)
-- Professor de Literatura Inglesa (234652)
-- Professor de Matematica no Ensino Medio (232155)
-- Professor de Nivel Medio no Ensino Fundamental (331205)
-- Professor de Nivel Superior do Ensino Fundamental (Primeira a Quarta Serie) (231210)
-- Professor de Nivel Superior na Educacao Infantil (Zero a Tres Anos) (231110)
-- Professor de Psicologia no Ensino Medio (232160)
-- Professor de Quimica no Ensino Medio (232165)
-- Psicologo Educacional (251505)
-- Auxiliar de Desenvolvimento Infantil (331110)
-- Inspetor de Alunos de Escola Privada (334105)
-- Monitor de Transporte Escolar (334115)
-- Pedagogo (239415)
-- Professor de Alunos com Deficiencia Auditiva e Surdos (239205)
-- Professor de Alunos com Deficiencia Mental (239215)
-- Professor de Alunos com Deficiencia Visual (239225)
-- Professor de Artes no Ensino Medio (232105)
-- Professor de Biologia no Ensino Medio (232110)
-- Professor de Disciplinas Pedagogicas no Ensino Medio (232115)
-- Professor de Educacao Artistica do Ensino Fundamental (231310)
-- Professor de Educacao Fisica no Ensino Medio (232120)
-- Professor de Filologia e Critica Textual (234676)
-- Professor de Filosofia no Ensino Medio (232125)
-- Professor de Fisica no Ensino Medio (232130)
-- Professor de Lingua e Literatura Brasileira no Ensino Medio (232145)
-- Professor de Lingua Estrangeira Moderna do Ensino Fundamental (231330)
-- Professor de Lingua Portuguesa do Ensino Fundamental (231335)
-- Professor de Linguistica e Linguistica Aplicada (234672)
-- Professor de Literatura Espanhola (234644)
-- Professor de Literatura Portuguesa (234632)
-- Professor de Matematica do Ensino Fundamental (231340)
-- Professor de Nivel Medio na Educacao Infantil (331105)
-- Professor de Nivel Medio no Ensino Profissionalizante (331305)
-- Professor de Nivel Superior na Educacao Infantil (Quatro a Seis Anos) (231105)
-- Professor de Sociologia no Ensino Medio (232170)
-- Professor Leigo no Ensino Fundamental (332105)
-- Psicopedagogo (239425)
-- Tecnólogo em Secretariado Escolar (252320)
-
-Vamos gerar a tabela ativa:
-
-```{sql eval=FALSE}
---Código para gerar a tabela ativa (não executado neste doc)
-SELECT * FROM `basedosdados.br_me_rais.microdados_vinculos` WHERE ano = 2019 AND vinculo_ativo_3112 = '1' AND (cnae_2_subclasse IN ('8513900', '8512100', '8520100', '8511200', '8550302', '4924800', '8550301') OR (cnae_2_subclasse IN ('8411600', '9430800', '8800600', '8599699', '9491000', '8412400') AND cbo_2002 IN ('371105', '239435', '515305', '239410', '233105', '262830', '234604', '234620', '234612', '234616', '234608', '234668', '234640', '234660', '234664', '515325', '239430', '239405', '334110', '231205', '239210', '239220', '231305', '231315', '231320', '232135', '231325', '232140', '232150', '234624', '234628', '234652', '232155', '331205', '231210', '231110', '232160', '232165', '251505', '331110', '334105', '334115', '239415', '239205', '239215', '239225', '232105', '232110', '232115', '231310', '232120', '234676', '232125', '232130', '232145', '231330', '231335', '234672', '234644', '234632', '231340', '331105', '331305', '231105', '232170', '332105', '239425', '252320')))
-```
-
-Isso gera uma tabela com 3.411.085 registros. Vamos agregar os resultados para facilitar a importação para o R.
-
-```{r eval=FALSE}
-query <- "SELECT id_municipio, idade, sexo_trabalhador, raca_cor, cbo_2002, COUNT(*) as total_funcionarios FROM `base-dos-dados-316520.rais2018.basica2019` GROUP BY id_municipio, idade, sexo_trabalhador, raca_cor, cbo_2002"
-sumario_basica <- read_sql(query)
-```
-```{r}
-# Código para carregar o arquivo RData com as informações já salvas
-load('../dados/basedosdados/sumario_basica.rdata')
-```
-
-Podemos agora começar.
-
-## Análise
-
-### Brasil - RAIS e vacinação
 Primeiramente, vamos fazer uma análise a nível nacional comparando os dados calculados pela RAIS com aqueles calculados pela vacinação para verificar se fazem algum sentido.
 
 A primeira comparação será uma distribuição etária por gênero
@@ -488,6 +571,7 @@ A primeira comparação será uma distribuição etária por gênero
 query <- "SELECT idade, sexo, COUNT(DISTINCT `basedosdados.br_ms_vacinacao_covid19.microdados_vacinacao`.id_paciente) as total FROM `basedosdados.br_ms_vacinacao_covid19.microdados_vacinacao` LEFT JOIN `basedosdados.br_ms_vacinacao_covid19.microdados_paciente` on `basedosdados.br_ms_vacinacao_covid19.microdados_vacinacao`.id_paciente = `basedosdados.br_ms_vacinacao_covid19.microdados_paciente`.id_paciente WHERE grupo_atendimento = '801' GROUP BY idade, sexo"
 piramide_vacinacao <- read_sql(query)
 ```
+
 ```{r}
 # Código para carregar o arquivo RData com as informações já salvas
 load('../dados/basedosdados/piramide_vacinacao.rdata')
@@ -504,6 +588,7 @@ graf_piramides <- piramide_vacinacao %>%
   select(id, sexo, idade, vacinados) %>%
   left_join(select(tab1, id, trabalhadores))
 ```
+
 ```{r, results='asis'}
 dump <- graf_piramides %>%
   filter(sexo == 'F' & idade > 18 & idade < 75) %>%
@@ -524,23 +609,23 @@ dump <- graf_piramides %>%
 print(dump, 'chart')
 ```
 
-Importante pontuar que há 13.726 pacientes vacinados que não possuem dados de sexo ou idade. Ainda assim, os dados calculados com base na RAIS parecem bastante alinhados. É notável que o número de vacinados na faixa até os 30 anos (no caso das mulehres) ou 40 anos (no caso dos homens) ultrapassa o total calculado pela RAIS. Como dito anteriormente, o cálculo está subestimado por não incluir auxiliares que prestam serviços para CNAEs diferentes dos selecionados. É possível também que uma série de preenchimentos incorretos dos dados tenham ocorrido.
+Importante pontuar que há 13.726 pacientes vacinados que não possuem dados de sexo ou idade. Ainda assim, os dados calculados com base na RAIS parecem bastante alinhados. É notável que o número de vacinados na faixa até os 30 anos (no caso das mulheres) ou 40 anos (no caso dos homens) ultrapassa o total calculado pela RAIS. Era de se esperar um número abaixo do valor obtido pela RAIS visto que estamos contabilizando vínculos duplicados, além de ser evidente que nem toda a população de profissionais da educação deva ter se vacinado. É possível também que uma série de preenchimentos incorretos dos dados tenham ocorrido.
 
 Por exemplo, no caso do Rio de Janeiro (município), há relatos de professores de cursos de idiomas que foram vacinados, ainda que não estivessem cobertos pelo PNI. Como só existem duas categorias de profissionais da educação - Ensino básico e Ensino superior - é provável que essas inserções tenham sido feitas sob a categoria de ensino básico.
 
 É interessante que a partir dos 30/40 anos, não há mais essa discrepância. Duas hipóteses devem ser consideradas para explicar isso:
 
-1) Por algum motivo, o cálculo do RAIS está subestimando o número de profissionais da educação nessa faixa etária
+1)  Por algum motivo, o cálculo do RAIS está subestimando o número de profissionais da educação nessa faixa etária
 
-2) Pessoas nessa faixa etária se vacinaram mais do que os mais velhos ou se vacinaram mais sob a motivação de profissionais da educação do que mais velhos
+2)  Pessoas nessa faixa etária se vacinaram mais do que os mais velhos ou se vacinaram mais sob a motivação de profissionais da educação do que mais velhos
 
 Há uma separação por gênero, conforme mulheres a partir dos 35 tendem a estar "sub-vacinadas", enquanto homens, no máximo, mantém uma quantidade similar. Ao final, os dois grupos, somados, acabam se compensando.
 
 Como estamos analisando no nível nacional, são diversas regras de vacinação diferentes adotadas, o que pode tornar a análise um pouco turva. Vamos verificar no Município de São Paulo como fica essa distribuição, visto que há maior controle sobre as vacinações.
 
-### São Paulo - RAIS e vacinação
+## São Paulo
 
-Para obter os dados por municípios, genero e idade, teremos que executar o código abaixo:
+Para obter os dados por municípios, genero e idade, teremos que executar o código abaixo. Já está corrigida a coluna de dose de acordo com a última atualização do MS:
 
 ```{r eval=FALSE}
 # Código R para importar dados do BigQuery (não executado)
@@ -550,19 +635,34 @@ query <- "SELECT
   sexo,
   COUNT(DISTINCT
     CASE
-      WHEN dose = '1ª Dose' THEN id_documento
+      WHEN dose IN ('1ª Dose', 'Dose Inicial ', '1ª Dose Revacinação ') THEN id_documento
   END
     ) AS prim_dose,
   COUNT(DISTINCT
     CASE
-      WHEN dose = '2ª Dose' THEN id_documento
+      WHEN dose IN ('2ª Dose', 'Dose Adicional ', '2ª Dose Revacinação ') THEN id_documento
   END
     ) AS segun_dose,
   COUNT(DISTINCT
     CASE
-      WHEN dose NOT IN ('1ª Dose', '2ª Dose') THEN id_documento
+      WHEN dose IN ('3ª Dose', '1º Reforço ') THEN id_documento
   END
-    ) AS outras_doses,
+    ) AS terc_dose,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose = 'Única ' THEN id_documento
+  END
+    ) AS dose_unica,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose = 'Dose ' THEN id_documento
+  END
+    ) AS dose_desconhecida,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose NOT IN ('1ª Dose', '1ª Dose Revacinação ', '2ª Dose Revacinação ', 'Dose Inicial ', 'Dose ', '2ª Dose', 'Dose Adicional ', 'Única ', '1º Reforço ', '3ª Dose') THEN id_documento
+  END
+    ) AS dose_incorreta,
   COUNT(DISTINCT vac.id_paciente) AS num_pacientes
 FROM
   `basedosdados.br_ms_vacinacao_covid19.microdados_vacinacao` AS vac
@@ -626,8 +726,129 @@ print(dump, 'chart')
 
 No caso do município de São Paulo, o número de vacinados fica consideravelmente abaixo do número de trabalhadores. Pode ser que o município tenha adotado regras mais rigídas de vacinação que acabaram limitando o acesso ou então realizou os registros de alguma forma diferente. Importante observar que esses dados levam em conta qualquer vacinação, seja primeira ou segunda dose, então já está próximo ao valor máximo que deve atingir.
 
-A tabela final que possuímos é a seguinte:
-```{r}
-compilado_mun_det
+Em todo caso, é evidente que o cenário nacional visto antes não retrata fielmente o que pode ser encontrado em outros municípios
+
+
+# Possíveis análises
+
+Dentre as análises que podemos extrair dos dados acima, é possível imaginar três correlações relevantes, por município:
+
+-   Número da vacinados totais / número de vacinados na categoria 801
+-   Número de vacinados totais / população
+-   Número de vacinados 801 / profissionais da educação
+
+Como os dados gerados até então tratavam apenas da categoria 801, vamos gerar a tabela com informações gerais:
+
+```{r eval=FALSE}
+# Código R para importar dados do BigQuery (não executado)
+query <- "SELECT
+  est.id_municipio,
+  idade,
+  sexo,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose IN ('1ª Dose', 'Dose Inicial ', '1ª Dose Revacinação ') THEN id_documento
+  END
+    ) AS prim_dose,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose IN ('2ª Dose', 'Dose Adicional ', '2ª Dose Revacinação ') THEN id_documento
+  END
+    ) AS segun_dose,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose IN ('3ª Dose', '1º Reforço ') THEN id_documento
+  END
+    ) AS terc_dose,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose = 'Única ' THEN id_documento
+  END
+    ) AS dose_unica,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose = 'Dose ' THEN id_documento
+  END
+    ) AS dose_desconhecida,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose NOT IN ('1ª Dose', '1ª Dose Revacinação ', '2ª Dose Revacinação ', 'Dose Inicial ', 'Dose ', '2ª Dose', 'Dose Adicional ', 'Única ', '1º Reforço ', '3ª Dose') THEN id_documento
+  END
+    ) AS dose_incorreta,
+  COUNT(DISTINCT vac.id_paciente) AS num_pacientes
+FROM
+  `basedosdados.br_ms_vacinacao_covid19.microdados_vacinacao` AS vac
+LEFT JOIN
+  `basedosdados.br_ms_vacinacao_covid19.microdados_estabelecimento` AS est
+ON
+  vac.id_estabelecimento = est.id_estabelecimento
+LEFT JOIN
+  `basedosdados.br_ms_vacinacao_covid19.microdados_paciente` AS pac
+ON
+  vac.id_paciente = pac.id_paciente
+GROUP BY
+  est.id_municipio,
+  pac.idade,
+  pac.sexo;"
+
+compilado_mun_geral <- read_sql(query)
 ```
 
+```{r}
+load('../dados/basedosdados/compilado_mun_geral.rdata')
+```
+
+## Número da vacinados totais / número de vacinados na categoria 801
+
+```{r}
+temp <- compilado_mun_geral %>%
+  group_by(id_municipio) %>%
+  summarise(total_vacinados = sum(num_pacientes))
+
+temp2 <- compilado_mun_det %>%
+  group_by(id_municipio) %>%
+  summarise(total_801 = sum(num_pacientes))
+
+temp3 <- sumario_basica %>%
+  group_by(id_municipio) %>%
+  summarise(total_funcionarios = sum(total_funcionarios))
+```
+
+```{r, results='asis'}
+dump <- temp %>%
+  left_join(temp2) %>%
+  left_join(pop, by = c('id_municipio' = 'municipio_codigo')) %>%
+  mutate(total_vacinados = as.numeric(total_vacinados), total_801 = as.numeric(total_801), total_801.html.tooltip = as.character(glue::glue("<p><b>{municipio}</b></br>População: {format(round(pop, 0), nsmall=0, big.mark='.', decimal.mark=',')}</br>Total vacinados: {format(round(total_vacinados, 0), nsmall=0, big.mark='.', decimal.mark=',')}</br>Funcionários da educação básica vacinados: {format(round(total_801, 0), nsmall=0, big.mark='.', decimal.mark=',')}</p>"))) %>%
+  select(total_vacinados,total_801, total_801.html.tooltip) %>%
+  googleVis::gvisScatterChart(options = list(dataOpacity = 0.5, height=500, hAxis = "{viewWindowMode: 'maximized', title: 'Total de municipes vacinados (escala logarítimica)', logScale: 'true'}", vAxis = "{viewWindowMode: 'maximized', title: 'Profissionais da educação básica vacinados (escala logarítimica)', logScale: 'true'}", tooltip="{isHtml:'true'}", legend = 'none'))
+
+print(dump, 'chart')
+```
+
+## Número de vacinados 801 / profissionais da educação
+
+```{r, results='asis'}
+dump <- temp3 %>%
+  left_join(temp2) %>%
+  left_join(pop, by = c('id_municipio' = 'municipio_codigo')) %>%
+  mutate(total_funcionarios = as.numeric(total_funcionarios), total_801 = as.numeric(total_801), total_801.html.tooltip = as.character(glue::glue("<p><b>{municipio}</b></br>População: {format(round(pop, 0), nsmall=0, big.mark='.', decimal.mark=',')}</br>Total de funcionários da educação básica: {format(round(total_funcionarios, 0), nsmall=0, big.mark='.', decimal.mark=',')}</br>Funcionários da educação básica vacinados: {format(round(total_801, 0), nsmall=0, big.mark='.', decimal.mark=',')}</p>"))) %>%
+  select(total_funcionarios,total_801, total_801.html.tooltip) %>%
+  googleVis::gvisScatterChart(options = list(dataOpacity = 0.5, height=500, hAxis = "{viewWindowMode: 'maximized', title: 'Total de funcionários da educação básica (escala logarítimica)', logScale: 'true'}", vAxis = "{viewWindowMode: 'maximized', title: 'Profissionais da educação básica vacinados (escala logarítimica)', logScale: 'true'}", tooltip="{isHtml:'true'}", legend = 'none'))
+
+print(dump, 'chart')
+```
+
+```{r, results='asis'}
+dump <- temp %>%
+  left_join(temp2) %>%
+  left_join(temp3) %>%
+  left_join(pop, by = c('id_municipio' = 'municipio_codigo')) %>%
+  mutate(total_funcionarios = as.numeric(total_funcionarios), total_801 = as.numeric(total_801), prop_educ_vacinada.html.tooltip = as.character(glue::glue("<p><b>{municipio}</b></br>População: {format(round(pop, 0), nsmall=0, big.mark='.', decimal.mark=',')}</br>Total de funcionários da educação básica: {format(round(total_funcionarios, 0), nsmall=0, big.mark='.', decimal.mark=',')}</br>Funcionários da educação básica vacinados: {format(round(total_801, 0), nsmall=0, big.mark='.', decimal.mark=',')}</p>"))) %>%
+  mutate(prop_pop_vacinada = as.numeric(total_vacinados/pop), prop_educ_vacinada = as.numeric(total_801/total_funcionarios)) %>%
+  select(prop_pop_vacinada, prop_educ_vacinada, prop_educ_vacinada.html.tooltip) %>%
+  filter(!is.na(prop_educ_vacinada) & !is.na(prop_pop_vacinada)) %>%
+  googleVis::gvisScatterChart(options = list(dataOpacity = 0.5, height=500, hAxis = "{viewWindowMode: 'maximized', title: 'Total de funcionários da educação básica (escala logarítimica)''}", vAxis = "{viewWindowMode: 'maximized', title: 'Profissionais da educação básica vacinados (escala logarítimica)'}", tooltip="{isHtml:'true'}", legend = 'none'))
+
+print(dump, 'chart')
+```
+  
