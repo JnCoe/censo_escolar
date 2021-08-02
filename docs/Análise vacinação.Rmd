@@ -281,10 +281,7 @@ CNAEs relativos:
 -   Administração pública em geral (8411600)
 -   Atividades de associações de direitos sociais (9430800)
 -   Serviços de assistência social sem alojamento (8800600)
--   Outras atividades de ensino não especificadas anteriormente (
-
-8599699) 
-
+-   Outras atividades de ensino não especificadas anteriormente (8599699) 
 -   Atividades de organizações religiosas ou filosóficas (9491000)
 -   Regulação das atividades de saúde educação serviços culturais e outros serviços sociais (8412400)
 
