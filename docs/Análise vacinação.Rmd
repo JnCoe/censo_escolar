@@ -16,6 +16,8 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
 ```
 
 # Introdução
@@ -465,7 +467,7 @@ total_docentes_brasil <- read_sql(query)
 
 Vamos ver como os número da RAIS batem com os do Censo. Para isso, será necessário obter os CBOS de todas as profissões de professor, visto que o Censo possui apenas docentes.
 
-```{r}
+```{r fig.height=50}
 sumario_basica %>%
     select(cbo_2002, total_funcionarios) %>%
     group_by(cbo_2002) %>%
