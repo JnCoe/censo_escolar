@@ -10,7 +10,7 @@ output:
       collapsed: false
     number_sections: true
     df_print: paged
-    code_folding: show
+    code_folding: hide
     self_contained: false
 ---
 
@@ -522,7 +522,55 @@ dump <- graf_comp %>%
 print(dump, 'chart')
 ```
 
+
 Há um deslocamento etário conforme o RAIS apresenta mais docentes a partir dos 40 anos quando comparado ao censo, porém menos docentes abaixo dessa idade. Por serem bases consideravelmente grandes, é inevitável que haja alguma diferença entre ambas. O que chama atenção, no entanto, é o deslocamento observado, que pode ser indício de alguma contagem incorreta.
+
+Em termos absolutos, vamos ver como isso se manifesta:
+```{r}
+# Comparação
+graf_comp %>%
+  mutate(idade = stringr::str_sub(id, 1, -2)) %>%
+  mutate(idade = as.numeric(idade), rais = as.numeric(total_rais), censo = as.numeric(total_censo)) %>%
+  filter(idade > 17 & idade < 66) %>%
+  mutate(rais_1 = idade*rais, censo_1 = idade*censo) %>%
+  summarise(media_rais = sum(rais_1)/sum(rais), media_censo = sum(censo_1)/sum(censo), n_rais = sum(rais), n_censo = sum(censo))
+```
+
+A média de idade pela Rais é 2 anos acima do censo, com uma diferença quase desprezível de 35.257 funcionários a mais. Por esse motivo, usaremos apenas os dados da RAIS.
+
+Para ter certeza, vamos só checar a distribuição por estados:
+
+```{r}
+id_estados <- data.frame(id_uf = c('12', '27', '16', '13', '29', '23', '53', '32', '52', '21', '51', '50', '31', '15', '25', '41', '26', '22', '24', '43', '33', '11', '14', '42', '35', '28', '17'), estado = c('Acre', 'Alagoas', 'Amapá', 'Amazonas', 'Bahia', 'Ceará', 'Distrito Federal', 'Espírito Santo', 'Goiás', 'Maranhão', 'Mato Grosso', 'Mato Grosso do Sul', 'Minas Gerais', 'Pará', 'Paraíba', 'Paraná', 'Pernambuco', 'Piauí', 'Rio Grande do Norte', 'Rio Grande do Sul', 'Rio de Janeiro', 'Rondônia', 'Roraima', 'Santa Catarina', 'São Paulo', 'Sergipe', 'Tocantins'))
+
+tab1 <- sumario_basica %>%
+  filter(cbo_2002 %in% c("231105", "231110", "231205", "231210", "231305", "231310", "231315", "231320", "231325", "231330", "231335", "231340", "232105", "232110", "232115", "232120", "232125", "232130", "232135", "232140", "232145", "232150", "232155", "232160", "232165", "232170", "233105", "233110", "233115", "233120", "233125", "233130", "233135", "233215", "233220", "233225", "234105", "234110", "234115", "234120", "234125", "234205", "234210", "234215", "234305", "234310", "234315", "234320", "234405", "234410", "234415", "234420", "234425", "234430", "234435", "234440", "234445", "234450", "234455", "234505", "234510", "234515", "234520", "234604", "234608", "234612", "234616", "234620", "234624", "234628", "234632", "234636", "234640", "234644", "234648", "234652", "234660", "234664", "234668", "234672", "234676", "234680", "234684", "234705", "234715", "234720", "234725", "234730", "234735", "234740", "234745", "234750", "234755", "234760", "234765", "234770", "234805", "234810", "234815", "234905", "234910", "234915", "239205", "239210", "239215", "239220", "239225", "239420", "262830", "331105", "331205", "331305", "332105", "332205", "333115", '331110', '239405', '239415')) %>%
+  group_by(id_municipio) %>%
+  summarise(total_rais = sum(total_funcionarios)) %>%
+  left_join(num_docentes) %>%
+  mutate(id_uf= stringr::str_sub(id_municipio, 1,2)) %>%
+  group_by(id_uf) %>%
+  summarise(total_rais = sum(total_rais), total_censo = sum(total_municipio)) %>%
+  mutate(diferença = total_censo - total_rais, dif_perc = diferença/total_censo) %>%
+  left_join(id_estados) %>%
+  select(estado, total_censo, total_rais) %>%
+  arrange(desc(total_censo)) 
+```
+
+```{r, results='asis'}
+dump <- tab1 %>%
+  googleVis::gvisBarChart(options = list(hAxis="{logScale:true}", height=800))
+  
+print(dump, 'chart')
+```
+```{r}
+tab1 %>%
+  mutate(dif_abs = (total_rais - total_censo), dif_rel = ((total_rais - total_censo)/total_rais)*100) %>%
+  arrange(desc(dif_rel)) %>%
+  mutate(dif_rel = paste0(round(dif_rel, 0), " %"))
+```
+
+É possível notar que não há um padrão uniforme nos estados, com alguns tendo mais funcionários pela rais e outros tendo mais pelo censo. 
 
 ### Dados do Estado de São Paulo
 
@@ -848,4 +896,12 @@ dump <- temp %>%
 
 print(dump, 'chart')
 ```
-  
+
+
+# Se diferena por estado ficar pequena, só usar RAIS
+
+# dados por municipio (total)
+# por genero/idade
+
+
+
