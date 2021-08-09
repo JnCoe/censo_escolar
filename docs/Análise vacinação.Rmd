@@ -30,6 +30,7 @@ O primeiro passo consiste em carregar as bibliotecas necessárias.
 library("basedosdados")
 library('dplyr')
 library(knitr)
+library(ggplot2)
 library(kableExtra)
 options(scipen = 9999)
 ```
@@ -377,7 +378,165 @@ sumario_basica <- read_sql(query)
 load('../dados/basedosdados/sumario_basica.rdata')
 ```
 
-Com os dados da RAIS computados, vamos passar à análise dos dados do Censo Escolar, para comparar as duas bases.
+Com os dados da RAIS computados, vamos só fazer uma comparação básica com a vacinação antes para ver o desempenho desse método:
+
+### Número de vacinados 801 / profissionais da educação
+
+```{r eval=FALSE}
+# Código R para importar dados do BigQuery (não executado)
+query <- "SELECT
+  est.id_municipio,
+  idade,
+  sexo,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose IN ('1ª Dose', 'Dose Inicial ', '1ª Dose Revacinação ') THEN id_documento
+  END
+    ) AS prim_dose,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose IN ('2ª Dose', 'Dose Adicional ', '2ª Dose Revacinação ') THEN id_documento
+  END
+    ) AS segun_dose,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose IN ('3ª Dose', '1º Reforço ') THEN id_documento
+  END
+    ) AS terc_dose,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose = 'Única ' THEN id_documento
+  END
+    ) AS dose_unica,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose = 'Dose ' THEN id_documento
+  END
+    ) AS dose_desconhecida,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose NOT IN ('1ª Dose', '1ª Dose Revacinação ', '2ª Dose Revacinação ', 'Dose Inicial ', 'Dose ', '2ª Dose', 'Dose Adicional ', 'Única ', '1º Reforço ', '3ª Dose') THEN id_documento
+  END
+    ) AS dose_incorreta,
+  COUNT(DISTINCT vac.id_paciente) AS num_pacientes
+FROM
+  `basedosdados.br_ms_vacinacao_covid19.microdados_vacinacao` AS vac
+LEFT JOIN
+  `basedosdados.br_ms_vacinacao_covid19.microdados_estabelecimento` AS est
+ON
+  vac.id_estabelecimento = est.id_estabelecimento
+LEFT JOIN
+  `basedosdados.br_ms_vacinacao_covid19.microdados_paciente` AS pac
+ON
+  vac.id_paciente = pac.id_paciente
+WHERE
+  grupo_atendimento = '801'
+GROUP BY
+  est.id_municipio,
+  pac.idade,
+  pac.sexo;"
+
+compilado_mun_det <- read_sql(query)
+```
+
+```{r}
+load('../dados/basedosdados/compilado_mun_det.rdata')
+```
+
+
+```{r eval=FALSE}
+# Código R para importar dados do BigQuery (não executado)
+query <- "SELECT
+  est.id_municipio,
+  idade,
+  sexo,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose IN ('1ª Dose', 'Dose Inicial ', '1ª Dose Revacinação ') THEN id_documento
+  END
+    ) AS prim_dose,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose IN ('2ª Dose', 'Dose Adicional ', '2ª Dose Revacinação ') THEN id_documento
+  END
+    ) AS segun_dose,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose IN ('3ª Dose', '1º Reforço ') THEN id_documento
+  END
+    ) AS terc_dose,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose = 'Única ' THEN id_documento
+  END
+    ) AS dose_unica,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose = 'Dose ' THEN id_documento
+  END
+    ) AS dose_desconhecida,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose NOT IN ('1ª Dose', '1ª Dose Revacinação ', '2ª Dose Revacinação ', 'Dose Inicial ', 'Dose ', '2ª Dose', 'Dose Adicional ', 'Única ', '1º Reforço ', '3ª Dose') THEN id_documento
+  END
+    ) AS dose_incorreta,
+  COUNT(DISTINCT vac.id_paciente) AS num_pacientes
+FROM
+  `basedosdados.br_ms_vacinacao_covid19.microdados_vacinacao` AS vac
+LEFT JOIN
+  `basedosdados.br_ms_vacinacao_covid19.microdados_estabelecimento` AS est
+ON
+  vac.id_estabelecimento = est.id_estabelecimento
+LEFT JOIN
+  `basedosdados.br_ms_vacinacao_covid19.microdados_paciente` AS pac
+ON
+  vac.id_paciente = pac.id_paciente
+GROUP BY
+  est.id_municipio,
+  pac.idade,
+  pac.sexo;"
+
+compilado_mun_geral <- read_sql(query)
+```
+
+```{r}
+load('../dados/basedosdados/compilado_mun_geral.rdata')
+```
+
+```{r}
+temp <- compilado_mun_geral %>%
+  group_by(id_municipio) %>%
+  summarise(total_vacinados = sum(num_pacientes))
+
+temp2 <- compilado_mun_det %>%
+  group_by(id_municipio) %>%
+  summarise(total_801 = sum(num_pacientes))
+
+temp3 <- sumario_basica %>%
+  group_by(id_municipio) %>%
+  summarise(total_funcionarios = sum(total_funcionarios))
+```
+
+```{r, results='asis'}
+dump <- temp3 %>%
+  left_join(temp2) %>%
+  left_join(pop, by = c('id_municipio' = 'municipio_codigo')) %>%
+  mutate(total_funcionarios = as.numeric(total_funcionarios), total_801 = as.numeric(total_801), total_801.html.tooltip = as.character(glue::glue("<p><b>{municipio}</b></br>População: {format(round(pop, 0), nsmall=0, big.mark='.', decimal.mark=',')}</br>Total de funcionários da educação básica: {format(round(total_funcionarios, 0), nsmall=0, big.mark='.', decimal.mark=',')}</br>Funcionários da educação básica vacinados: {format(round(total_801, 0), nsmall=0, big.mark='.', decimal.mark=',')}</p>"))) %>%
+  select(total_funcionarios,total_801, total_801.html.tooltip) %>%
+  googleVis::gvisScatterChart(options = list(dataOpacity = 0.5, height=500, hAxis = "{viewWindowMode: 'maximized', title: 'Total de funcionários da educação básica (escala logarítimica)', logScale: 'true'}", vAxis = "{viewWindowMode: 'maximized', title: 'Profissionais da educação básica vacinados (escala logarítimica)', logScale: 'true'}", tooltip="{isHtml:'true'}", legend = 'none')) 
+print(dump, 'chart')
+```
+
+Há algumas coisas que chamam atenção, como o município de Caetés - PE, com 439 funcionários da educação básica vacinados, mas apenas 1 registro na RAIS pelo nosso método.
+
+Vamos analisar todos os registros dessa cidade para entender melhor.
+Há 1.494 registros de todos os profissionais registrados no município.
+
+E de fato, de todos os profissionais só há um único vínculo que parece relacionado a educação que é o "Professor de Educacao Fisica do Ensino Fundamental".
+
+Só que, pelo censo, há pelo menos 2.043 docentes no município em 53 escolas. Fica claro, levando em conta esse caso, que a RAIS não parece ser inteiramente confiável.
+
+Vamos olhar os dados do censo, então, para ver o que pode ser obtido.
 
 ## Censo escolar
 
@@ -485,9 +644,12 @@ A essas, vamos adicionar outras três que também podem ser consideradas ativida
 Vamos gerar gráficos etários comparando a soma por ambos os métodos (RAIS e Censo).
 
 ```{r}
+cbo_docentes <- c("231105", "231110", "231205", "231210", "231305", "231310", "231315", "231320", "231325", "231330", "231335", "231340", "232105", "232110", "232115", "232120", "232125", "232130", "232135", "232140", "232145", "232150", "232155", "232160", "232165", "232170", "233105", "233110", "233115", "233120", "233125", "233130", "233135", "233215", "233220", "233225", "234105", "234110", "234115", "234120", "234125", "234205", "234210", "234215", "234305", "234310", "234315", "234320", "234405", "234410", "234415", "234420", "234425", "234430", "234435", "234440", "234445", "234450", "234455", "234505", "234510", "234515", "234520", "234604", "234608", "234612", "234616", "234620", "234624", "234628", "234632", "234636", "234640", "234644", "234648", "234652", "234660", "234664", "234668", "234672", "234676", "234680", "234684", "234705", "234715", "234720", "234725", "234730", "234735", "234740", "234745", "234750", "234755", "234760", "234765", "234770", "234805", "234810", "234815", "234905", "234910", "234915", "239205", "239210", "239215", "239220", "239225", "239420", "262830", "331105", "331205", "331305", "332105", "332205", "333115", '331110', '239405', '239415')
+
+
 piramide_professores_rais <- sumario_basica %>%
   mutate(sexo = case_when(sexo_trabalhador == '1' ~ 'M', sexo_trabalhador == '2' ~ 'F'), id = paste0(idade, sexo)) %>%
-  filter(cbo_2002 %in% c("231105", "231110", "231205", "231210", "231305", "231310", "231315", "231320", "231325", "231330", "231335", "231340", "232105", "232110", "232115", "232120", "232125", "232130", "232135", "232140", "232145", "232150", "232155", "232160", "232165", "232170", "233105", "233110", "233115", "233120", "233125", "233130", "233135", "233215", "233220", "233225", "234105", "234110", "234115", "234120", "234125", "234205", "234210", "234215", "234305", "234310", "234315", "234320", "234405", "234410", "234415", "234420", "234425", "234430", "234435", "234440", "234445", "234450", "234455", "234505", "234510", "234515", "234520", "234604", "234608", "234612", "234616", "234620", "234624", "234628", "234632", "234636", "234640", "234644", "234648", "234652", "234660", "234664", "234668", "234672", "234676", "234680", "234684", "234705", "234715", "234720", "234725", "234730", "234735", "234740", "234745", "234750", "234755", "234760", "234765", "234770", "234805", "234810", "234815", "234905", "234910", "234915", "239205", "239210", "239215", "239220", "239225", "239420", "262830", "331105", "331205", "331305", "332105", "332205", "333115", '331110', '239405', '239415')) %>%
+  filter(cbo_2002 %in% cbo_docentes) %>%
   mutate(id = paste0(idade, sexo)) %>%
   group_by(id) %>%
   summarise(total_rais = sum(total_funcionarios))
@@ -519,7 +681,7 @@ dump <- graf_comp %>%
   mutate(idade = stringr::str_sub(id, 1, -2)) %>%
   mutate(idade = as.numeric(idade), rais = as.numeric(total_rais), censo = as.numeric(total_censo)) %>%
   filter(idade > 17 & idade < 66) %>%
-  googleVis::gvisColumnChart(xvar = 'idade', yvar = c('rais', 'censo'), options=list(hAxis = "{title: 'Idade'}", vAxis = "{title: 'Total do segmento'}", title = 'Distribuição de trabalhadores e vacinados da educação básica por idade (apenas mulheres)'))
+  googleVis::gvisColumnChart(xvar = 'idade', yvar = c('rais', 'censo'), options=list(hAxis = "{title: 'Idade'}", vAxis = "{title: 'Total do segmento'}", title = 'Distribuição de trabalhadores e vacinados da educação básica por idade (apenas homens)'))
 
 print(dump, 'chart')
 ```
@@ -538,15 +700,14 @@ graf_comp %>%
   summarise(media_rais = sum(rais_1)/sum(rais), media_censo = sum(censo_1)/sum(censo), n_rais = sum(rais), n_censo = sum(censo))
 ```
 
-A média de idade pela Rais é 2 anos acima do censo, com uma diferença quase desprezível de 35.257 funcionários a mais. Por esse motivo, usaremos apenas os dados da RAIS.
+A média de idade pela Rais é 2 anos acima do censo, com uma diferença quase desprezível de 35.257 funcionários a mais.
 
-Para ter certeza, vamos só checar a distribuição por estados:
+Vamos checar a distribuição por estados:
 
 ```{r}
 id_estados <- data.frame(id_uf = c('12', '27', '16', '13', '29', '23', '53', '32', '52', '21', '51', '50', '31', '15', '25', '41', '26', '22', '24', '43', '33', '11', '14', '42', '35', '28', '17'), estado = c('Acre', 'Alagoas', 'Amapá', 'Amazonas', 'Bahia', 'Ceará', 'Distrito Federal', 'Espírito Santo', 'Goiás', 'Maranhão', 'Mato Grosso', 'Mato Grosso do Sul', 'Minas Gerais', 'Pará', 'Paraíba', 'Paraná', 'Pernambuco', 'Piauí', 'Rio Grande do Norte', 'Rio Grande do Sul', 'Rio de Janeiro', 'Rondônia', 'Roraima', 'Santa Catarina', 'São Paulo', 'Sergipe', 'Tocantins'))
 
 tab1 <- sumario_basica %>%
-  filter(cbo_2002 %in% c("231105", "231110", "231205", "231210", "231305", "231310", "231315", "231320", "231325", "231330", "231335", "231340", "232105", "232110", "232115", "232120", "232125", "232130", "232135", "232140", "232145", "232150", "232155", "232160", "232165", "232170", "233105", "233110", "233115", "233120", "233125", "233130", "233135", "233215", "233220", "233225", "234105", "234110", "234115", "234120", "234125", "234205", "234210", "234215", "234305", "234310", "234315", "234320", "234405", "234410", "234415", "234420", "234425", "234430", "234435", "234440", "234445", "234450", "234455", "234505", "234510", "234515", "234520", "234604", "234608", "234612", "234616", "234620", "234624", "234628", "234632", "234636", "234640", "234644", "234648", "234652", "234660", "234664", "234668", "234672", "234676", "234680", "234684", "234705", "234715", "234720", "234725", "234730", "234735", "234740", "234745", "234750", "234755", "234760", "234765", "234770", "234805", "234810", "234815", "234905", "234910", "234915", "239205", "239210", "239215", "239220", "239225", "239420", "262830", "331105", "331205", "331305", "332105", "332205", "333115", '331110', '239405', '239415')) %>%
   group_by(id_municipio) %>%
   summarise(total_rais = sum(total_funcionarios)) %>%
   left_join(num_docentes) %>%
@@ -574,6 +735,96 @@ tab1 %>%
 
 É possível notar que não há um padrão uniforme nos estados, com alguns tendo mais funcionários pela rais e outros tendo mais pelo censo. 
 
+Como visto antes, os números da RAIS muitas vezes podem ser subestimados. O problema consiste na imprevisibilidade dos dados, visto que às vezes estão subestimados e às vezes superestimados.
+
+Como nossa análise se dará no nível municipal, vamos ver como fica a discrepância. Para isso, iremos gerar uma tabela com algumas informações
+
+```{r}
+compilado_mun <- compilado_mun_det %>%
+  group_by(id_municipio) %>%
+  summarise(total_vacinados = sum(num_pacientes)) %>%
+  left_join(pop, by = c('id_municipio' = 'municipio_codigo'))
+
+rais_municipal <- sumario_basica %>%
+  filter(cbo_2002 %in% cbo_docentes) %>%
+  group_by(id_municipio) %>%
+  summarise(total_rais = sum(total_funcionarios))
+
+comparativo_municipal <- compilado_censo %>%
+  group_by(id_municipio) %>%
+  summarise(total_censo = sum(total_profissionais)) %>%
+  left_join(rais_municipal) %>%
+  replace(is.na(.), 0) %>%
+  mutate(diferenca_censo_rais = total_censo-total_rais) %>%
+  left_join(compilado_mun) %>%
+  mutate(vacinados_rais = total_vacinados/total_rais, vacinados_censo = total_vacinados/total_censo, dif_pop = diferenca_censo_rais/total_rais)
+```
+
+Agora, vamos utilizar o número de vacinados da educação básica como um parâmetro próximo e gerar um histograma com a proporção de vacinados com base na RAIS e a proporção com base no censo. 
+
+```{r}
+comparativo_municipal %>%
+  select(municipio, vacinados_rais, vacinados_censo) %>%
+  tidyr::gather(tipo, valor, -municipio) %>%
+  filter(valor<3 & tipo == 'vacinados_censo') %>%
+    ggplot(aes(x=valor)) +
+    geom_histogram( binwidth=0.1, fill="#69b3a2", color="#e9ecef", alpha=0.9) +
+  labs(title = stringr::str_wrap("Distribuição da proporção de funcionários da educação básica vacinados sobre o número de docentes segundo o censo", 60)) +
+      hrbrthemes::theme_ipsum() +
+    theme(
+      plot.title = element_text(size=11))
+
+comparativo_municipal %>%
+  select(municipio, vacinados_rais, vacinados_censo) %>%
+  tidyr::gather(tipo, valor, -municipio) %>%
+  filter(valor<3 & tipo == 'vacinados_rais') %>%
+    ggplot(aes(x=valor)) +
+    geom_histogram( binwidth=0.1, fill="#69b3a2", color="#e9ecef", alpha=0.9) +
+    labs(title = stringr::str_wrap("Distribuição da proporção de funcionários da educação básica vacinados sobre o número de docentes segundo a RAIS", 60)) +
+      hrbrthemes::theme_ipsum() +
+    theme(
+      plot.title = element_text(size=11))
+
+comparativo_municipal %>%
+  select(municipio, vacinados_rais, vacinados_censo) %>%
+  tidyr::gather(tipo, valor, -municipio) %>%
+  filter(valor<3) %>%
+   ggplot( aes(x=valor, fill=tipo)) +
+    geom_histogram( color="#e9ecef", alpha=0.4, position = 'identity') +
+    scale_fill_manual(values=c("#69b3a2", "#404080")) +
+    hrbrthemes::theme_ipsum() +
+    labs(fill="") +
+    ggtitle("Sobreposição dos dois gráficos")
+```
+
+Vamos também quantificar quantos municipios estão com mais docentes na RAIS e quantos estão com mais docentes no Censo:
+
+```{r}
+comparativo_municipal %>%
+  mutate(maioria = case_when(diferenca_censo_rais > 0 ~ 'CENSO', diferenca_censo_rais < 0 ~ 'RAIS', diferenca_censo_rais == 0 ~ 'IGUAIS')) %>%
+  group_by(maioria) %>%
+  summarise(total = n())
+```
+
+É possível notar que o Censo possui o maior número de docentes registrados em 4.887, algo considerável. 
+
+Sobre os gráficos, duas observações devem ser feitas:
+
+1 - Diversos municípios ficaram de fora por não terem nenhum registro de vacinação da educação básica ou nenhum registro de docentes na RAIS
+
+2 - O valor máximo de proporção foi limitado a 300% (3) para melhor visualização, mas há casos que ultrapassam esse valor, principalmente considerando a relação da RAIS. Ou seja, se o municipio tem 7 docentes registrados na RAIS e vacinou 22 funcionários da educação básica, esse município fica de fora.
+
+O gráfico simultaneamente reforça a superioridade mas insuficiência do Censo. Não só a curva de distribuição está muito mais próxima de uma normal no caso do censo (ver resultados abaixo) como muito mais concentrada perto do eixo 1 (100%), o que faz bastante sentido, visto que é esperado que os municípios estejam próximos de ter vacinado um número minimamente próximo ao de docentes.
+
+Ainda assim, o alto número acima do 100% mostra como é necessário complementar essa informação
+
+```{r}
+shapiro.test(comparativo_municipal$vacinados_rais[0:5000])
+
+shapiro.test(comparativo_municipal$vacinados_censo[0:5000])
+```
+
+
 ### Dados do Estado de São Paulo
 
 Para investigarmos mais a fundo, vamos usar o estado de São Paulo como métrica. Segundo [essa matéria](https://www.uol.com.br/vivabem/noticias/redacao/2021/06/09/doria-vacinacao-professores-sao-paulo.htm), o estado contabilizou 363 mil profissionais da educação básica de 18 a 44 anos. Usando o modelo utilizado até agora pela RAIS nós chegamos ao seguinte valor:
@@ -585,6 +836,7 @@ sumario_basica %>%
   summarise(sum(total_funcionarios)) %>%
   print()
 ```
+
 Mais de 500 mil funcionários, muito além do valor obtido. Vamos tentar mitigar isso excluindo professores pela RAIS e inserindo o cálculo pelo censo, que é mais preciso:
 
 ```{r}
@@ -604,7 +856,166 @@ print(glue::glue('Funcionários não-docentes SP (RAIS): {sp_rais$total_rais}\nF
 
 Temos mais de 454 mil funcionários da educação básica no estado de São Paulo segundo nosso método, muito acima dos 363 mil estimados pelo governo. Pode ser que a contagem do governo não tenha considerado terceirizados ou excluiu da análise funcionários já vacinados por outros motivos. Um pedido de acesso foi realizado para buscar compreender melhor.
 
-Enquanto não obtemos resposta, no entanto, vamos verificar como esses dados se relacionam com as vacinações.
+Enquanto não obtemos resposta, no entanto, vamos tentar uma última cartada, o SIOPE.
+
+## Comparativos SIOPE x RAIS
+
+Considerando que o SIOPE contem dados de remuneração, é possível imaginar que a base tenha maior confiabilidade do que o censo ou até a RAIS, visto que está atrelada aos pagamentos. A limitação do SIOPE, como dito anteriormente, é que abrange apenas a rede pública. Além disso, o único identificador único dos funcionários é o nome completo, o que impossibilita remover duplicatas visto que homônimos também seriam excluídos. Para comparação com a RAIS, no entanto, isso não é problema visto que a RAIS também não exclui funções duplicadas.
+
+Vamos usar os dados de MG para essa análise:
+
+```{r}
+siope_mg <- read.csv2('../dados/REMUNERACAO_PROFISSIONAIS_EDUCACAO_MG_2019.CSV') %>%
+  janitor::clean_names()
+```
+
+Profissões do SIOPE:
+
+```{r}
+siope_mg %>%
+  select(categ_profissional) %>%
+  unique()
+```
+
+Há duas categorias de profissionais que não estão inclusos entre os docentes:
+
+- Profissionais que atuam na realização das atividades requeridos nos ambientes de secretaria, de manu
+- Profissionais que exercem funções de secretaria escolar, alimentação escolar (merendeiras), multime
+
+Vamos fazer a categorização para comparar com o que obtivemos na RAIS, mantendo apenas os vínculos da administração pública:
+
+```{r}
+compilado_siope <- siope_mg %>%
+  filter(me_exercicio == 12) %>%
+  mutate(grupo_profissional = ifelse(stringr::str_detect(categ_profissional, '^Profissionais que'),'Auxiliar','Docente')) %>%
+  group_by(grupo_profissional) %>%
+  summarise(total_siope = n())
+```
+
+```{r}
+compilado_siope
+```
+
+Pelo SIOPE, portanto, temos que no Estado de Minas Gerais há 50.214 professores contratados pela administração pública e 11.688 outros funcionários da educação básica pública.
+
+Esse número é instintivamente baixo. Vamos verificar se há escolas que não estão registrando seus funcionários:
+
+```{r}
+siope_mg %>%
+  filter(me_exercicio == 12) %>%
+  group_by(local_exercicio) %>%
+  summarise(funcionarios = n(), valor_pago = sum(vl_total)) %>%
+  filter(funcionarios == 1) %>%
+  arrange(desc(valor_pago))
+```
+
+Há quase 500 unidades que registraram apenas um funcionário, o que obviamente não está correto. Diante disso, fica inviável confiar minimamente no SIOPE para qualquer estimativa. As informações não são obtidas direto pelo pagamento, mas de forma declaratória pelas escolas e municípios, aparentemente com menos supervisão do que o próprio Censo.
+
+Só para fins de comparação, vamos ver como esses números se espelham na RAIS e Censo.
+
+No censo, podemos obter esse resultado com o seguinte código:
+
+```{sql eval=FALSE}
+--Código para obter informações do censo(não executado neste doc)
+SELECT rede, COUNT(DISTINCT id_docente) as docentes_unicos, COUNT(*) as total_vinculos FROM `basedosdados.br_inep_censo_escolar.docente` WHERE sigla_uf = 'MG' AND rede != 'privada' AND ano = 2019 GROUP BY rede
+```
+
+Segundo o censo, há na rede pública de educação básica de MG, 214.606 docentes, praticamente 4 vezes mais do que o obtido no SIOPE.
+
+Agora vamos ver como fica na Rais:
+
+```{sql eval=FALSE}
+--Código para obter informações da RAIS (não executado neste doc)
+SELECT
+  COUNT(*) as total_funcionarios
+FROM
+  `basedosdados.br_me_rais.microdados_vinculos`
+WHERE
+  ano = 2019
+  AND vinculo_ativo_3112 = '1'
+  AND sigla_uf = 'MG'
+  AND (cnae_2_subclasse = '8411600'
+      AND cbo_2002 IN ('371105',
+        '239435',
+        '515305',
+        '239410',
+        '233105',
+        '262830',
+        '234604',
+        '234620',
+        '234612',
+        '234616',
+        '234608',
+        '234668',
+        '234640',
+        '234660',
+        '234664',
+        '515325',
+        '239430',
+        '239405',
+        '334110',
+        '231205',
+        '239210',
+        '239220',
+        '231305',
+        '231315',
+        '231320',
+        '232135',
+        '231325',
+        '232140',
+        '232150',
+        '234624',
+        '234628',
+        '234652',
+        '232155',
+        '331205',
+        '231210',
+        '231110',
+        '232160',
+        '232165',
+        '251505',
+        '331110',
+        '334105',
+        '334115',
+        '239415',
+        '239205',
+        '239215',
+        '239225',
+        '232105',
+        '232110',
+        '232115',
+        '231310',
+        '232120',
+        '234676',
+        '232125',
+        '232130',
+        '232145',
+        '231330',
+        '231335',
+        '234672',
+        '234644',
+        '234632',
+        '231340',
+        '331105',
+        '331305',
+        '231105',
+        '232170',
+        '332105',
+        '239425',
+        '252320',))
+```
+
+156.188 professores somente na educação básica da rede pública. É curioso como o número fica ABAIXO do previsto no censo, visto que, como dito antes, a RAIS não identifica registros duplicados de um mesmo professor em duas escolas diferentes.
+
+
+```{r}
+sp_rais <- sumario_basica %>%
+  filter(cbo_2002 %!in% c("231105", "231110", "231205", "231210", "231305", "231310", "231315", "231320", "231325", "231330", "231335", "231340", "232105", "232110", "232115", "232120", "232125", "232130", "232135", "232140", "232145", "232150", "232155", "232160", "232165", "232170", "233105", "233110", "233115", "233120", "233125", "233130", "233135", "233215", "233220", "233225", "234105", "234110", "234115", "234120", "234125", "234205", "234210", "234215", "234305", "234310", "234315", "234320", "234405", "234410", "234415", "234420", "234425", "234430", "234435", "234440", "234445", "234450", "234455", "234505", "234510", "234515", "234520", "234604", "234608", "234612", "234616", "234620", "234624", "234628", "234632", "234636", "234640", "234644", "234648", "234652", "234660", "234664", "234668", "234672", "234676", "234680", "234684", "234705", "234715", "234720", "234725", "234730", "234735", "234740", "234745", "234750", "234755", "234760", "234765", "234770", "234805", "234810", "234815", "234905", "234910", "234915", "239205", "239210", "239215", "239220", "239225", "239420", "262830", "331105", "331205", "331305", "332105", "332205", "333115", '331110', '239405', '239415')) %>%
+  filter(stringr::str_detect(id_municipio, "^35") & idade > 17 & idade < 45) %>%
+  summarise(total_rais = sum(total_funcionarios))
+```
+
+
 
 # Análise
 
@@ -674,66 +1085,6 @@ Como estamos analisando no nível nacional, são diversas regras de vacinação 
 
 Para obter os dados por municípios, genero e idade, teremos que executar o código abaixo. Já está corrigida a coluna de dose de acordo com a última atualização do MS:
 
-```{r eval=FALSE}
-# Código R para importar dados do BigQuery (não executado)
-query <- "SELECT
-  est.id_municipio,
-  idade,
-  sexo,
-  COUNT(DISTINCT
-    CASE
-      WHEN dose IN ('1ª Dose', 'Dose Inicial ', '1ª Dose Revacinação ') THEN id_documento
-  END
-    ) AS prim_dose,
-  COUNT(DISTINCT
-    CASE
-      WHEN dose IN ('2ª Dose', 'Dose Adicional ', '2ª Dose Revacinação ') THEN id_documento
-  END
-    ) AS segun_dose,
-  COUNT(DISTINCT
-    CASE
-      WHEN dose IN ('3ª Dose', '1º Reforço ') THEN id_documento
-  END
-    ) AS terc_dose,
-  COUNT(DISTINCT
-    CASE
-      WHEN dose = 'Única ' THEN id_documento
-  END
-    ) AS dose_unica,
-  COUNT(DISTINCT
-    CASE
-      WHEN dose = 'Dose ' THEN id_documento
-  END
-    ) AS dose_desconhecida,
-  COUNT(DISTINCT
-    CASE
-      WHEN dose NOT IN ('1ª Dose', '1ª Dose Revacinação ', '2ª Dose Revacinação ', 'Dose Inicial ', 'Dose ', '2ª Dose', 'Dose Adicional ', 'Única ', '1º Reforço ', '3ª Dose') THEN id_documento
-  END
-    ) AS dose_incorreta,
-  COUNT(DISTINCT vac.id_paciente) AS num_pacientes
-FROM
-  `basedosdados.br_ms_vacinacao_covid19.microdados_vacinacao` AS vac
-LEFT JOIN
-  `basedosdados.br_ms_vacinacao_covid19.microdados_estabelecimento` AS est
-ON
-  vac.id_estabelecimento = est.id_estabelecimento
-LEFT JOIN
-  `basedosdados.br_ms_vacinacao_covid19.microdados_paciente` AS pac
-ON
-  vac.id_paciente = pac.id_paciente
-WHERE
-  grupo_atendimento = '801'
-GROUP BY
-  est.id_municipio,
-  pac.idade,
-  pac.sexo;"
-
-compilado_mun_det <- read_sql(query)
-```
-
-```{r}
-load('../dados/basedosdados/compilado_mun_det.rdata')
-```
 
 Agora para gerar os gráficos:
 
@@ -786,80 +1137,11 @@ Dentre as análises que podemos extrair dos dados acima, é possível imaginar t
 
 Como os dados gerados até então tratavam apenas da categoria 801, vamos gerar a tabela com informações gerais:
 
-```{r eval=FALSE}
-# Código R para importar dados do BigQuery (não executado)
-query <- "SELECT
-  est.id_municipio,
-  idade,
-  sexo,
-  COUNT(DISTINCT
-    CASE
-      WHEN dose IN ('1ª Dose', 'Dose Inicial ', '1ª Dose Revacinação ') THEN id_documento
-  END
-    ) AS prim_dose,
-  COUNT(DISTINCT
-    CASE
-      WHEN dose IN ('2ª Dose', 'Dose Adicional ', '2ª Dose Revacinação ') THEN id_documento
-  END
-    ) AS segun_dose,
-  COUNT(DISTINCT
-    CASE
-      WHEN dose IN ('3ª Dose', '1º Reforço ') THEN id_documento
-  END
-    ) AS terc_dose,
-  COUNT(DISTINCT
-    CASE
-      WHEN dose = 'Única ' THEN id_documento
-  END
-    ) AS dose_unica,
-  COUNT(DISTINCT
-    CASE
-      WHEN dose = 'Dose ' THEN id_documento
-  END
-    ) AS dose_desconhecida,
-  COUNT(DISTINCT
-    CASE
-      WHEN dose NOT IN ('1ª Dose', '1ª Dose Revacinação ', '2ª Dose Revacinação ', 'Dose Inicial ', 'Dose ', '2ª Dose', 'Dose Adicional ', 'Única ', '1º Reforço ', '3ª Dose') THEN id_documento
-  END
-    ) AS dose_incorreta,
-  COUNT(DISTINCT vac.id_paciente) AS num_pacientes
-FROM
-  `basedosdados.br_ms_vacinacao_covid19.microdados_vacinacao` AS vac
-LEFT JOIN
-  `basedosdados.br_ms_vacinacao_covid19.microdados_estabelecimento` AS est
-ON
-  vac.id_estabelecimento = est.id_estabelecimento
-LEFT JOIN
-  `basedosdados.br_ms_vacinacao_covid19.microdados_paciente` AS pac
-ON
-  vac.id_paciente = pac.id_paciente
-GROUP BY
-  est.id_municipio,
-  pac.idade,
-  pac.sexo;"
 
-compilado_mun_geral <- read_sql(query)
-```
-
-```{r}
-load('../dados/basedosdados/compilado_mun_geral.rdata')
-```
 
 ## Número da vacinados totais / número de vacinados na categoria 801
 
-```{r}
-temp <- compilado_mun_geral %>%
-  group_by(id_municipio) %>%
-  summarise(total_vacinados = sum(num_pacientes))
 
-temp2 <- compilado_mun_det %>%
-  group_by(id_municipio) %>%
-  summarise(total_801 = sum(num_pacientes))
-
-temp3 <- sumario_basica %>%
-  group_by(id_municipio) %>%
-  summarise(total_funcionarios = sum(total_funcionarios))
-```
 
 ```{r, results='asis'}
 dump <- temp %>%
@@ -872,18 +1154,7 @@ dump <- temp %>%
 print(dump, 'chart')
 ```
 
-## Número de vacinados 801 / profissionais da educação
 
-```{r, results='asis'}
-dump <- temp3 %>%
-  left_join(temp2) %>%
-  left_join(pop, by = c('id_municipio' = 'municipio_codigo')) %>%
-  mutate(total_funcionarios = as.numeric(total_funcionarios), total_801 = as.numeric(total_801), total_801.html.tooltip = as.character(glue::glue("<p><b>{municipio}</b></br>População: {format(round(pop, 0), nsmall=0, big.mark='.', decimal.mark=',')}</br>Total de funcionários da educação básica: {format(round(total_funcionarios, 0), nsmall=0, big.mark='.', decimal.mark=',')}</br>Funcionários da educação básica vacinados: {format(round(total_801, 0), nsmall=0, big.mark='.', decimal.mark=',')}</p>"))) %>%
-  select(total_funcionarios,total_801, total_801.html.tooltip) %>%
-  googleVis::gvisScatterChart(options = list(dataOpacity = 0.5, height=500, hAxis = "{viewWindowMode: 'maximized', title: 'Total de funcionários da educação básica (escala logarítimica)', logScale: 'true'}", vAxis = "{viewWindowMode: 'maximized', title: 'Profissionais da educação básica vacinados (escala logarítimica)', logScale: 'true'}", tooltip="{isHtml:'true'}", legend = 'none'))
-
-print(dump, 'chart')
-```
 
 ```{r, results='asis'}
 dump <- temp %>%
@@ -898,6 +1169,9 @@ dump <- temp %>%
 
 print(dump, 'chart')
 ```
+
+
+
 
 
 # Se diferena por estado ficar pequena, só usar RAIS
