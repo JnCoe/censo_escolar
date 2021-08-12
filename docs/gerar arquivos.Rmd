@@ -197,10 +197,142 @@ write.csv(tabela_final, file=paste0('../dados/outputs/tabela_final',Sys.Date(),'
 
 Extração: 2021-08-10
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 tabela_final %>%
   DT::datatable(filter = 'top', options = list(scrollX='600px')) %>%
   DT::formatRound(c("prop_vacin", "prop_1_dose", "prop_imun_completa"), digits=2)
 ```
 
+# Dicionário
+<div><table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;width:100%">
+
+ <colgroup><col width="73" style="width:55pt">
+ <col width="178" style="width:134pt">
+ <col width="73" style="width:55pt">
+ <col width="348" style="width:261pt">
+ </colgroup><tbody><tr height="19" style="height:14.4pt">
+  <td height="19" width="73" style="height:14.4pt;width:55pt;font-size:11pt;color:black;font-weight:700;font-family:Calibri,sans-serif;border-top:0.5pt solid black;border-right:none;border-bottom:0.5pt solid black;border-left:none;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;white-space:nowrap">num</td>
+  <td width="178" style="width:134pt;font-size:11pt;color:black;font-weight:700;font-family:Calibri,sans-serif;border-top:0.5pt solid black;border-right:none;border-bottom:0.5pt solid black;border-left:none;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;white-space:nowrap">label</td>
+  <td width="73" style="width:55pt;font-size:11pt;color:black;font-weight:700;font-family:Calibri,sans-serif;border-top:0.5pt solid black;border-right:none;border-bottom:0.5pt solid black;border-left:none;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;white-space:nowrap">type</td>
+  <td width="348" style="width:261pt;font-size:11pt;color:black;font-weight:700;font-family:Calibri,sans-serif;border-top:0.5pt solid black;border-right:none;border-bottom:0.5pt solid black;border-left:none;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;white-space:nowrap">desc</td>
+ </tr>
+ <tr height="19" style="height:14.4pt">
+  <td height="19" width="73" style="height:14.4pt;width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">1</td>
+  <td width="178" style="width:134pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">id_municipio</td>
+  <td width="73" style="width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">string</td>
+  <td width="348" style="width:261pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">Código IBGE do município (7 dígitos)</td>
+ </tr>
+ <tr height="19" style="height:14.4pt">
+  <td height="19" width="73" style="height:14.4pt;width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">2</td>
+  <td width="178" style="width:134pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">municipio</td>
+  <td width="73" style="width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">string</td>
+  <td width="348" style="width:261pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">Nome do município</td>
+ </tr>
+ <tr height="19" style="height:14.4pt">
+  <td height="19" width="73" style="height:14.4pt;width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">3</td>
+  <td width="178" style="width:134pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">uf</td>
+  <td width="73" style="width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">string</td>
+  <td width="348" style="width:261pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">Sigla do estado</td>
+ </tr>
+ <tr height="19" style="height:14.4pt">
+  <td height="19" width="73" style="height:14.4pt;width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">4</td>
+  <td width="178" style="width:134pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">pop</td>
+  <td width="73" style="width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">float</td>
+  <td width="348" style="width:261pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">População segundo o IBGE em 2020</td>
+ </tr>
+ <tr height="38" style="height:28.8pt">
+  <td height="38" width="73" style="height:28.8pt;width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">5</td>
+  <td width="178" style="width:134pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">docentes_censo</td>
+  <td width="73" style="width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">integer</td>
+  <td width="348" style="width:261pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">Total de docentes no município segundo o censo escolar (2019)</td>
+ </tr>
+ <tr height="38" style="height:28.8pt">
+  <td height="38" width="73" style="height:28.8pt;width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">6</td>
+  <td width="178" style="width:134pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">auxiliares_rais</td>
+  <td width="73" style="width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">integer</td>
+  <td width="348" style="width:261pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">Total de profissionais auxiliares
+  da educação segundo a RAIS (2019)</td>
+ </tr>
+ <tr height="19" style="height:14.4pt">
+  <td height="19" width="73" style="height:14.4pt;width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">7</td>
+  <td width="178" style="width:134pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">total_educ_basic</td>
+  <td width="73" style="width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">integer</td>
+  <td width="348" style="width:261pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">Total de profissionais da educação básica (coluna 5+6)</td>
+ </tr>
+ <tr height="58" style="height:43.2pt">
+  <td height="58" width="73" style="height:43.2pt;width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">8</td>
+  <td width="178" style="width:134pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">prim_dose</td>
+  <td width="73" style="width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">integer</td>
+  <td width="348" style="width:261pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">Total de vacinações de primeira
+  dose distribuídas no município ('1ª&nbsp;Dose', 'Dose&nbsp;Inicial&nbsp;',
+  '1ª&nbsp;Dose&nbsp;Revacinação&nbsp;')</td>
+ </tr>
+ <tr height="58" style="height:43.2pt">
+  <td height="58" width="73" style="height:43.2pt;width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">9</td>
+  <td width="178" style="width:134pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">segun_dose</td>
+  <td width="73" style="width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">integer</td>
+  <td width="348" style="width:261pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">Total de vacinações de segunda dose distribuídas no município
+  ('2ª&nbsp;Dose', 'Dose&nbsp;Adicional&nbsp;',
+  '2ª&nbsp;Dose&nbsp;Revacinação&nbsp;')</td>
+ </tr>
+ <tr height="38" style="height:28.8pt">
+  <td height="38" width="73" style="height:28.8pt;width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">10</td>
+  <td width="178" style="width:134pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">terc_dose</td>
+  <td width="73" style="width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">integer</td>
+  <td width="348" style="width:261pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">Total de vacinações de terceira
+  dose distribuídas no município ('3ª&nbsp;Dose', '1º&nbsp;Reforço&nbsp;')</td>
+ </tr>
+ <tr height="38" style="height:28.8pt">
+  <td height="38" width="73" style="height:28.8pt;width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">11</td>
+  <td width="178" style="width:134pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">dose_unica</td>
+  <td width="73" style="width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">integer</td>
+  <td width="348" style="width:261pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">Total de vacinações de dose única distribuídas no município
+  ('Única&nbsp;')</td>
+ </tr>
+ <tr height="38" style="height:28.8pt">
+  <td height="38" width="73" style="height:28.8pt;width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">12</td>
+  <td width="178" style="width:134pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">dose_desconhecida</td>
+  <td width="73" style="width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">integer</td>
+  <td width="348" style="width:261pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">Total de vacinações cuja dose não
+  foi determinada ('Dose&nbsp;')</td>
+ </tr>
+ <tr height="58" style="height:43.2pt">
+  <td height="58" width="73" style="height:43.2pt;width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">13</td>
+  <td width="178" style="width:134pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">dose_incorreta</td>
+  <td width="73" style="width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">integer</td>
+  <td width="348" style="width:261pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">Total de vacinações cuja dose não se encaixa em nenhuma
+  categoria acima. Por ora, deve ser 0 em todas as linhas.</td>
+ </tr>
+ <tr height="38" style="height:28.8pt">
+  <td height="38" width="73" style="height:28.8pt;width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">14</td>
+  <td width="178" style="width:134pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">num_pacientes</td>
+  <td width="73" style="width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">integer</td>
+  <td width="348" style="width:261pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">Total de 'id_pacientes' únicas que
+  receberam ao menos uma dose no município</td>
+ </tr>
+ <tr height="38" style="height:28.8pt">
+  <td height="38" width="73" style="height:28.8pt;width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">15</td>
+  <td width="178" style="width:134pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">prop_vacin</td>
+  <td width="73" style="width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">float</td>
+  <td width="348" style="width:261pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">Total de funcionários da educação básica que receberam ao menos
+  uma dose (coluna 14/coluna 7)</td>
+ </tr>
+ <tr height="58" style="height:43.2pt">
+  <td height="58" width="73" style="height:43.2pt;width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">16</td>
+  <td width="178" style="width:134pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">prop_1_dose</td>
+  <td width="73" style="width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">float</td>
+  <td width="348" style="width:261pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px;border:none">Total de primeiras dose
+  distribuídas em relação ao número de funcionários da educação básica no
+  município (coluna 8/coluna 7)</td>
+ </tr>
+ <tr height="58" style="height:43.2pt">
+  <td height="58" width="73" style="height:43.2pt;width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;border-top:none;border-right:none;border-bottom:0.5pt solid black;border-left:none;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px">17</td>
+  <td width="178" style="width:134pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;border-top:none;border-right:none;border-bottom:0.5pt solid black;border-left:none;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px">prop_imun_completa</td>
+  <td width="73" style="width:55pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;border-top:none;border-right:none;border-bottom:0.5pt solid black;border-left:none;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px">float</td>
+  <td width="348" style="width:261pt;font-size:11pt;color:black;font-family:&quot;Quire Sans&quot;,sans-serif;border-top:none;border-right:none;border-bottom:0.5pt solid black;border-left:none;background:rgb(217,217,217);text-align:center;vertical-align:middle;padding-top:1px;padding-right:1px;padding-left:1px">Total de segunda dose ou dose única distribuídas no
+  município em relação ao número de funcionários da educação básica (coluna
+  9+coluna 10 / coluna 7)</td>
+ </tr>
+
+</tbody></table><br></div>
 
