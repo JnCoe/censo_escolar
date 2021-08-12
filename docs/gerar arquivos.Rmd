@@ -1,0 +1,206 @@
+---
+title: "Gerar arquivos"
+author: "Jonas Coelho"
+date: "01/07/2021"
+output: 
+  html_document:
+    theme: cosmo
+    toc: true
+    toc_float:
+      collapsed: false
+    number_sections: true
+    df_print: paged
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introdução
+
+```{r message=FALSE, warning=FALSE}
+library("basedosdados")
+library('dplyr')
+library(knitr)
+library(ggplot2)
+library(kableExtra)
+options(scipen = 9999)
+```
+
+Esse documento irá gerar os arquivos finais atualizados para envio na plataforma vacina.edu.
+
+Os dados de vacinação serão retirados diretamente do BigQuery. Por favor note que a cada knit desse documento uma nova consulta será feita, podendo ultrapassar o limite de 1TB de processamento disponível. Por esse motivo, o eval na célula de obter os dados estará como 'false'. Remova o parâmetro para que os arquivos sejam gerados corretamente.
+
+Definindo o projeto:
+
+```{r message=FALSE, warning=FALSE}
+# Definindo o projeto do BigQuery
+set_billing_id("base-dos-dados-316520")
+```
+
+Vamos também criar uma função de "not in" para facilitar algumas operações.
+
+```{r}
+'%!in%' <- function(x,y)!('%in%'(x,y))
+```
+
+# Dados de vacinação
+
+O código abaixo obtem as doses distribuídas para profissionais da educação básica (grupo 801), bem como o número de profissionais vacinados até o momento. 
+
+```{r eval=FALSE}
+# Código R para importar dados do BigQuery (não executado)
+query <- "SELECT
+  est.id_municipio,
+  idade,
+  sexo,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose IN ('1ª Dose', 'Dose Inicial ', '1ª Dose Revacinação ') THEN id_documento
+  END
+    ) AS prim_dose,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose IN ('2ª Dose', 'Dose Adicional ', '2ª Dose Revacinação ') THEN id_documento
+  END
+    ) AS segun_dose,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose IN ('3ª Dose', '1º Reforço ') THEN id_documento
+  END
+    ) AS terc_dose,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose = 'Única ' THEN id_documento
+  END
+    ) AS dose_unica,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose = 'Dose ' THEN id_documento
+  END
+    ) AS dose_desconhecida,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose NOT IN ('1ª Dose', '1ª Dose Revacinação ', '2ª Dose Revacinação ', 'Dose Inicial ', 'Dose ', '2ª Dose', 'Dose Adicional ', 'Única ', '1º Reforço ', '3ª Dose') THEN id_documento
+  END
+    ) AS dose_incorreta,
+  COUNT(DISTINCT vac.id_paciente) AS num_pacientes
+FROM
+  `basedosdados.br_ms_vacinacao_covid19.microdados_vacinacao` AS vac
+LEFT JOIN
+  `basedosdados.br_ms_vacinacao_covid19.microdados_estabelecimento` AS est
+ON
+  vac.id_estabelecimento = est.id_estabelecimento
+LEFT JOIN
+  `basedosdados.br_ms_vacinacao_covid19.microdados_paciente` AS pac
+ON
+  vac.id_paciente = pac.id_paciente
+WHERE
+  grupo_atendimento = '801'
+GROUP BY
+  est.id_municipio,
+  pac.idade,
+  pac.sexo;"
+
+compilado_mun_det <- read_sql(query)
+
+save(compilado_mun_det, file=paste0('../dados/outputs/compilado_mun_det',Sys.Date(),'.rdata'))
+```
+
+```{r eval=FALSE}
+load(paste0('../dados/outputs/compilado_mun_det',Sys.Date(),'.rdata'))
+```
+
+```{r}
+load('../dados/outputs/compilado_mun_det2021-08-10.rdata')
+```
+
+```{r}
+compilado_mun <- compilado_mun_det %>%
+  group_by(id_municipio) %>%
+  summarise(prim_dose = sum(prim_dose), segun_dose = sum(segun_dose), terc_dose = sum(terc_dose), dose_unica = sum(dose_unica), dose_desconhecida = sum(dose_desconhecida), dose_incorreta = sum(dose_incorreta), num_pacientes = sum(num_pacientes))
+```
+
+
+# Dados do censo
+
+Como os dados do censo são estáticos, vamos carregar do arquivo já processado:
+
+```{r}
+load('../dados/basedosdados/compilado_censo.rdata')
+```
+
+```{r}
+censo_final <- compilado_censo %>%
+  filter(idade < 60) %>%
+  group_by(id_municipio) %>%
+  summarise(total_censo = sum(total_profissionais))
+```
+
+
+# Dados da RAIS
+
+O mesmo vale para a RAIS:
+
+```{r}
+# Código para carregar o arquivo RData com as informações já salvas
+load('../dados/basedosdados/sumario_basica.rdata')
+```
+
+
+```{r}
+func_rais <- sumario_basica %>%
+  filter(cbo_2002 %!in% c("231105", "231110", "231205", "231210", "231305", "231310", "231315", "231320", "231325", "231330", "231335", "231340", "232105", "232110", "232115", "232120", "232125", "232130", "232135", "232140", "232145", "232150", "232155", "232160", "232165", "232170", "233105", "233110", "233115", "233120", "233125", "233130", "233135", "233215", "233220", "233225", "234105", "234110", "234115", "234120", "234125", "234205", "234210", "234215", "234305", "234310", "234315", "234320", "234405", "234410", "234415", "234420", "234425", "234430", "234435", "234440", "234445", "234450", "234455", "234505", "234510", "234515", "234520", "234604", "234608", "234612", "234616", "234620", "234624", "234628", "234632", "234636", "234640", "234644", "234648", "234652", "234660", "234664", "234668", "234672", "234676", "234680", "234684", "234705", "234715", "234720", "234725", "234730", "234735", "234740", "234745", "234750", "234755", "234760", "234765", "234770", "234805", "234810", "234815", "234905", "234910", "234915", "239205", "239210", "239215", "239220", "239225", "239420", "262830", "331105", "331205", "331305", "332105", "332205", "333115", '331110', '239405', '239415')) %>%
+  filter(idade < 60) %>%
+  group_by(id_municipio) %>%
+  summarise(total_rais = sum(total_funcionarios))
+```
+
+# Dados do município
+
+```{r}
+load('../dados/basedosdados/pop.rdata')
+
+pop <- pop %>%
+  mutate(uf = stringr::str_sub(municipio, -2,-1),
+         municipio = stringr::str_sub(municipio, 1,-6)) %>%
+  rename(id_municipio = municipio_codigo)
+```
+
+
+# Compilando os dados
+
+```{r}
+tabela_final <- censo_final %>%
+  left_join(func_rais) %>%
+  replace(is.na(.), 0) %>%
+  mutate(total_educ_basic = total_censo + total_rais) %>%
+  left_join(compilado_mun) %>%
+  replace(is.na(.), 0) %>%
+  mutate(prop_vacin = num_pacientes/total_educ_basic, prop_1_dose = prim_dose/total_educ_basic, prop_imun_completa = (segun_dose+dose_unica)/total_educ_basic) %>%
+  left_join(pop) %>%
+  rename(docentes_censo = total_censo, auxiliares_rais = total_rais) %>%
+  relocate(c(municipio, uf, pop), .after=id_municipio)
+```
+
+# Salvando os dados
+
+```{r}
+save(tabela_final, file=paste0('../dados/outputs/tabela_final',Sys.Date(),'.rdata'))
+
+write.csv(tabela_final, file=paste0('../dados/outputs/tabela_final',Sys.Date(),'.csv'), row.names = FALSE, fileEncoding = 'UTF-8')
+```
+
+
+# Tabela final  
+
+Extração: 2021-08-10
+
+```{r}
+tabela_final %>%
+  DT::datatable(filter = 'top', options = list(scrollX='600px')) %>%
+  DT::formatRound(c("prop_vacin", "prop_1_dose", "prop_imun_completa"), digits=2)
+```
+
+

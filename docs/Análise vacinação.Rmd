@@ -163,7 +163,7 @@ load('../dados/basedosdados/pop.rdata')
 
 ```{r}
 compilado_mun <- pop %>%
-  left_join(compilado_mun, by = c('municipio_codigo' = 'id_municipio'))
+  full_join(compilado_mun, by = c('municipio_codigo' = 'id_municipio'))
 ```
 
 ```{r}
@@ -1016,3 +1016,12 @@ sp_rais <- sumario_basica %>%
 ```
 
 
+# Resultados finais
+
+Combinando o número de docentes obtidos pelo censo com o número de auxiliares obtidos pela RAIS, podemos chegar a uma estimativa de funcionários da educação básica por cada município.
+
+Vamos filtrar também apenas aquele quantitativo abaixo de 60 anos, visto que acima disso provavelmente se vacinou por idade*.
+
+*Apesar de haver 51 mil profissionais acima de 60 anos marcados como vacinados no grupo 801, por ser um valor ínfimo no universo de 3,3 milhões de vacinados, é esperado que isso não é representativo do quadro real, no qual a maior parte provavelmente se vacinou por idade.
+
+O resultado direto e compilado para gerar a tabela final pode ser visualizado no doc [Gerar arquivos](gerar-arquivos.html)
