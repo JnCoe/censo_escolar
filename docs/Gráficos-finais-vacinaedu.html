@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Jonas Coelho" />
+
+
+<title>Gráficos finais Vacina.edu</title>
+
+<script src="Gráficos-finais-vacinaedu_files/header-attrs-2.10/header-attrs.js"></script>
+<script src="Gráficos-finais-vacinaedu_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="Gráficos-finais-vacinaedu_files/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="Gráficos-finais-vacinaedu_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="Gráficos-finais-vacinaedu_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="Gráficos-finais-vacinaedu_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="Gráficos-finais-vacinaedu_files/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="Gráficos-finais-vacinaedu_files/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="Gráficos-finais-vacinaedu_files/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="Gráficos-finais-vacinaedu_files/navigation-1.1/tabsets.js"></script>
+<script src="Gráficos-finais-vacinaedu_files/navigation-1.1/codefolding.js"></script>
+<link href="Gráficos-finais-vacinaedu_files/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="Gráficos-finais-vacinaedu_files/highlightjs-9.12.0/highlight.js"></script>
+<link href="Gráficos-finais-vacinaedu_files/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
+<script src="Gráficos-finais-vacinaedu_files/pagedtable-1.1/js/pagedtable.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+.tocify-subheader {
+  display: inline;
+}
+.tocify-subheader .tocify-item {
+  font-size: 0.95em;
+}
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Gráficos finais Vacina.edu</h1>
+<h4 class="author">Jonas Coelho</h4>
+<h4 class="date">19/08/2021</h4>
+
+</div>
+
+
+<p>Este arquivo possui exemplos dos gráficos a serem gerados para o site Vacina.edu.</p>
+<pre class="r"><code>library(dplyr)
+library(ggplot2)
+library(geobr)
+library(sf)
+
+library(crul)
+
+library(hrbrthemes)
+
+no_axis &lt;- theme(axis.title=element_blank(),
+                   axis.text=element_blank(),
+                   axis.ticks=element_blank())</code></pre>
+<div id="proporção-de-funcionários-vacinados" class="section level1" number="1">
+<h1 number="1"><span class="header-section-number">1</span> Proporção de funcionários vacinados</h1>
+<pre class="r"><code>tabela_final &lt;- readr::read_csv(&quot;../dados/outputs/tabela_final2021-08-18.csv&quot;)
+
+lista_capitais &lt;- c(&#39;1100205&#39;, &#39;1302603&#39;, &#39;1200401&#39;, &#39;5002704&#39;, &#39;1600303&#39;, &#39;5300108&#39;, &#39;1400100&#39;, &#39;5103403&#39;, &#39;1721000&#39;, &#39;3550308&#39;, &#39;2211001&#39;, &#39;3304557&#39;, &#39;1501402&#39;, &#39;5208707&#39;, &#39;2927408&#39;, &#39;4205407&#39;, &#39;2111300&#39;, &#39;2704302&#39;, &#39;4314902&#39;, &#39;4106902&#39;, &#39;3106200&#39;, &#39;2304400&#39;, &#39;2611606&#39;, &#39;2507507&#39;, &#39;2800308&#39;, &#39;2408102&#39;, &#39;3205309&#39;)
+
+graf1 &lt;- tabela_final %&gt;%
+group_by(uf) %&gt;%
+summarise(total_educ_basic = sum(total_educ_basic), prim_dose = sum(prim_dose), completa = sum(segun_dose+dose_unica)) %&gt;%
+mutate(imun_parcial = prim_dose/total_educ_basic, imun_completa = completa/total_educ_basic)
+
+graf2 &lt;- graf1 %&gt;%
+  mutate(local = &#39;Estado&#39;)
+
+capitais &lt;- tabela_final %&gt;%
+filter(id_municipio %in% lista_capitais) %&gt;%
+rowwise() %&gt;%
+mutate(local = &#39;Capital&#39;, completa = segun_dose+dose_unica) %&gt;%
+select(uf, local, total_educ_basic, prim_dose, completa) %&gt;%
+mutate(imun_parcial = prim_dose/total_educ_basic, imun_completa = completa/total_educ_basic) %&gt;%
+rbind(graf2)</code></pre>
+<div id="somente-estados" class="section level2" number="1.1">
+<h2 number="1.1"><span class="header-section-number">1.1</span> Somente estados</h2>
+<pre class="r"><code> graf1 %&gt;%
+  select(uf, imun_parcial, imun_completa) %&gt;%
+  mutate(ordem = ifelse(imun_parcial&gt;1, 5+imun_completa, imun_parcial)) %&gt;%
+  mutate(uf = forcats::fct_reorder(uf, ordem)) %&gt;%
+  select(!ordem) %&gt;%
+  tidyr::pivot_longer(!uf, names_to = &#39;vacinados&#39;, values_to = &#39;prop&#39;) %&gt;%
+  mutate(prop = ifelse(prop&gt;1,1,prop)) %&gt;%
+  ggplot(aes(fill=vacinados, y=uf, x=prop)) + 
+  geom_bar(stat=&quot;identity&quot;, position = &quot;identity&quot;) +
+  scale_fill_manual(values=c(&quot;#083550&quot;, &quot;#1F95E1&quot;))</code></pre>
+<p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+</div>
+<div id="estados-e-capitais" class="section level2" number="1.2">
+<h2 number="1.2"><span class="header-section-number">1.2</span> Estados e capitais</h2>
+<pre class="r"><code>capitais %&gt;%
+  select(uf, local, imun_parcial, imun_completa) %&gt;%
+  filter(uf %in% c(&#39;RJ&#39;, &#39;SP&#39;, &#39;AL&#39;, &#39;MA&#39;, &#39;RS&#39;, &#39;GO&#39;)) %&gt;%
+  tidyr::pivot_longer(!c(uf, local), names_to = &#39;vacinados&#39;, values_to = &#39;prop&#39;) %&gt;%
+  mutate(prop = ifelse(prop&gt;1,1,prop)) %&gt;%
+  ggplot(aes(fill=vacinados, y=local, x=prop)) + 
+  scale_fill_manual(values=c(&quot;#083550&quot;, &quot;#1F95E1&quot;)) +
+  geom_bar(stat=&quot;identity&quot;, position = &quot;identity&quot;) +
+  facet_wrap(~ uf, ncol = 1)</code></pre>
+<p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+</div>
+</div>
+<div id="dias-letivos" class="section level1" number="2">
+<h1 number="2"><span class="header-section-number">2</span> Dias letivos</h1>
+</div>
+<div id="infraestrutura" class="section level1" number="3">
+<h1 number="3"><span class="header-section-number">3</span> Infraestrutura</h1>
+<pre class="r"><code>load(&#39;../apps/dados/states.RData&#39;)
+load(&#39;../apps/dados/sumario3.rdata&#39;)
+load(&#39;../apps/dados/sumario_capitais.RData&#39;)</code></pre>
+<div id="estados" class="section level2" number="3.1">
+<h2 number="3.1"><span class="header-section-number">3.1</span> Estados</h2>
+<div id="água-potável" class="section level3" number="3.1.1">
+<h3 number="3.1.1"><span class="header-section-number">3.1.1</span> Água potável</h3>
+<pre class="r"><code>states %&gt;%
+  filter(coluna == &#39;in_agua_potavel&#39;) %&gt;%
+  mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %&gt;%
+  ggplot() +
+    geom_sf(aes(fill=prop_preenchida_sem_agua), color= &#39;#000000&#39;, size=.15) +
+      labs(subtitle=&quot;Proporção em % de escolas sem acesso a água potável&quot;, size=8) +
+      scale_fill_distiller(direction = -1, name=&quot;Proporção&quot;) +
+      theme_minimal() +
+      no_axis</code></pre>
+<p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+</div>
+<div id="área-verde" class="section level3" number="3.1.2">
+<h3 number="3.1.2"><span class="header-section-number">3.1.2</span> Área verde</h3>
+<pre class="r"><code>states %&gt;%
+  filter(coluna == &#39;in_area_verde&#39;) %&gt;%
+  mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %&gt;%
+  ggplot() +
+    geom_sf(aes(fill=prop_preenchida_sem_agua), color= &#39;#000000&#39;, size=.15) +
+      labs(subtitle=&quot;Proporção em % de escolas sem área verde&quot;, size=8) +
+      scale_fill_distiller(direction = -1, palette = &quot;Greens&quot;, name=&quot;Proporção&quot;) +
+      theme_minimal() +
+      no_axis</code></pre>
+<p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+</div>
+<div id="pátio-descoberto" class="section level3" number="3.1.3">
+<h3 number="3.1.3"><span class="header-section-number">3.1.3</span> Pátio descoberto</h3>
+<pre class="r"><code>states %&gt;%
+  filter(coluna == &#39;in_patio_descoberto&#39; | coluna == &#39;in_patio_coberto&#39;) %&gt;%
+  group_by(co_uf) %&gt;%
+  summarise(soma_zeros = sum(zeros),
+            soma_uns = sum(uns)) %&gt;%
+  mutate(prop_preenchida_sem_agua = soma_zeros/(soma_zeros+soma_uns)) %&gt;%
+  ggplot() +
+    geom_sf(aes(fill=prop_preenchida_sem_agua), color= &#39;#000000&#39;, size=.15) +
+      labs(subtitle=&quot;Proporção em % de escolas sem pátio descoberto&quot;, size=8) +
+      scale_fill_distiller(direction = -1, palette = &quot;Oranges&quot;, name=&quot;Proporção&quot;) +
+      theme_minimal() +
+      no_axis</code></pre>
+<p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+</div>
+</div>
+<div id="estados-e-capitais-1" class="section level2" number="3.2">
+<h2 number="3.2"><span class="header-section-number">3.2</span> Estados e capitais</h2>
+<div id="água-potável-1" class="section level3" number="3.2.1">
+<h3 number="3.2.1"><span class="header-section-number">3.2.1</span> Água potável</h3>
+<pre class="r"><code>temp1 &lt;- sumario3 %&gt;%
+  filter(coluna == &#39;in_agua_potavel&#39;) %&gt;%
+  mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %&gt;%
+  select(co_uf, prop_preenchida_sem_agua) %&gt;%
+  rename(valor_estado = prop_preenchida_sem_agua)
+
+temp2 &lt;- sumario_capitais %&gt;%
+  filter(coluna == &#39;in_agua_potavel&#39;) %&gt;%
+  mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %&gt;%
+  select(co_uf, prop_preenchida_sem_agua) %&gt;%
+  rename(valor_capital = prop_preenchida_sem_agua)
+
+temp3 &lt;- temp1 %&gt;%
+  left_join(temp2) %&gt;%
+  mutate(mymean = mean(c(valor_estado,valor_capital) ), dif = valor_estado-valor_capital) %&gt;% 
+  arrange(valor_estado) %&gt;% 
+  mutate(co_uf=factor(co_uf, co_uf))
+
+ggplot(temp3) +
+  geom_segment( aes(x=co_uf, xend=co_uf, y=valor_estado, yend=valor_capital), color=&quot;grey&quot;) +
+  geom_point( aes(x=co_uf, y=valor_estado), color=rgb(0.2,0.7,0.1,0.5), size=3 ) +
+  geom_point( aes(x=co_uf, y=valor_capital), color=rgb(0.7,0.2,0.1,0.5), size=3 ) +
+  coord_flip()+
+  theme_ipsum() +
+  theme(
+    legend.position = &quot;none&quot;,
+  ) +
+  xlab(&quot;&quot;) +
+  ylab(&quot;Value of Y&quot;)</code></pre>
+<p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+</div>
+<div id="área-verde-1" class="section level3" number="3.2.2">
+<h3 number="3.2.2"><span class="header-section-number">3.2.2</span> Área verde</h3>
+</div>
+<div id="pátio-descoberto-1" class="section level3" number="3.2.3">
+<h3 number="3.2.3"><span class="header-section-number">3.2.3</span> Pátio descoberto</h3>
+</div>
+</div>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = false;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
