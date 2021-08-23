@@ -329,18 +329,17 @@ rbind(graf2)</code></pre>
 <p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
 </div>
 </div>
-<div id="dias-letivos" class="section level1" number="2">
-<h1 number="2"><span class="header-section-number">2</span> Dias letivos</h1>
-</div>
-<div id="infraestrutura" class="section level1" number="3">
-<h1 number="3"><span class="header-section-number">3</span> Infraestrutura</h1>
+<div id="infraestrutura" class="section level1" number="2">
+<h1 number="2"><span class="header-section-number">2</span> Infraestrutura</h1>
 <pre class="r"><code>load(&#39;../apps/dados/states.RData&#39;)
 load(&#39;../apps/dados/sumario3.rdata&#39;)
-load(&#39;../apps/dados/sumario_capitais.RData&#39;)</code></pre>
-<div id="estados" class="section level2" number="3.1">
-<h2 number="3.1"><span class="header-section-number">3.1</span> Estados</h2>
-<div id="água-potável" class="section level3" number="3.1.1">
-<h3 number="3.1.1"><span class="header-section-number">3.1.1</span> Água potável</h3>
+load(&#39;../apps/dados/sumario_capitais.RData&#39;)
+
+equivalencias &lt;- data.frame(co_uf = c(&#39;12&#39;, &#39;27&#39;, &#39;13&#39;, &#39;16&#39;, &#39;29&#39;, &#39;23&#39;, &#39;53&#39;, &#39;32&#39;, &#39;52&#39;, &#39;21&#39;, &#39;31&#39;, &#39;50&#39;, &#39;51&#39;, &#39;15&#39;, &#39;25&#39;, &#39;26&#39;, &#39;22&#39;, &#39;41&#39;, &#39;33&#39;, &#39;24&#39;, &#39;11&#39;, &#39;14&#39;, &#39;43&#39;, &#39;42&#39;, &#39;28&#39;, &#39;35&#39;, &#39;17&#39;), uf = c(&#39;AC&#39;, &#39;AL&#39;, &#39;AM&#39;, &#39;AP&#39;, &#39;BA&#39;, &#39;CE&#39;, &#39;DF&#39;, &#39;ES&#39;, &#39;GO&#39;, &#39;MA&#39;, &#39;MG&#39;, &#39;MS&#39;, &#39;MT&#39;, &#39;PA&#39;, &#39;PB&#39;, &#39;PE&#39;, &#39;PI&#39;, &#39;PR&#39;, &#39;RJ&#39;, &#39;RN&#39;, &#39;RO&#39;, &#39;RR&#39;, &#39;RS&#39;, &#39;SC&#39;, &#39;SE&#39;, &#39;SP&#39;, &#39;TO&#39;))</code></pre>
+<div id="estados" class="section level2" number="2.1">
+<h2 number="2.1"><span class="header-section-number">2.1</span> Estados</h2>
+<div id="água-potável" class="section level3" number="2.1.1">
+<h3 number="2.1.1"><span class="header-section-number">2.1.1</span> Água potável</h3>
 <pre class="r"><code>states %&gt;%
   filter(coluna == &#39;in_agua_potavel&#39;) %&gt;%
   mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %&gt;%
@@ -352,8 +351,8 @@ load(&#39;../apps/dados/sumario_capitais.RData&#39;)</code></pre>
       no_axis</code></pre>
 <p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
 </div>
-<div id="área-verde" class="section level3" number="3.1.2">
-<h3 number="3.1.2"><span class="header-section-number">3.1.2</span> Área verde</h3>
+<div id="área-verde" class="section level3" number="2.1.2">
+<h3 number="2.1.2"><span class="header-section-number">2.1.2</span> Área verde</h3>
 <pre class="r"><code>states %&gt;%
   filter(coluna == &#39;in_area_verde&#39;) %&gt;%
   mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %&gt;%
@@ -365,8 +364,8 @@ load(&#39;../apps/dados/sumario_capitais.RData&#39;)</code></pre>
       no_axis</code></pre>
 <p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 </div>
-<div id="pátio-descoberto" class="section level3" number="3.1.3">
-<h3 number="3.1.3"><span class="header-section-number">3.1.3</span> Pátio descoberto</h3>
+<div id="pátio-descoberto" class="section level3" number="2.1.3">
+<h3 number="2.1.3"><span class="header-section-number">2.1.3</span> Pátio descoberto</h3>
 <pre class="r"><code>states %&gt;%
   filter(coluna == &#39;in_patio_descoberto&#39; | coluna == &#39;in_patio_coberto&#39;) %&gt;%
   group_by(co_uf) %&gt;%
@@ -382,46 +381,114 @@ load(&#39;../apps/dados/sumario_capitais.RData&#39;)</code></pre>
 <p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 </div>
 </div>
-<div id="estados-e-capitais-1" class="section level2" number="3.2">
-<h2 number="3.2"><span class="header-section-number">3.2</span> Estados e capitais</h2>
-<div id="água-potável-1" class="section level3" number="3.2.1">
-<h3 number="3.2.1"><span class="header-section-number">3.2.1</span> Água potável</h3>
+<div id="estados-e-capitais-1" class="section level2" number="2.2">
+<h2 number="2.2"><span class="header-section-number">2.2</span> Estados e capitais</h2>
+<div id="água-potável-1" class="section level3" number="2.2.1">
+<h3 number="2.2.1"><span class="header-section-number">2.2.1</span> Água potável</h3>
 <pre class="r"><code>temp1 &lt;- sumario3 %&gt;%
+  left_join(equivalencias) %&gt;%
   filter(coluna == &#39;in_agua_potavel&#39;) %&gt;%
   mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %&gt;%
-  select(co_uf, prop_preenchida_sem_agua) %&gt;%
+  select(uf, prop_preenchida_sem_agua) %&gt;%
   rename(valor_estado = prop_preenchida_sem_agua)
 
 temp2 &lt;- sumario_capitais %&gt;%
+  left_join(equivalencias) %&gt;%
   filter(coluna == &#39;in_agua_potavel&#39;) %&gt;%
   mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %&gt;%
-  select(co_uf, prop_preenchida_sem_agua) %&gt;%
+  select(uf, prop_preenchida_sem_agua) %&gt;%
   rename(valor_capital = prop_preenchida_sem_agua)
 
 temp3 &lt;- temp1 %&gt;%
   left_join(temp2) %&gt;%
+  rowwise() %&gt;% 
   mutate(mymean = mean(c(valor_estado,valor_capital) ), dif = valor_estado-valor_capital) %&gt;% 
-  arrange(valor_estado) %&gt;% 
-  mutate(co_uf=factor(co_uf, co_uf))
+  arrange(desc(dif)) %&gt;% 
+  mutate(uf=factor(uf, uf))
 
 ggplot(temp3) +
-  geom_segment( aes(x=co_uf, xend=co_uf, y=valor_estado, yend=valor_capital), color=&quot;grey&quot;) +
-  geom_point( aes(x=co_uf, y=valor_estado), color=rgb(0.2,0.7,0.1,0.5), size=3 ) +
-  geom_point( aes(x=co_uf, y=valor_capital), color=rgb(0.7,0.2,0.1,0.5), size=3 ) +
+  geom_segment( aes(x=uf, xend=uf, y=valor_estado, yend=valor_capital), color=&quot;grey&quot;) +
+  geom_point( aes(x=uf, y=valor_estado), color=&#39;#083550&#39;, size=3, alpha = 0.7) +
+  geom_point( aes(x=uf, y=valor_capital), color=&#39;#1f95e1&#39;, size=3, alpha = 0.7) +
   coord_flip()+
   theme_ipsum() +
   theme(
     legend.position = &quot;none&quot;,
   ) +
-  xlab(&quot;&quot;) +
-  ylab(&quot;Value of Y&quot;)</code></pre>
+  xlab(&quot;Estado&quot;) +
+  ylab(&quot;Proporção em % de escolas sem acesso a água potável&quot;)</code></pre>
 <p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
 </div>
-<div id="área-verde-1" class="section level3" number="3.2.2">
-<h3 number="3.2.2"><span class="header-section-number">3.2.2</span> Área verde</h3>
+<div id="área-verde-1" class="section level3" number="2.2.2">
+<h3 number="2.2.2"><span class="header-section-number">2.2.2</span> Área verde</h3>
+<pre class="r"><code>temp1 &lt;- sumario3 %&gt;%
+  left_join(equivalencias) %&gt;%
+  filter(coluna == &#39;in_area_verde&#39;) %&gt;%
+  mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %&gt;%
+  select(uf, prop_preenchida_sem_agua) %&gt;%
+  rename(valor_estado = prop_preenchida_sem_agua)
+
+temp2 &lt;- sumario_capitais %&gt;%
+  left_join(equivalencias) %&gt;%
+  filter(coluna == &#39;in_area_verde&#39;) %&gt;%
+  mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %&gt;%
+  select(uf, prop_preenchida_sem_agua) %&gt;%
+  rename(valor_capital = prop_preenchida_sem_agua)
+
+temp3 &lt;- temp1 %&gt;%
+  left_join(temp2) %&gt;%
+  rowwise() %&gt;% 
+  mutate(mymean = mean(c(valor_estado,valor_capital) ), dif = valor_estado-valor_capital) %&gt;% 
+  arrange(desc(dif)) %&gt;% 
+  mutate(uf=factor(uf, uf))
+
+ggplot(temp3) +
+  geom_segment( aes(x=uf, xend=uf, y=valor_estado, yend=valor_capital), color=&quot;grey&quot;) +
+  geom_point( aes(x=uf, y=valor_estado), color=&#39;#083550&#39;, size=3, alpha = 0.7) +
+  geom_point( aes(x=uf, y=valor_capital), color=&#39;#1f95e1&#39;, size=3, alpha = 0.7) +
+  coord_flip()+
+  theme_ipsum() +
+  theme(
+    legend.position = &quot;none&quot;,
+  ) +
+  xlab(&quot;Estado&quot;) +
+  ylab(&quot;Proporção em % de escolas sem área verde&quot;)</code></pre>
+<p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
 </div>
-<div id="pátio-descoberto-1" class="section level3" number="3.2.3">
-<h3 number="3.2.3"><span class="header-section-number">3.2.3</span> Pátio descoberto</h3>
+<div id="pátio-descoberto-1" class="section level3" number="2.2.3">
+<h3 number="2.2.3"><span class="header-section-number">2.2.3</span> Pátio descoberto</h3>
+<pre class="r"><code>temp1 &lt;- sumario3 %&gt;%
+  left_join(equivalencias) %&gt;%
+  filter(coluna == &#39;in_patio_descoberto&#39;) %&gt;%
+  mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %&gt;%
+  select(uf, prop_preenchida_sem_agua) %&gt;%
+  rename(valor_estado = prop_preenchida_sem_agua)
+
+temp2 &lt;- sumario_capitais %&gt;%
+  left_join(equivalencias) %&gt;%
+  filter(coluna == &#39;in_patio_descoberto&#39;) %&gt;%
+  mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %&gt;%
+  select(uf, prop_preenchida_sem_agua) %&gt;%
+  rename(valor_capital = prop_preenchida_sem_agua)
+
+
+temp3 &lt;- temp1 %&gt;%
+  left_join(temp2) %&gt;%
+  rowwise() %&gt;% 
+  mutate(mymean = mean(c(valor_estado,valor_capital) ), dif = valor_estado-valor_capital) %&gt;% 
+  arrange(desc(dif)) %&gt;% 
+  mutate(uf=factor(uf, uf))
+
+ggplot(temp3) +
+  geom_segment( aes(x=uf, xend=uf, y=valor_estado, yend=valor_capital), color=&quot;grey&quot;) +
+  geom_point( aes(x=uf, y=valor_estado), color=&#39;#083550&#39;, size=3, alpha = 0.7, show.legend=TRUE) +
+  geom_point( aes(x=uf, y=valor_capital), color=&#39;#1f95e1&#39;, size=3, alpha = 0.7, show.legend=TRUE) +
+  coord_flip()+
+  theme_ipsum() +
+  theme(legend.position = &quot;none&quot;) +
+  xlab(&quot;Estado&quot;) +
+  ylab(&quot;Proporção em % de escolas sem pátio descoberto&quot;)</code></pre>
+<p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
 </div>
 </div>
 </div>

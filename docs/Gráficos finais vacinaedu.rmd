@@ -95,15 +95,14 @@ capitais %>%
   facet_wrap(~ uf, ncol = 1)
 ```
 
-
-# Dias letivos
-
 # Infraestrutura
 
 ```{r}
 load('../apps/dados/states.RData')
 load('../apps/dados/sumario3.rdata')
 load('../apps/dados/sumario_capitais.RData')
+
+equivalencias <- data.frame(co_uf = c('12', '27', '13', '16', '29', '23', '53', '32', '52', '21', '31', '50', '51', '15', '25', '26', '22', '41', '33', '24', '11', '14', '43', '42', '28', '35', '17'), uf = c('AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA', 'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO'))
 ```
 
 
@@ -160,42 +159,108 @@ states %>%
 
 ```{r}
 temp1 <- sumario3 %>%
+  left_join(equivalencias) %>%
   filter(coluna == 'in_agua_potavel') %>%
   mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %>%
-  select(co_uf, prop_preenchida_sem_agua) %>%
+  select(uf, prop_preenchida_sem_agua) %>%
   rename(valor_estado = prop_preenchida_sem_agua)
 
 temp2 <- sumario_capitais %>%
+  left_join(equivalencias) %>%
   filter(coluna == 'in_agua_potavel') %>%
   mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %>%
-  select(co_uf, prop_preenchida_sem_agua) %>%
+  select(uf, prop_preenchida_sem_agua) %>%
   rename(valor_capital = prop_preenchida_sem_agua)
 
 temp3 <- temp1 %>%
   left_join(temp2) %>%
+  rowwise() %>% 
   mutate(mymean = mean(c(valor_estado,valor_capital) ), dif = valor_estado-valor_capital) %>% 
-  arrange(valor_estado) %>% 
-  mutate(co_uf=factor(co_uf, co_uf))
+  arrange(desc(dif)) %>% 
+  mutate(uf=factor(uf, uf))
 
 ggplot(temp3) +
-  geom_segment( aes(x=co_uf, xend=co_uf, y=valor_estado, yend=valor_capital), color="grey") +
-  geom_point( aes(x=co_uf, y=valor_estado), color=rgb(0.2,0.7,0.1,0.5), size=3 ) +
-  geom_point( aes(x=co_uf, y=valor_capital), color=rgb(0.7,0.2,0.1,0.5), size=3 ) +
+  geom_segment( aes(x=uf, xend=uf, y=valor_estado, yend=valor_capital), color="grey") +
+  geom_point( aes(x=uf, y=valor_estado), color='#083550', size=3, alpha = 0.7) +
+  geom_point( aes(x=uf, y=valor_capital), color='#1f95e1', size=3, alpha = 0.7) +
   coord_flip()+
   theme_ipsum() +
   theme(
     legend.position = "none",
   ) +
-  xlab("") +
-  ylab("Value of Y")
+  xlab("Estado") +
+  ylab("Proporção em % de escolas sem acesso a água potável")
 ```
 
 
 ### Área verde
 ```{r}
+temp1 <- sumario3 %>%
+  left_join(equivalencias) %>%
+  filter(coluna == 'in_area_verde') %>%
+  mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %>%
+  select(uf, prop_preenchida_sem_agua) %>%
+  rename(valor_estado = prop_preenchida_sem_agua)
 
+temp2 <- sumario_capitais %>%
+  left_join(equivalencias) %>%
+  filter(coluna == 'in_area_verde') %>%
+  mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %>%
+  select(uf, prop_preenchida_sem_agua) %>%
+  rename(valor_capital = prop_preenchida_sem_agua)
+
+temp3 <- temp1 %>%
+  left_join(temp2) %>%
+  rowwise() %>% 
+  mutate(mymean = mean(c(valor_estado,valor_capital) ), dif = valor_estado-valor_capital) %>% 
+  arrange(desc(dif)) %>% 
+  mutate(uf=factor(uf, uf))
+
+ggplot(temp3) +
+  geom_segment( aes(x=uf, xend=uf, y=valor_estado, yend=valor_capital), color="grey") +
+  geom_point( aes(x=uf, y=valor_estado), color='#083550', size=3, alpha = 0.7) +
+  geom_point( aes(x=uf, y=valor_capital), color='#1f95e1', size=3, alpha = 0.7) +
+  coord_flip()+
+  theme_ipsum() +
+  theme(
+    legend.position = "none",
+  ) +
+  xlab("Estado") +
+  ylab("Proporção em % de escolas sem área verde")
 ```
 
 
-
 ### Pátio descoberto
+```{r}
+temp1 <- sumario3 %>%
+  left_join(equivalencias) %>%
+  filter(coluna == 'in_patio_descoberto') %>%
+  mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %>%
+  select(uf, prop_preenchida_sem_agua) %>%
+  rename(valor_estado = prop_preenchida_sem_agua)
+
+temp2 <- sumario_capitais %>%
+  left_join(equivalencias) %>%
+  filter(coluna == 'in_patio_descoberto') %>%
+  mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %>%
+  select(uf, prop_preenchida_sem_agua) %>%
+  rename(valor_capital = prop_preenchida_sem_agua)
+
+
+temp3 <- temp1 %>%
+  left_join(temp2) %>%
+  rowwise() %>% 
+  mutate(mymean = mean(c(valor_estado,valor_capital) ), dif = valor_estado-valor_capital) %>% 
+  arrange(desc(dif)) %>% 
+  mutate(uf=factor(uf, uf))
+
+ggplot(temp3) +
+  geom_segment( aes(x=uf, xend=uf, y=valor_estado, yend=valor_capital), color="grey") +
+  geom_point( aes(x=uf, y=valor_estado), color='#083550', size=3, alpha = 0.7, show.legend=TRUE) +
+  geom_point( aes(x=uf, y=valor_capital), color='#1f95e1', size=3, alpha = 0.7, show.legend=TRUE) +
+  coord_flip()+
+  theme_ipsum() +
+  theme(legend.position = "none") +
+  xlab("Estado") +
+  ylab("Proporção em % de escolas sem pátio descoberto")
+```
