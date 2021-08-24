@@ -11,7 +11,7 @@ output:
     number_sections: true
     df_print: paged
     code_folding: hide
-    self_contained: false
+    self_contained: true
 ---
 
 ```{r setup, include=FALSE}
@@ -21,10 +21,14 @@ knitr::opts_chunk$set(warning = FALSE)
 ```
 
 
+
 Este arquivo possui exemplos dos gráficos a serem gerados para o site Vacina.edu.
+
+Serão três seções de gráficos distintas, descritas abaixo. As exibições são meramente exemplos, não necessitando que sejam seguidas à risca.
 
 
 ```{r}
+# Bibliotecas usadas para gerar exemplos
 library(dplyr)
 library(ggplot2)
 library(geobr)
@@ -41,6 +45,16 @@ no_axis <- theme(axis.title=element_blank(),
 
 
 # Proporção de funcionários vacinados
+
+Essa primeira parte seriam dois gráficos, alternáveis por meio de boxes em que o usuário possa clicar e alternar a visualização.
+O primeiro gráfico é um gráfico de barras empilhadas com a proporção de profissionais da educação básica imunizados. Uma barra corresponde ao valor de primeiras doses distribuídas no estado (imunização parcial) enquanto a outra barra corresponde à soma de segundas doses + doses únicas (imunização completa).
+
+- Os valores seriam apresentados agregados por estados.
+- O eixo X iria de 0 a 100%
+- O eixo Y seriam os estados, ordenados pela proporção de imunizados parcialmente (em caso de empate, pela proporção de imunizados completamente)
+- As cores das barras são as seguintes: imunização completa (#083550), imunização parcial (#1F95E1)
+- No caso de estados em que há mais de 100% de imunização parcial (há alguns casos), o gráfico caparia no limite de 100%, mas mostraria o valor real quando o usuário passasse o mouse por cima
+
 
 ```{r}
 tabela_final <- readr::read_csv("../dados/outputs/tabela_final2021-08-18.csv")
@@ -66,6 +80,7 @@ rbind(graf2)
 
 
 ## Somente estados
+
 
 ```{r}
  graf1 %>%
@@ -95,7 +110,9 @@ capitais %>%
   facet_wrap(~ uf, ncol = 1)
 ```
 
-# Infraestrutura
+# Infraestrutura - Estados
+
+Essa segunda parte pretende apresentar a proporção (em %) de escolas em cada estado que não possui a) água potável, b) área verde e c) pátio descoberto. Os gráficos serão gerados a partir de mapas, com escala monocromática indo do valor mínimo ao máximo entre cada estado. O usuário poderá trocar entre os três tipos diferentes ao clicar em 'boxes' acima do gráfico.
 
 ```{r}
 load('../apps/dados/states.RData')
@@ -105,10 +122,9 @@ load('../apps/dados/sumario_capitais.RData')
 equivalencias <- data.frame(co_uf = c('12', '27', '13', '16', '29', '23', '53', '32', '52', '21', '31', '50', '51', '15', '25', '26', '22', '41', '33', '24', '11', '14', '43', '42', '28', '35', '17'), uf = c('AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA', 'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO'))
 ```
 
+## Água potável
 
-## Estados
-
-### Água potável
+A escala desse mapa deverá ser na cor azul.
 
 ```{r}
 states %>%
@@ -122,7 +138,9 @@ states %>%
       no_axis
 ```
 
-### Área verde
+## Área verde
+
+A escala desse mapa deverá ser na cor verde.
 
 ```{r}
 states %>%
@@ -136,7 +154,9 @@ states %>%
       no_axis
 ```
 
-### Pátio descoberto
+## Pátio descoberto
+
+A escala desse mapa deverá ser na cor laranja.
 
 ```{r}
 states %>%
@@ -153,9 +173,12 @@ states %>%
       no_axis
 ```
 
-## Estados e capitais
+# Infraestrutura - Capitais e Estados
 
-### Água potável
+Nessa seção, será apresentada a diferença entre os valores anteriores por estado e o valor obtido pela sua respectiva capital, em três Lollipop charts distintos. Os estados serão representados por pontos com a cor #083550 e as capitais por pontos com a cor #1f95e1. Ambos deverão estar levemente transparentes para melhor evidenciar casos de sobreposição. Os estados estão ordenados por diferença entre o valor da capital e o valor do estado. Quanto "pior" a capital, mais para cima no ordenamento, quanto "melhor", mais para baixo.
+O usuário poderá trocar entre os três tipos diferentes ao clicar em 'boxes' acima do gráfico.
+
+## Água potável
 
 ```{r}
 temp1 <- sumario3 %>%
@@ -193,7 +216,7 @@ ggplot(temp3) +
 ```
 
 
-### Área verde
+## Área verde
 ```{r}
 temp1 <- sumario3 %>%
   left_join(equivalencias) %>%
@@ -230,7 +253,7 @@ ggplot(temp3) +
 ```
 
 
-### Pátio descoberto
+## Pátio descoberto
 ```{r}
 temp1 <- sumario3 %>%
   left_join(equivalencias) %>%
