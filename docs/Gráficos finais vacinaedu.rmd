@@ -234,7 +234,7 @@ ggplot(temp3) +
     legend.position = "none",
   ) +
   xlab("Estado") +
-  ylab("Proporção em % de escolas sem acesso a água potável")
+  ylab("Proporção em % de escolas com acesso a água potável")
 ```
 
 
@@ -271,7 +271,7 @@ ggplot(temp3) +
     legend.position = "none",
   ) +
   xlab("Estado") +
-  ylab("Proporção em % de escolas sem área verde")
+  ylab("Proporção em % de escolas com área verde")
 ```
 
 
@@ -307,7 +307,7 @@ ggplot(temp3) +
   theme_ipsum() +
   theme(legend.position = "none") +
   xlab("Estado") +
-  ylab("Proporção em % de escolas sem pátio descoberto")
+  ylab("Proporção em % de escolas com pátio descoberto")
 ```
 
 
@@ -327,6 +327,3 @@ final_infra <- states_sem_mapa %>%
 
 write.csv(final_infra, row.names = FALSE, fileEncoding = 'UTF-8', file='../dados/outputs/final_infra.csv')
 ```
-
-
-
