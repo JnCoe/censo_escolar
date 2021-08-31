@@ -23,7 +23,11 @@ library(knitr)
 library(kableExtra)
 options(scipen = 9999)
 
+'%!in%' <- function(x,y)!('%in%'(x,y))
+
 load('../dados/basedosdados/cnaes_cbo.rdata')
+
+load('../dados/basedosdados/caete_rais.rdata')
 
 dici_cnae <- data.table::fread('../dados/dici_cnae.csv', encoding = 'UTF-8', colClasses = 'character') %>%
   mutate(id_classe = gsub('\\.|-',"", cod_classe)) %>%
@@ -39,7 +43,23 @@ cnaes_cbo2 <- cnaes_cbo %>%
   left_join(dici_cbo)
 ```
 
-```{r, results='asis'}
+```{r results='asis', eval=FALSE}
+dump <- caete_rais %>%
+  group_by(cnae_2_subclasse, cbo_2002) %>%
+  summarise(total = n()) %>%
+  left_join(dici_cbo) %>%
+  left_join(dici_cnae) %>%
+  mutate(total = as.numeric(total)) %>%
+  select(nm_cnae, ocupacao, total) %>%
+  tidyr::spread(key = nm_cnae, value = total, fill = 0) %>%
+  googleVis::gvisBarChart(xvar= "ocupacao", options=list(height=5400, fontSize=11,  isStacked='percent', chartArea= "{height:\"100%\"}" )) %>%
+  plot()
+
+print(dump, 'chart')
+```
+
+
+```{r, results='asis', eval=FALSE}
 dump <- cnaes_cbo2 %>%
   select(nm_cnae, ocupacao, total) %>%
   mutate(total = as.numeric(total)) %>%
