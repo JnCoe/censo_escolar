@@ -11,7 +11,7 @@ output:
     number_sections: true
     df_print: paged
     code_folding: hide
-    self_contained: true
+    self_contained: false
 ---
 
 ```{r setup, include=FALSE}
@@ -126,51 +126,73 @@ equivalencias <- data.frame(co_uf = c('12', '27', '13', '16', '29', '23', '53', 
 
 A escala desse mapa deverá ser na cor azul.
 
+###Protótipo:
+
 ```{r}
 states %>%
   filter(coluna == 'in_agua_potavel') %>%
-  mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %>%
+  mutate(prop_preenchida_com_agua = uns/(zeros+uns)) %>%
   ggplot() +
-    geom_sf(aes(fill=prop_preenchida_sem_agua), color= '#000000', size=.15) +
-      labs(subtitle="Proporção em % de escolas sem acesso a água potável", size=8) +
-      scale_fill_distiller(direction = -1, name="Proporção") +
+    geom_sf(aes(fill=prop_preenchida_com_agua), color= '#000000', size=.15) +
+      labs(subtitle="Proporção em % de escolas com acesso a água potável", size=8) +
+      scale_fill_distiller(direction = 1, name="Proporção") +
       theme_minimal() +
       no_axis
+```
+
+### Modelo final
+
+```{r, results='asis'}
+print(cat('<div class="flourish-embed flourish-map" data-src="visualisation/7136865"><script src="https://public.flourish.studio/resources/embed.js"></script></div>'))
 ```
 
 ## Área verde
 
 A escala desse mapa deverá ser na cor verde.
 
+### Protótipo
 ```{r}
 states %>%
   filter(coluna == 'in_area_verde') %>%
-  mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %>%
+  mutate(prop_preenchida_com_agua = uns/(zeros+uns)) %>%
   ggplot() +
-    geom_sf(aes(fill=prop_preenchida_sem_agua), color= '#000000', size=.15) +
-      labs(subtitle="Proporção em % de escolas sem área verde", size=8) +
-      scale_fill_distiller(direction = -1, palette = "Greens", name="Proporção") +
+    geom_sf(aes(fill=prop_preenchida_com_agua), color= '#000000', size=.15) +
+      labs(subtitle="Proporção em % de escolas com área verde", size=8) +
+      scale_fill_distiller(direction = 1, palette = "Greens", name="Proporção") +
       theme_minimal() +
       no_axis
+```
+
+### Modelo final
+
+```{r, results='asis'}
+print(cat('<div class="flourish-embed flourish-map" data-src="visualisation/7137008"><script src="https://public.flourish.studio/resources/embed.js"></script></div>'))
 ```
 
 ## Pátio descoberto
 
 A escala desse mapa deverá ser na cor laranja.
 
+### Protótipo
 ```{r}
 states %>%
   filter(coluna == 'in_patio_descoberto' | coluna == 'in_patio_coberto') %>%
   group_by(co_uf) %>%
   summarise(soma_zeros = sum(zeros),
             soma_uns = sum(uns)) %>%
-  mutate(prop_preenchida_sem_agua = soma_zeros/(soma_zeros+soma_uns)) %>%
+  mutate(prop_preenchida_com_agua = soma_uns/(soma_zeros+soma_uns)) %>%
   ggplot() +
-    geom_sf(aes(fill=prop_preenchida_sem_agua), color= '#000000', size=.15) +
-      labs(subtitle="Proporção em % de escolas sem pátio descoberto", size=8) +
-      scale_fill_distiller(direction = -1, palette = "Oranges", name="Proporção") +
+    geom_sf(aes(fill=prop_preenchida_com_agua), color= '#000000', size=.15) +
+      labs(subtitle="Proporção em % de escolas com pátio descoberto", size=8) +
+      scale_fill_distiller(direction = 1, palette = "Oranges", name="Proporção") +
       theme_minimal() +
       no_axis
+```
+
+### Modelo final
+
+```{r, results='asis'}
+print(cat('<div class="flourish-embed flourish-map" data-src="visualisation/7137021"><script src="https://public.flourish.studio/resources/embed.js"></script></div>'))
 ```
 
 # Infraestrutura - Capitais e Estados
@@ -184,16 +206,16 @@ O usuário poderá trocar entre os três tipos diferentes ao clicar em 'boxes' a
 temp1 <- sumario3 %>%
   left_join(equivalencias) %>%
   filter(coluna == 'in_agua_potavel') %>%
-  mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %>%
-  select(uf, prop_preenchida_sem_agua) %>%
-  rename(valor_estado = prop_preenchida_sem_agua)
+  mutate(prop_preenchida_com_agua = uns/(zeros+uns)) %>%
+  select(uf, prop_preenchida_com_agua) %>%
+  rename(valor_estado = prop_preenchida_com_agua)
 
 temp2 <- sumario_capitais %>%
   left_join(equivalencias) %>%
   filter(coluna == 'in_agua_potavel') %>%
-  mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %>%
-  select(uf, prop_preenchida_sem_agua) %>%
-  rename(valor_capital = prop_preenchida_sem_agua)
+  mutate(prop_preenchida_com_agua = uns/(zeros+uns)) %>%
+  select(uf, prop_preenchida_com_agua) %>%
+  rename(valor_capital = prop_preenchida_com_agua)
 
 temp3 <- temp1 %>%
   left_join(temp2) %>%
@@ -221,16 +243,16 @@ ggplot(temp3) +
 temp1 <- sumario3 %>%
   left_join(equivalencias) %>%
   filter(coluna == 'in_area_verde') %>%
-  mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %>%
-  select(uf, prop_preenchida_sem_agua) %>%
-  rename(valor_estado = prop_preenchida_sem_agua)
+  mutate(prop_preenchida_com_agua = uns/(zeros+uns)) %>%
+  select(uf, prop_preenchida_com_agua) %>%
+  rename(valor_estado = prop_preenchida_com_agua)
 
 temp2 <- sumario_capitais %>%
   left_join(equivalencias) %>%
   filter(coluna == 'in_area_verde') %>%
-  mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %>%
-  select(uf, prop_preenchida_sem_agua) %>%
-  rename(valor_capital = prop_preenchida_sem_agua)
+  mutate(prop_preenchida_com_agua = uns/(zeros+uns)) %>%
+  select(uf, prop_preenchida_com_agua) %>%
+  rename(valor_capital = prop_preenchida_com_agua)
 
 temp3 <- temp1 %>%
   left_join(temp2) %>%
@@ -258,16 +280,16 @@ ggplot(temp3) +
 temp1 <- sumario3 %>%
   left_join(equivalencias) %>%
   filter(coluna == 'in_patio_descoberto') %>%
-  mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %>%
-  select(uf, prop_preenchida_sem_agua) %>%
-  rename(valor_estado = prop_preenchida_sem_agua)
+  mutate(prop_preenchida_com_agua = uns/(zeros+uns)) %>%
+  select(uf, prop_preenchida_com_agua) %>%
+  rename(valor_estado = prop_preenchida_com_agua)
 
 temp2 <- sumario_capitais %>%
   left_join(equivalencias) %>%
   filter(coluna == 'in_patio_descoberto') %>%
-  mutate(prop_preenchida_sem_agua = zeros/(zeros+uns)) %>%
-  select(uf, prop_preenchida_sem_agua) %>%
-  rename(valor_capital = prop_preenchida_sem_agua)
+  mutate(prop_preenchida_com_agua = uns/(zeros+uns)) %>%
+  select(uf, prop_preenchida_com_agua) %>%
+  rename(valor_capital = prop_preenchida_com_agua)
 
 
 temp3 <- temp1 %>%
@@ -287,3 +309,24 @@ ggplot(temp3) +
   xlab("Estado") +
   ylab("Proporção em % de escolas sem pátio descoberto")
 ```
+
+
+# ANEXO: Gerando arquivos:
+
+```{r}
+states_sem_mapa <- states %>%
+    st_set_geometry(NULL) %>%
+    rowwise() %>%
+    mutate(prop_com_estado = uns/(zeros+uns)) %>%
+    select(code_state, abbrev_state, coluna, prop_com_estado)
+
+final_infra <- states_sem_mapa %>%
+  left_join(select(sumario_capitais, code_state, coluna, prop_uns), by = c("code_state" = "code_state", "coluna" = "coluna")) %>%
+  rename(prop_com_capital = prop_uns) %>%
+  as.data.frame()
+
+write.csv(final_infra, row.names = FALSE, fileEncoding = 'UTF-8', file='../dados/outputs/final_infra.csv')
+```
+
+
+
