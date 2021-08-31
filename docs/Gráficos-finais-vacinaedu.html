@@ -311,32 +311,13 @@ mutate(local = &#39;Capital&#39;, completa = segun_dose+dose_unica) %&gt;%
 select(uf, local, total_educ_basic, prim_dose, completa) %&gt;%
 mutate(imun_parcial = prim_dose/total_educ_basic, imun_completa = completa/total_educ_basic) %&gt;%
 rbind(graf2)</code></pre>
-<div id="somente-estados" class="section level2" number="1.1">
-<h2 number="1.1"><span class="header-section-number">1.1</span> Somente estados</h2>
-<pre class="r"><code> graf1 %&gt;%
-  select(uf, imun_parcial, imun_completa) %&gt;%
-  mutate(ordem = ifelse(imun_parcial&gt;1, 5+imun_completa, imun_parcial)) %&gt;%
-  mutate(uf = forcats::fct_reorder(uf, ordem)) %&gt;%
-  select(!ordem) %&gt;%
-  tidyr::pivot_longer(!uf, names_to = &#39;vacinados&#39;, values_to = &#39;prop&#39;) %&gt;%
-  mutate(prop = ifelse(prop&gt;1,1,prop)) %&gt;%
-  ggplot(aes(fill=vacinados, y=uf, x=prop)) + 
-  geom_bar(stat=&quot;identity&quot;, position = &quot;identity&quot;) +
-  scale_fill_manual(values=c(&quot;#083550&quot;, &quot;#1F95E1&quot;))</code></pre>
-<p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<div id="modelo-final" class="section level2" number="1.1">
+<h2 number="1.1"><span class="header-section-number">1.1</span> Modelo final:</h2>
+<pre class="r"><code>print(cat(&#39;&lt;div class=&quot;flourish-embed flourish-chart&quot; data-src=&quot;visualisation/7149000&quot;&gt;&lt;script src=&quot;https://public.flourish.studio/resources/embed.js&quot;&gt;&lt;/script&gt;&lt;/div&gt;&#39;))</code></pre>
+<div class="flourish-embed flourish-chart" data-src="visualisation/7149000">
+<script src="https://public.flourish.studio/resources/embed.js"></script>
 </div>
-<div id="estados-e-capitais" class="section level2" number="1.2">
-<h2 number="1.2"><span class="header-section-number">1.2</span> Estados e capitais</h2>
-<pre class="r"><code>capitais %&gt;%
-  select(uf, local, imun_parcial, imun_completa) %&gt;%
-  filter(uf %in% c(&#39;RJ&#39;, &#39;SP&#39;, &#39;AL&#39;, &#39;MA&#39;, &#39;RS&#39;, &#39;GO&#39;)) %&gt;%
-  tidyr::pivot_longer(!c(uf, local), names_to = &#39;vacinados&#39;, values_to = &#39;prop&#39;) %&gt;%
-  mutate(prop = ifelse(prop&gt;1,1,prop)) %&gt;%
-  ggplot(aes(fill=vacinados, y=local, x=prop)) + 
-  scale_fill_manual(values=c(&quot;#083550&quot;, &quot;#1F95E1&quot;)) +
-  geom_bar(stat=&quot;identity&quot;, position = &quot;identity&quot;) +
-  facet_wrap(~ uf, ncol = 1)</code></pre>
-<p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>NULL</p>
 </div>
 </div>
 <div id="infraestrutura---estados" class="section level1" number="2">
@@ -350,7 +331,8 @@ equivalencias &lt;- data.frame(co_uf = c(&#39;12&#39;, &#39;27&#39;, &#39;13&#39
 <div id="água-potável" class="section level2" number="2.1">
 <h2 number="2.1"><span class="header-section-number">2.1</span> Água potável</h2>
 <p>A escala desse mapa deverá ser na cor azul.</p>
-<p>###Protótipo:</p>
+<div id="protótipo" class="section level3" number="2.1.1">
+<h3 number="2.1.1"><span class="header-section-number">2.1.1</span> Protótipo:</h3>
 <pre class="r"><code>states %&gt;%
   filter(coluna == &#39;in_agua_potavel&#39;) %&gt;%
   mutate(prop_preenchida_com_agua = uns/(zeros+uns)) %&gt;%
@@ -360,9 +342,10 @@ equivalencias &lt;- data.frame(co_uf = c(&#39;12&#39;, &#39;27&#39;, &#39;13&#39
       scale_fill_distiller(direction = 1, name=&quot;Proporção&quot;) +
       theme_minimal() +
       no_axis</code></pre>
-<p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
-<div id="modelo-final" class="section level3" number="2.1.1">
-<h3 number="2.1.1"><span class="header-section-number">2.1.1</span> Modelo final</h3>
+<p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+</div>
+<div id="modelo-final-1" class="section level3" number="2.1.2">
+<h3 number="2.1.2"><span class="header-section-number">2.1.2</span> Modelo final</h3>
 <pre class="r"><code>print(cat(&#39;&lt;div class=&quot;flourish-embed flourish-map&quot; data-src=&quot;visualisation/7136865&quot;&gt;&lt;script src=&quot;https://public.flourish.studio/resources/embed.js&quot;&gt;&lt;/script&gt;&lt;/div&gt;&#39;))</code></pre>
 <div class="flourish-embed flourish-map" data-src="visualisation/7136865">
 <script src="https://public.flourish.studio/resources/embed.js"></script>
@@ -373,7 +356,7 @@ equivalencias &lt;- data.frame(co_uf = c(&#39;12&#39;, &#39;27&#39;, &#39;13&#39
 <div id="área-verde" class="section level2" number="2.2">
 <h2 number="2.2"><span class="header-section-number">2.2</span> Área verde</h2>
 <p>A escala desse mapa deverá ser na cor verde.</p>
-<div id="protótipo" class="section level3" number="2.2.1">
+<div id="protótipo-1" class="section level3" number="2.2.1">
 <h3 number="2.2.1"><span class="header-section-number">2.2.1</span> Protótipo</h3>
 <pre class="r"><code>states %&gt;%
   filter(coluna == &#39;in_area_verde&#39;) %&gt;%
@@ -384,9 +367,9 @@ equivalencias &lt;- data.frame(co_uf = c(&#39;12&#39;, &#39;27&#39;, &#39;13&#39
       scale_fill_distiller(direction = 1, palette = &quot;Greens&quot;, name=&quot;Proporção&quot;) +
       theme_minimal() +
       no_axis</code></pre>
-<p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 </div>
-<div id="modelo-final-1" class="section level3" number="2.2.2">
+<div id="modelo-final-2" class="section level3" number="2.2.2">
 <h3 number="2.2.2"><span class="header-section-number">2.2.2</span> Modelo final</h3>
 <pre class="r"><code>print(cat(&#39;&lt;div class=&quot;flourish-embed flourish-map&quot; data-src=&quot;visualisation/7137008&quot;&gt;&lt;script src=&quot;https://public.flourish.studio/resources/embed.js&quot;&gt;&lt;/script&gt;&lt;/div&gt;&#39;))</code></pre>
 <div class="flourish-embed flourish-map" data-src="visualisation/7137008">
@@ -398,7 +381,7 @@ equivalencias &lt;- data.frame(co_uf = c(&#39;12&#39;, &#39;27&#39;, &#39;13&#39
 <div id="pátio-descoberto" class="section level2" number="2.3">
 <h2 number="2.3"><span class="header-section-number">2.3</span> Pátio descoberto</h2>
 <p>A escala desse mapa deverá ser na cor laranja.</p>
-<div id="protótipo-1" class="section level3" number="2.3.1">
+<div id="protótipo-2" class="section level3" number="2.3.1">
 <h3 number="2.3.1"><span class="header-section-number">2.3.1</span> Protótipo</h3>
 <pre class="r"><code>states %&gt;%
   filter(coluna == &#39;in_patio_descoberto&#39; | coluna == &#39;in_patio_coberto&#39;) %&gt;%
@@ -412,9 +395,9 @@ equivalencias &lt;- data.frame(co_uf = c(&#39;12&#39;, &#39;27&#39;, &#39;13&#39
       scale_fill_distiller(direction = 1, palette = &quot;Oranges&quot;, name=&quot;Proporção&quot;) +
       theme_minimal() +
       no_axis</code></pre>
-<p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
 </div>
-<div id="modelo-final-2" class="section level3" number="2.3.2">
+<div id="modelo-final-3" class="section level3" number="2.3.2">
 <h3 number="2.3.2"><span class="header-section-number">2.3.2</span> Modelo final</h3>
 <pre class="r"><code>print(cat(&#39;&lt;div class=&quot;flourish-embed flourish-map&quot; data-src=&quot;visualisation/7137021&quot;&gt;&lt;script src=&quot;https://public.flourish.studio/resources/embed.js&quot;&gt;&lt;/script&gt;&lt;/div&gt;&#39;))</code></pre>
 <div class="flourish-embed flourish-map" data-src="visualisation/7137021">
@@ -461,7 +444,7 @@ ggplot(temp3) +
   ) +
   xlab(&quot;Estado&quot;) +
   ylab(&quot;Proporção em % de escolas com acesso a água potável&quot;)</code></pre>
-<p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
 </div>
 <div id="área-verde-1" class="section level2" number="3.2">
 <h2 number="3.2"><span class="header-section-number">3.2</span> Área verde</h2>
@@ -497,7 +480,7 @@ ggplot(temp3) +
   ) +
   xlab(&quot;Estado&quot;) +
   ylab(&quot;Proporção em % de escolas com área verde&quot;)</code></pre>
-<p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 </div>
 <div id="pátio-descoberto-1" class="section level2" number="3.3">
 <h2 number="3.3"><span class="header-section-number">3.3</span> Pátio descoberto</h2>
@@ -532,7 +515,7 @@ ggplot(temp3) +
   theme(legend.position = &quot;none&quot;) +
   xlab(&quot;Estado&quot;) +
   ylab(&quot;Proporção em % de escolas com pátio descoberto&quot;)</code></pre>
-<p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<p><img src="Gráficos-finais-vacinaedu_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
 </div>
 </div>
 <div id="anexo-gerando-arquivos" class="section level1" number="4">

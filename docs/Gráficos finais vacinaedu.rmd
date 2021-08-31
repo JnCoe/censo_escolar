@@ -78,37 +78,12 @@ mutate(imun_parcial = prim_dose/total_educ_basic, imun_completa = completa/total
 rbind(graf2)
 ```
 
+## Modelo final:
 
-## Somente estados
-
-
-```{r}
- graf1 %>%
-  select(uf, imun_parcial, imun_completa) %>%
-  mutate(ordem = ifelse(imun_parcial>1, 5+imun_completa, imun_parcial)) %>%
-  mutate(uf = forcats::fct_reorder(uf, ordem)) %>%
-  select(!ordem) %>%
-  tidyr::pivot_longer(!uf, names_to = 'vacinados', values_to = 'prop') %>%
-  mutate(prop = ifelse(prop>1,1,prop)) %>%
-  ggplot(aes(fill=vacinados, y=uf, x=prop)) + 
-  geom_bar(stat="identity", position = "identity") +
-  scale_fill_manual(values=c("#083550", "#1F95E1"))
+```{r, results='asis'}
+print(cat('<div class="flourish-embed flourish-chart" data-src="visualisation/7149000"><script src="https://public.flourish.studio/resources/embed.js"></script></div>'))
 ```
 
-
-## Estados e capitais
-
-```{r}
-capitais %>%
-  select(uf, local, imun_parcial, imun_completa) %>%
-  filter(uf %in% c('RJ', 'SP', 'AL', 'MA', 'RS', 'GO')) %>%
-  tidyr::pivot_longer(!c(uf, local), names_to = 'vacinados', values_to = 'prop') %>%
-  mutate(prop = ifelse(prop>1,1,prop)) %>%
-  ggplot(aes(fill=vacinados, y=local, x=prop)) + 
-  scale_fill_manual(values=c("#083550", "#1F95E1")) +
-  geom_bar(stat="identity", position = "identity") +
-  facet_wrap(~ uf, ncol = 1)
-```
 
 # Infraestrutura - Estados
 
@@ -126,7 +101,7 @@ equivalencias <- data.frame(co_uf = c('12', '27', '13', '16', '29', '23', '53', 
 
 A escala desse mapa deverá ser na cor azul.
 
-###Protótipo:
+### Protótipo:
 
 ```{r}
 states %>%
