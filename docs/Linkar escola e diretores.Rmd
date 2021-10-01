@@ -1,0 +1,341 @@
+---
+title: "Linkar escola e diretores"
+author: "Jonas Coelho"
+date: "23/09/2021"
+output: 
+  html_document:
+    theme: cosmo
+    toc: true
+    toc_float:
+      collapsed: false
+    number_sections: true
+    df_print: paged
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+```{css, echo=FALSE}
+pre:not(.r) {
+  color: #b0b0b0;
+}
+
+pre {
+  width: 80%;
+  margin-inline: auto;
+}
+
+.table {
+  width: 60%;
+  margin-inline: auto;
+}
+```
+
+```{r, message=FALSE}
+# Bibliotecas padrão
+library(dplyr)
+library(tidylog)
+library(kableExtra)
+library("basedosdados")
+
+# Visualizar números sem notação científica
+options(scipen = 9999)
+```
+
+Vamos carregar duas bases diferentes de dados: - A direto dos microdados, que possui nome das escolas - A disponibilizada pelo Base dos Dados, que possui as colunas já trabalhadas para facilitar buscas
+
+Vamos precisar também criar uma tabela com o código e nome dos municípios já trabalhados. Para isso, usaremos o SIDRA.
+
+```{r}
+pib_mun <-
+  sidrar::get_sidra(api = "/t/5938/n6/all/v/37/p/last%201/d/v37%200") %>%
+  janitor::clean_names() %>%
+  select(municipio_codigo, municipio, valor) %>%
+  rename(pib = valor, co_municipio = municipio_codigo) %>%
+  rowwise() %>%
+  mutate(nome_mun_formatado = toupper(
+    stringi::stri_trans_general(
+    stringr::str_replace_all(
+      stringr::str_sub(municipio, 1,-6),
+      "[^[:alnum:][:space:]]",
+      ""
+    ), id = "Latin-ASCII")))
+```
+
+Agora vamos criar a tabela do BdD.
+
+> *OBS.:O código abaixo não é executado nesse doc para economizar billing, mas está disponibilizado para debug futuros. Os dados são carregados de um .rdata salvo com as informações já consultadas.*
+
+```{r eval=FALSE}
+# Definindo o projeto do BigQuery
+set_billing_id("base-dos-dados-316520")
+
+query <- "SELECT * FROM `basedosdados.br_inep_censo_escolar.escola` WHERE ano = 2020"
+
+escolas_bdd <- read_sql(query) %>%
+  left_join(pib_mun, by = c('id_municipio' = 'co_municipio'))
+
+save(escolas_bdd, file = '../dados/basedosdados/escolas_bdd.rdata')
+```
+
+```{r}
+# Efetivamente carregar a tabela
+load('../dados/basedosdados/escolas_bdd.rdata')
+
+```
+
+Carregando os dados direto do censo:
+
+```{r}
+load('../dados/outputs/escolas_filtradas.rdata')
+
+# Ajustando o encoding do código da escola
+escolas <- escolas %>%
+  mutate(id_escola = as.character(co_entidade))
+```
+
+Agora vamos dar join nas duas bases, selecionando apenas as variáveis de interesse na tabela da BdD:
+
+-   sigla_uf
+
+-   id_municipio
+
+-   rede
+
+-   id_escola
+
+```{r}
+temp <- escolas %>%
+  left_join(
+    select(
+      escolas_bdd,
+      sigla_uf,
+      id_municipio,
+      rede,
+      id_escola,
+      nome_mun_formatado
+    ),
+    by = 'id_escola'
+  ) %>%
+  mutate(escola = toupper(
+    stringi::stri_trans_general(
+      stringr::str_replace_all(no_entidade,
+                               "[^[:alnum:][:space:]]",
+                               ""),
+      id = "Latin-ASCII"
+    )
+  )) %>% # E remover as siglas passíveis de confusão
+  mutate(escola =
+           ifelse(
+             stringr::str_detect(escola, excluir),
+             stringr::str_replace_all(
+               string = escola,
+               pattern = excluir,
+               replacement = ""
+             ),
+             escola
+           ))
+
+```
+
+Pelo registro do tidylog, todas as escolas encontraram correspondentes na tabela da BdD.
+
+Agora vamos criar uma função para processar tudo. Por enquanto ela está processando só com base no nome da escola e do município, mas uma condicional pode ser inserida caso surja o código da escola ou do próprio município na base de emails.
+
+```{r}
+linkador <-
+  function(base_padrao,
+           base_emails,
+           uf,
+           tipo_rede,
+           coluna_email = 'email',
+           coluna_cod_escola = 'id_escola',
+           coluna_nome_escola = 'escola',
+           coluna_cod_municipio = 'id_municipio',
+           coluna_nome_municipio = 'nome_mun_formatado') {
+    # Definir os termos que serão usados para extrair do começo do nome das escolas
+    termos <-
+      c(
+        'CEEMTI',
+        'EEEFM',
+        'EEEF',
+        'CEEFTI',
+        'CEEJA',
+        'EE',
+        'EEPEF',
+        'EEUEF ',
+        'EEEM',
+        'CEEFMTI',
+        'EEE',
+        'EECOR',
+        'EEEPEF',
+        'EEUF',
+        'CEIER',
+        'EEUEF'
+      )
+    
+    coluna_email <- as.name(coluna_email)
+    coluna_cod_escola <- as.name(coluna_cod_escola)
+    coluna_nome_escola <- as.name(coluna_nome_escola)
+    coluna_cod_municipio <- as.name(coluna_cod_municipio)
+    coluna_nome_municipio <- as.name(coluna_nome_municipio)
+
+    
+    alternativas <- paste0(termos, collapse = "|")
+    
+    excluir <- paste0("^(", alternativas, ")", "\\s", "(?=[A-Z])")
+    
+    
+    # Checar se variáveis obrigatórias foram fornecidas
+    if (missing(base_padrao)) {
+      print('Forneça pelo menos uma base padrao e uma base de emails')
+    } else {
+      # Primeiramente vamos filtrar apenas a UF selecionada
+      base_padrao <- base_padrao %>%
+        filter(sigla_uf == uf & rede == tipo_rede)
+      
+      # Agora vamos limpar o nome do município da tabela de emails
+      base_emails <- base_emails %>%
+        rowwise() %>%
+        mutate(nome_mun_formatado = toupper(
+          stringi::stri_trans_general(
+            stringr::str_replace_all(!!coluna_nome_municipio,
+                                     "[^[:alnum:][:space:]]",
+                                     ""),
+            id = "Latin-ASCII"
+          )
+        )) %>% # Agora vamos limpar o nome das escolas:
+        mutate(escola = toupper(
+          stringi::stri_trans_general(
+            stringr::str_replace_all(!!coluna_nome_escola,
+                                     "[^[:alnum:][:space:]]",
+                                     ""),
+            id = "Latin-ASCII"
+          )
+        )) %>% # E remover as siglas passíveis de confusão
+        mutate(escola =
+                 ifelse(
+                   stringr::str_detect(escola, excluir),
+                   stringr::str_replace_all(
+                     string = escola,
+                     pattern = excluir,
+                     replacement = ""
+                   ),
+                   escola)
+        )
+
+# Join as duas tabelas
+
+tabela_final <- base_padrao %>%
+  left_join(
+    select(base_emails, escola, nome_mun_formatado, coluna_email),
+    by = c('escola', 'nome_mun_formatado')
+  )
+
+    }
+    return(tabela_final)
+  }
+
+```
+
+```{r}
+es_1 <- linkador(base_padrao = temp,
+           base_emails = escolas_es_1,
+           uf = 'ES',
+           tipo_rede = 'estadual',
+           coluna_email = 'e_mail_do_escola',
+           coluna_cod_escola = 'id_escola',
+           coluna_nome_escola = 'escola',
+           coluna_cod_municipio = 'id_municipio',
+           coluna_nome_municipio = 'municipio')
+
+```
+
+Vendo quem falta o email:
+
+```{r}
+es_2 %>%
+  filter(is.na(e_mail_do_escola))
+```
+
+
+```{r}
+escolas_es <- escolas %>%
+    filter(co_uf == 32 & nu_ano_censo == 2020) %>%
+#    select(co_entidade, no_entidade, co_municipio) %>%
+  mutate(co_municipio = as.character(co_municipio)) %>%
+  left_join(pib_mun)
+
+rm(escolas)
+
+```
+
+```{r}
+escolas_es2 <- escolas %>%
+  filter(co_entidade %in% escolas_es$id_escola)
+```
+
+```{r}
+termos <-
+  c(
+    'CEEMTI',
+    'EEEFM',
+    'EEEF',
+    'CEEFTI',
+    'CEEJA',
+    'EE',
+    'EEPEF',
+    'EEUEF ',
+    'EEEM',
+    'CEEFMTI',
+    'EEE',
+    'EECOR',
+    'EEEPEF',
+    'EEUF',
+    'CEIER',
+    'EEUEF'
+  )
+
+alternativas <- paste0(termos, collapse = "|")
+
+excluir <- paste0("^(", alternativas, ")", "\\s", "(?=[A-Z])")
+
+emails_limpos <- emails %>%
+  mutate(no_entidade =
+           ifelse(
+             stringr::str_detect(escola, excluir),
+             stringr::str_replace_all(
+               string = escola,
+               pattern = excluir,
+               replacement = ""
+             ),
+             escola
+           )) %>%
+  rename(nome_mun_formatado = municipio)
+
+escolas_limpo <- escolas %>%
+  rename(nome_antigo = no_entidade) %>%
+  mutate(no_entidade =
+           ifelse(
+             stringr::str_detect(nome_antigo, excluir),
+             stringr::str_replace_all(
+               string = nome_antigo,
+               pattern = excluir,
+               replacement = ""
+             ),
+             nome_antigo
+           )) %>%
+  mutate(co_entidade = as.character(co_entidade))
+```
+
+```{r}
+escolas_es <- read_sql(query) %>%
+  left_join(pib_mun, by = c('id_municipio' = 'co_municipio'))
+
+emails_escolas <- emails_limpos %>%
+  left_join(escolas_es, by = c('no_entidade', 'nome_mun_formatado')) %>%
+  select(nome_mun_formatado, escola, e_mail_do_escola, no_entidade, nome_antigo, co_entidade)
+```

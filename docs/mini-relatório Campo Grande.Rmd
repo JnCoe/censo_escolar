@@ -1,0 +1,107 @@
+---
+title: "Mini-relatório Campo Grnade"
+author: "Jonas Coelho"
+date: "21/09/2021"
+output: 
+  html_document:
+    theme: cosmo
+    toc: true
+    toc_float:
+      collapsed: false
+    number_sections: true
+    df_print: paged
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+```{css, echo=FALSE}
+pre:not(.r) {
+  color: #b0b0b0;
+}
+
+pre {
+  width: 80%;
+  margin-inline: auto;
+}
+
+.table {
+  width: 60%;
+  margin-inline: auto;
+}
+```
+
+```{r, message=FALSE}
+# Bibliotecas padrão
+library(dplyr)
+library(tidylog)
+library(kableExtra)
+
+# Visualizar números sem notação científica
+options(scipen = 9999)
+
+# Bibliotecas adicionais
+library("basedosdados")
+```
+
+Os dados de vacinação serão retirados diretamente do BigQuery. Por favor note que a cada knit desse documento uma nova consulta será feita, podendo ultrapassar o limite de 1TB de processamento disponível. Por esse motivo, o eval na célula de obter os dados estará como 'false'. Remova o parâmetro para que os arquivos sejam gerados corretamente.
+
+Definindo o projeto:
+
+```{r message=FALSE, warning=FALSE}
+# Definindo o projeto do BigQuery
+set_billing_id("base-dos-dados-316520")
+```
+
+```{r eval=FALSE}
+# Código R para importar dados do BigQuery (não executado)
+query <- "SELECT
+  grupo_atendimento_vacina,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose_vacina IN ('2a Dose', 'Dose Única') THEN id_documento
+  END
+    ) AS completa,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose_vacina = '1a Dose' THEN id_documento
+  END
+    ) AS primeira,
+  SUM(CASE WHEN dose_vacina = '1a Dose' THEN 1 ELSE 0 END) AS linhas_1a_dose,
+  SUM(CASE WHEN dose_vacina IN ('2a Dose', 'Dose Única') THEN 1 ELSE 0 END) AS linhas_2a_dose,
+  COUNT(*) as total_linhas_gerais,
+  COUNT(DISTINCT id_documento) AS total_pacientes,
+  COUNT(DISTINCT
+    CASE
+      WHEN dose_vacina IN ('1a Dose', 'Dose Única') THEN id_documento
+  END
+    ) AS ao_menos_uma_dose  
+FROM
+  `basedosdados.br_ms_vacinacao_covid19.microdados`
+WHERE
+  id_municipio_estabelecimento = '5002704'
+GROUP BY
+  grupo_atendimento_vacina;"
+
+grupos_cg <- read_sql(query) %>%
+  mutate_if(bit64::is.integer64, as.integer)
+```
+
+Dicionário:
+
+```{r}
+# Código R para importar dados do BigQuery (não executado)
+query <- "SELECT * FROM `basedosdados.br_ms_vacinacao_covid19.dicionario`"
+
+dicionario <- read_sql(query)
+```
+
+```{r}
+grupos_cg %>%
+  left_join(select(dicionario, chave, valor), by = c('grupo_atendimento_vacina' = 'chave')) %>%
+  relocate(valor, .after = grupo_atendimento_vacina)
+```
+

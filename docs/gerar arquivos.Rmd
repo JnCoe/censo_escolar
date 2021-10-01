@@ -108,12 +108,8 @@ compilado_mun_det <- read_sql(query)
 save(compilado_mun_det, file=paste0('../dados/outputs/compilado_mun_det',Sys.Date(),'.rdata'))
 ```
 
-```{r eval=FALSE}
-load(paste0('../dados/outputs/compilado_mun_det',Sys.Date(),'.rdata'))
-```
-
 ```{r}
-load('../dados/outputs/compilado_mun_det2021-08-10.rdata')
+load(paste0('../dados/outputs/compilado_mun_det',Sys.Date(),'.rdata'))
 ```
 
 ```{r}
