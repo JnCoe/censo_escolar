@@ -1,0 +1,92 @@
+---
+title: "Cronograma"
+author: "Jonas Coelho"
+date: "04/11/2021"
+output:
+  html_document:
+    theme: cosmo
+    toc: yes
+    toc_float:
+      collapsed: no
+    number_sections: yes
+    df_print: paged
+    code_folding: hide
+    self_contained: false
+  word_document:
+    toc: yes
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+```{css, echo=FALSE}
+pre:not(.r) {
+  color: #b0b0b0;
+}
+```
+
+
+Carregando bibliotecas
+```{r}
+library(dplyr)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+options(scipen = 9999)
+load('../dados/cronograma.rdata')
+```
+
+Convertendo a tabela em formato long e criando identificador numérico de cada etapa
+```{r}
+cronograma_long <- cronograma %>%
+    tidyr::pivot_longer(!Data, names_to='municipio') %>%
+    arrange(municipio) %>%
+    mutate(num = cumsum(value != lag(value, 1, default=""))) %>%
+  mutate(dia_formatado = lubridate::parse_date_time(Data, orders="dmy")) %>%
+  select(!Data)
+```
+
+Filtrando datas de começo e final de cada etapa
+```{r}
+cronograma_final <- cronograma_long %>%
+  group_by(num) %>%
+  mutate(start = min(dia_formatado),
+         end = max(dia_formatado)) %>%
+  ungroup() %>%
+  select(municipio, value, start, end) %>%
+  unique() %>%
+  mutate(
+    value.style = case_when(
+      value == 'Férias' ~ '#999999',
+      value == 'Presencial' ~ '#62d45c',
+      value == 'Suspensas' ~ '#ff0000',
+      value == 'Online' ~ '#f1c232',
+      value %in% c('Fim', 'Fim 2020', 'Fim 2021') ~ '#000000',
+      value == 'Hibrido' ~ '#d8f43f',
+      value %in% c('', 'Desconhecido') ~ '#ffffff'
+    )
+  ) %>%
+  select(municipio, value, value.style, start, end)
+```
+
+Gerando gráfico
+```{r, results='asis'}
+graf <- googleVis::gvisTimeline(data=cronograma_final,
+                         rowlabel="municipio",
+                         barlabel=c("value", "value.style"),
+                         start="start", 
+                         end="end",
+                         options=list(timeline="{groupByRowLabel:true, showBarLabels:false}", height="1280", width='100%'))
+
+print(graf, "chart")
+```
+
+
+Observações:
+
+- Natal: não teve aulas suspensas? Pulou direto para as aulas online?
+- Salvador: Quando foi o fim do ano letivo? Como conseguiu ter férias de dezembro até fevereiro e pretende encerrar esse ano em dezembro de novo?
+- Fortaleza: Só 4 dias de aulas suspensas?
+- Boa Vista: suspendeu aulas por 20 dias e teve férias no meio do ano e ainda conseguiu terminar em dezembro?
