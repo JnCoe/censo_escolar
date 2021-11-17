@@ -36,6 +36,7 @@ library(knitr)
 library(kableExtra)
 options(scipen = 9999)
 load('../dados/cronograma.rdata')
+load('../dados/novo_cronograma.rdata')
 ```
 
 Convertendo a tabela em formato long e criando identificador numérico de cada etapa
@@ -90,3 +91,30 @@ Observações:
 - Salvador: Quando foi o fim do ano letivo? Como conseguiu ter férias de dezembro até fevereiro e pretende encerrar esse ano em dezembro de novo?
 - Fortaleza: Só 4 dias de aulas suspensas?
 - Boa Vista: suspendeu aulas por 20 dias e teve férias no meio do ano e ainda conseguiu terminar em dezembro?
+
+
+# Dados 2021
+
+## Rede municipal
+
+```{r, results='asis'}
+graf <- novo_cronograma %>%
+    janitor::clean_names() %>%
+    mutate(hibrido = as.numeric(hibrido), presencial = as.numeric(presencial)) %>% filter(rede == 'Municipal') %>%
+    select(!rede) %>%
+    googleVis::gvisBarChart(xvar='capital', options=list(bars='horizontal', isStacked=TRUE, height=1080))
+
+print(graf, "chart")
+```
+
+## Rede estadual
+
+```{r, results='asis'}
+graf <- novo_cronograma %>%
+    janitor::clean_names() %>%
+    mutate(hibrido = as.numeric(hibrido), presencial = as.numeric(presencial)) %>% filter(rede == 'Estadual') %>%
+    select(!rede) %>%
+    googleVis::gvisBarChart(xvar='capital', options=list(bars='horizontal', isStacked=TRUE, height=1080))
+
+print(graf, "chart")
+```
