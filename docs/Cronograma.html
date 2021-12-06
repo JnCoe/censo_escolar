@@ -280,7 +280,8 @@ library(knitr)
 library(kableExtra)
 options(scipen = 9999)
 load(&#39;../dados/cronograma.rdata&#39;)
-load(&#39;../dados/novo_cronograma.rdata&#39;)</code></pre>
+load(&#39;../dados/novo_cronograma.rdata&#39;)
+load(&#39;../dados/novo_cronograma2.rdata&#39;)</code></pre>
 <p>Convertendo a tabela em formato long e criando identificador numérico de cada etapa</p>
 <pre class="r"><code>cronograma_long &lt;- cronograma %&gt;%
     tidyr::pivot_longer(!Data, names_to=&#39;municipio&#39;) %&gt;%
@@ -318,12 +319,12 @@ load(&#39;../dados/novo_cronograma.rdata&#39;)</code></pre>
 
 print(graf, &quot;chart&quot;)</code></pre>
 <!-- Timeline generated in R 4.0.3 by googleVis 0.6.10 package -->
-<!-- Wed Nov 17 19:56:44 2021 -->
+<!-- Fri Dec 03 18:25:59 2021 -->
 <!-- jsHeader -->
 <script type="text/javascript">
  
 // jsData 
-function gvisDataTimelineIDaf00491c4521 () {
+function gvisDataTimelineID69384a7c702e () {
 var data = new google.visualization.DataTable();
 var datajson =
 [
@@ -1962,14 +1963,14 @@ return(data);
 }
  
 // jsDrawChart
-function drawChartTimelineIDaf00491c4521() {
-var data = gvisDataTimelineIDaf00491c4521();
+function drawChartTimelineID69384a7c702e() {
+var data = gvisDataTimelineID69384a7c702e();
 var options = {};
 options["height"] = "1280";
 options["timeline"] = {groupByRowLabel:true, showBarLabels:false};
 
     var chart = new google.visualization.Timeline(
-    document.getElementById('TimelineIDaf00491c4521')
+    document.getElementById('TimelineID69384a7c702e')
     );
     chart.draw(data,options);
     
@@ -1993,9 +1994,9 @@ if (newPackage)
   pkgs.push(chartid);
   
 // Add the drawChart function to the global list of callbacks
-callbacks.push(drawChartTimelineIDaf00491c4521);
+callbacks.push(drawChartTimelineID69384a7c702e);
 })();
-function displayChartTimelineIDaf00491c4521() {
+function displayChartTimelineID69384a7c702e() {
   var pkgs = window.__gvisPackages = window.__gvisPackages || [];
   var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
   window.clearTimeout(window.__gvisLoad);
@@ -2018,9 +2019,9 @@ callbacks.shift()();
 // jsFooter
 </script>
 <!-- jsChart -->
-<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartTimelineIDaf00491c4521"></script>
+<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartTimelineID69384a7c702e"></script>
 <!-- divChart -->
-<div id="TimelineIDaf00491c4521" style="width: 100%; height: 1280;">
+<div id="TimelineID69384a7c702e" style="width: 100%; height: 1280;">
 
 </div>
 <p>Observações:</p>
@@ -2032,195 +2033,213 @@ callbacks.shift()();
 </ul>
 <div id="dados-2021" class="section level1" number="1">
 <h1 number="1"><span class="header-section-number">1</span> Dados 2021</h1>
-<div id="rede-municipal" class="section level2" number="1.1">
-<h2 number="1.1"><span class="header-section-number">1.1</span> Rede municipal</h2>
-<pre class="r"><code>graf &lt;- novo_cronograma %&gt;%
-    janitor::clean_names() %&gt;%
-    mutate(hibrido = as.numeric(hibrido), presencial = as.numeric(presencial)) %&gt;% filter(rede == &#39;Municipal&#39;) %&gt;%
-    select(!rede) %&gt;%
-    googleVis::gvisBarChart(xvar=&#39;capital&#39;, options=list(bars=&#39;horizontal&#39;, isStacked=TRUE, height=1080))
+<div id="rede-municipal-2" class="section level2" number="1.1">
+<h2 number="1.1"><span class="header-section-number">1.1</span> Rede municipal 2</h2>
+<pre class="r"><code>graf &lt;- novo_cronograma2 %&gt;%
+  mutate(Híbrido = as.numeric(Híbrido),
+         Presencial = as.numeric(Presencial)) %&gt;% filter(rede == &#39;Municipal&#39;) %&gt;%
+  select(!rede) %&gt;%
+  googleVis::gvisBarChart(
+    xvar = &#39;capital&#39;,
+    options = list(
+      bars = &#39;horizontal&#39;,
+      isStacked = TRUE,
+      height = 700,
+      focusTarget = &#39;category&#39;,
+      colors = &quot;[&#39;#527184&#39;, &#39;#62b5ea&#39;, &#39;#f6a323&#39;]&quot;,
+      fontName = &#39;Source Sans Pro&#39;,
+      fontSize = 14.4,
+      chartArea = &quot;{height:\&quot;90%\&quot;}&quot;
+    )
+  )
+
 
 print(graf, &quot;chart&quot;)</code></pre>
 <!-- BarChart generated in R 4.0.3 by googleVis 0.6.10 package -->
-<!-- Wed Nov 17 19:56:44 2021 -->
+<!-- Fri Dec 03 18:25:59 2021 -->
 <!-- jsHeader -->
 <script type="text/javascript">
  
 // jsData 
-function gvisDataBarChartIDaf0035cebd () {
+function gvisDataBarChartID693828d7654b () {
 var data = new google.visualization.DataTable();
 var datajson =
 [
  [
-"ARACAJU",
+"Aracaju",
 103,
 97,
 0
 ],
 [
-"SALVADOR",
+"Salvador",
 80,
 123,
 0
 ],
 [
-"FORTALEZA ",
+"Fortaleza ",
 129,
 72,
 0
 ],
 [
-"SÃO LUIZ ",
+"São Luiz ",
 94,
 106,
 0
 ],
 [
-"JOÃO PESSOA ",
+"João Pessoa ",
 164,
 43,
 0
 ],
 [
-"TERESINA ",
+"Teresina ",
 142,
 72,
 0
 ],
 [
-"NATAL ",
+"Natal* ",
 5,
 145,
 0
 ],
 [
-"RECIFE",
+"Recife",
 95,
 105,
 0
 ],
 [
-"MACEIÓ ",
+"Maceió ",
 111,
 86,
 0
 ],
 [
-"GOIÂNIA",
+"Goiânia",
 109,
 82,
 0
 ],
 [
-"CUIABÁ",
+"Cuiabá",
 103,
 97,
 0
 ],
 [
-"CAMPO GRANDE ",
+"Campo Grande ",
 103,
 97,
 0
 ],
 [
-" BELÉM ",
+"Belém ",
 100,
 100,
 0
 ],
 [
-"RIO BRANCO ",
+"Rio Branco ",
 142,
 57,
 0
 ],
 [
-"MACAPÁ",
+"Macapá",
 162,
 58,
 0
 ],
 [
-"MANAUS",
+"Manaus",
 70,
 140,
 0
 ],
 [
-"BOA VISTA",
+"Boa Vista",
 88,
 72,
 0
 ],
 [
-"PALMAS",
+"Palmas",
 100,
 100,
 0
 ],
 [
-"BELO HORIZONTE ",
+"Belo Horizonte ",
 83,
 128,
 0
 ],
 [
-"VITÓRIA  ",
+"Vitória  ",
 61,
 141,
 0
 ],
 [
-"RIO DE JANEIRO ",
+"Rio de Janeiro ",
 29,
 173,
 0
 ],
 [
-"SÃO PAULO ",
+"São Paulo ",
 0,
 204,
 0
 ],
 [
-"FLORIANÒPOLIS  ",
+"Florianópolis  ",
 16,
 185,
 0
 ],
 [
-"CURITIBA ",
+"Curitiba ",
 93,
 107,
 0
 ],
 [
-"PORTO ALEGRE  ",
+"Porto Alegre  ",
 0,
 100,
 100
 ] 
 ];
 data.addColumn('string','capital');
-data.addColumn('number','remoto');
-data.addColumn('number','hibrido');
-data.addColumn('number','presencial');
+data.addColumn('number','Remoto');
+data.addColumn('number','Híbrido');
+data.addColumn('number','Presencial');
 data.addRows(datajson);
 return(data);
 }
  
 // jsDrawChart
-function drawChartBarChartIDaf0035cebd() {
-var data = gvisDataBarChartIDaf0035cebd();
+function drawChartBarChartID693828d7654b() {
+var data = gvisDataBarChartID693828d7654b();
 var options = {};
 options["allowHtml"] = true;
 options["bars"] = "horizontal";
 options["isStacked"] = true;
-options["height"] = 1080;
+options["height"] = 700;
+options["focusTarget"] = "category";
+options["colors"] = ['#527184', '#62b5ea', '#f6a323'];
+options["fontName"] = "Source Sans Pro";
+options["fontSize"] = 14.4;
+options["chartArea"] = {height:"90%"};
 
     var chart = new google.visualization.BarChart(
-    document.getElementById('BarChartIDaf0035cebd')
+    document.getElementById('BarChartID693828d7654b')
     );
     chart.draw(data,options);
     
@@ -2244,9 +2263,9 @@ if (newPackage)
   pkgs.push(chartid);
   
 // Add the drawChart function to the global list of callbacks
-callbacks.push(drawChartBarChartIDaf0035cebd);
+callbacks.push(drawChartBarChartID693828d7654b);
 })();
-function displayChartBarChartIDaf0035cebd() {
+function displayChartBarChartID693828d7654b() {
   var pkgs = window.__gvisPackages = window.__gvisPackages || [];
   var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
   window.clearTimeout(window.__gvisLoad);
@@ -2269,213 +2288,234 @@ callbacks.shift()();
 // jsFooter
 </script>
 <!-- jsChart -->
-<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartIDaf0035cebd"></script>
+<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartID693828d7654b"></script>
 <!-- divChart -->
-<div id="BarChartIDaf0035cebd" style="width: 500; height: 1080;">
+<div id="BarChartID693828d7654b" style="width: 500; height: 700;">
 
 </div>
 </div>
-<div id="rede-estadual" class="section level2" number="1.2">
-<h2 number="1.2"><span class="header-section-number">1.2</span> Rede estadual</h2>
-<pre class="r"><code>graf &lt;- novo_cronograma %&gt;%
-    janitor::clean_names() %&gt;%
-    mutate(hibrido = as.numeric(hibrido), presencial = as.numeric(presencial)) %&gt;% filter(rede == &#39;Estadual&#39;) %&gt;%
-    select(!rede) %&gt;%
-    googleVis::gvisBarChart(xvar=&#39;capital&#39;, options=list(bars=&#39;horizontal&#39;, isStacked=TRUE, height=1080))
+<div id="rede-estadual-2" class="section level2" number="1.2">
+<h2 number="1.2"><span class="header-section-number">1.2</span> Rede estadual 2</h2>
+<pre class="r"><code>graf &lt;- novo_cronograma2 %&gt;%
+  mutate(Híbrido = as.numeric(Híbrido),
+         Presencial = as.numeric(Presencial)) %&gt;% filter(rede == &#39;Estadual&#39;) %&gt;%
+  select(!rede) %&gt;%
+  googleVis::gvisBarChart(
+    xvar = &#39;capital&#39;,
+    options = list(
+      bars = &#39;horizontal&#39;,
+      isStacked = TRUE,
+      height = 1080,
+      focusTarget = &#39;category&#39;,
+      colors = &quot;[&#39;#527184&#39;, &#39;#62b5ea&#39;, &#39;#f6a323&#39;]&quot;,
+      fontName = &#39;Source Sans Pro&#39;,
+      fontSize = 14.4
+    )
+  )
 
 print(graf, &quot;chart&quot;)</code></pre>
 <!-- BarChart generated in R 4.0.3 by googleVis 0.6.10 package -->
-<!-- Wed Nov 17 19:56:44 2021 -->
+<!-- Fri Dec 03 18:25:59 2021 -->
 <!-- jsHeader -->
 <script type="text/javascript">
  
 // jsData 
-function gvisDataBarChartIDaf001ae76b5 () {
+function gvisDataBarChartID6938572012f0 () {
 var data = new google.visualization.DataTable();
 var datajson =
 [
  [
-"ARACAJU",
+"Aracaju",
 100,
 100,
 0
 ],
 [
-"SALVADOR",
+"Salvador",
 80,
 123,
 0
 ],
 [
-"FORTALEZA ",
+"Fortaleza ",
 100,
 100,
 0
 ],
 [
-"SÃO LUIZ ",
+"São Luiz ",
 89,
 111,
 0
 ],
 [
-"JOÃO PESSOA ",
+"João Pessoa ",
 136,
 69,
 0
 ],
 [
-"TERESINA ",
+"Teresina ",
 166,
 94,
 0
 ],
 [
-"NATAL ",
+"Natal  ",
 80,
 98,
 0
 ],
 [
-"RECIFE",
+"Recife",
 105,
 95,
 0
 ],
 [
-"MACEIÓ ",
+"Maceió ",
 109,
 92,
 0
 ],
 [
-"DISTRITO FEDERAL ",
+"Distrito Federal ",
 103,
 97,
 0
 ],
 [
-"GOIÂNIA",
+"Goiânia",
 109,
 92,
 0
 ],
 [
-"CUIABÁ",
+"Cuiabá",
 112,
 88,
 0
 ],
 [
-"CAMPO GRANDE ",
+"Campo Grande ",
 112,
 88,
 0
 ],
 [
-" BELÉM ",
+"Belém ",
 100,
 100,
 0
 ],
 [
-"RIO BRANCO ",
+"Rio Branco - EM ",
 93,
-null,
+67,
 0
 ],
 [
-"MACAPÁ",
+"Rio Branco - EF ",
+93,
+87,
+0
+],
+[
+"Macapá",
 163,
 58,
 0
 ],
 [
-"MANAUS",
+"Manaus",
 70,
 140,
 0
 ],
 [
-"PORTO VELHO",
+"Porto Velho",
 114,
 86,
 0
 ],
 [
-"BOA VISTA",
+"Boa Vista",
 89,
 85,
 0
 ],
 [
-"PALMAS",
+"Palmas",
 50,
 114,
 0
 ],
 [
-"BELO HORIZONTE ",
+"Belo Horizonte ",
 72,
 128,
 0
 ],
 [
-"VITÓRIA  ",
+"Vitória  ",
 5,
 195,
 0
 ],
 [
-"RIO DE JANEIRO ",
+"Rio de Janeiro ",
 43,
 164,
 0
 ],
 [
-"SÃO PAULO ",
+"São Paulo ",
 12,
 188,
 0
 ],
 [
-"FLORIANÒPOLIS  ",
+"Florianópolis  ",
 67,
 67,
 67
 ],
 [
-"CURITIBA ",
+"Curitiba ",
 55,
 145,
 0
 ],
 [
-"PORTO ALEGRE  ",
+"Porto Alegre  ",
 43,
 157,
 0
 ] 
 ];
 data.addColumn('string','capital');
-data.addColumn('number','remoto');
-data.addColumn('number','hibrido');
-data.addColumn('number','presencial');
+data.addColumn('number','Remoto');
+data.addColumn('number','Híbrido');
+data.addColumn('number','Presencial');
 data.addRows(datajson);
 return(data);
 }
  
 // jsDrawChart
-function drawChartBarChartIDaf001ae76b5() {
-var data = gvisDataBarChartIDaf001ae76b5();
+function drawChartBarChartID6938572012f0() {
+var data = gvisDataBarChartID6938572012f0();
 var options = {};
 options["allowHtml"] = true;
 options["bars"] = "horizontal";
 options["isStacked"] = true;
 options["height"] = 1080;
+options["focusTarget"] = "category";
+options["colors"] = ['#527184', '#62b5ea', '#f6a323'];
+options["fontName"] = "Source Sans Pro";
+options["fontSize"] = 14.4;
 
     var chart = new google.visualization.BarChart(
-    document.getElementById('BarChartIDaf001ae76b5')
+    document.getElementById('BarChartID6938572012f0')
     );
     chart.draw(data,options);
     
@@ -2499,9 +2539,9 @@ if (newPackage)
   pkgs.push(chartid);
   
 // Add the drawChart function to the global list of callbacks
-callbacks.push(drawChartBarChartIDaf001ae76b5);
+callbacks.push(drawChartBarChartID6938572012f0);
 })();
-function displayChartBarChartIDaf001ae76b5() {
+function displayChartBarChartID6938572012f0() {
   var pkgs = window.__gvisPackages = window.__gvisPackages || [];
   var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
   window.clearTimeout(window.__gvisLoad);
@@ -2524,9 +2564,9 @@ callbacks.shift()();
 // jsFooter
 </script>
 <!-- jsChart -->
-<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartIDaf001ae76b5"></script>
+<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartID6938572012f0"></script>
 <!-- divChart -->
-<div id="BarChartIDaf001ae76b5" style="width: 500; height: 1080;">
+<div id="BarChartID6938572012f0" style="width: 500; height: 1080;">
 
 </div>
 </div>

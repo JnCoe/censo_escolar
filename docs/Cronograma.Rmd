@@ -37,6 +37,7 @@ library(kableExtra)
 options(scipen = 9999)
 load('../dados/cronograma.rdata')
 load('../dados/novo_cronograma.rdata')
+load('../dados/novo_cronograma2.rdata')
 ```
 
 Convertendo a tabela em formato long e criando identificador numérico de cada etapa
@@ -95,26 +96,52 @@ Observações:
 
 # Dados 2021
 
-## Rede municipal
+
+## Rede municipal 2
 
 ```{r, results='asis'}
-graf <- novo_cronograma %>%
-    janitor::clean_names() %>%
-    mutate(hibrido = as.numeric(hibrido), presencial = as.numeric(presencial)) %>% filter(rede == 'Municipal') %>%
-    select(!rede) %>%
-    googleVis::gvisBarChart(xvar='capital', options=list(bars='horizontal', isStacked=TRUE, height=1080))
+graf <- novo_cronograma2 %>%
+  mutate(Híbrido = as.numeric(Híbrido),
+         Presencial = as.numeric(Presencial)) %>% filter(rede == 'Municipal') %>%
+  select(!rede) %>%
+  googleVis::gvisBarChart(
+    xvar = 'capital',
+    options = list(
+      bars = 'horizontal',
+      isStacked = TRUE,
+      height = 700,
+      focusTarget = 'category',
+      colors = "['#527184', '#62b5ea', '#f6a323']",
+      fontName = 'Source Sans Pro',
+      fontSize = 14.4,
+      chartArea = "{height:\"90%\"}"
+    )
+  )
+
 
 print(graf, "chart")
 ```
 
-## Rede estadual
+## Rede estadual 2
 
 ```{r, results='asis'}
-graf <- novo_cronograma %>%
-    janitor::clean_names() %>%
-    mutate(hibrido = as.numeric(hibrido), presencial = as.numeric(presencial)) %>% filter(rede == 'Estadual') %>%
-    select(!rede) %>%
-    googleVis::gvisBarChart(xvar='capital', options=list(bars='horizontal', isStacked=TRUE, height=1080))
+graf <- novo_cronograma2 %>%
+  mutate(Híbrido = as.numeric(Híbrido),
+         Presencial = as.numeric(Presencial)) %>% filter(rede == 'Estadual') %>%
+  select(!rede) %>%
+  googleVis::gvisBarChart(
+    xvar = 'capital',
+    options = list(
+      bars = 'horizontal',
+      isStacked = TRUE,
+      height = 1080,
+      focusTarget = 'category',
+      colors = "['#527184', '#62b5ea', '#f6a323']",
+      fontName = 'Source Sans Pro',
+      fontSize = 14.4,
+      chartArea = "{height:\"90%\"}"
+    )
+  )
 
 print(graf, "chart")
 ```
