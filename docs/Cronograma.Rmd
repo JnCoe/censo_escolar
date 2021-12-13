@@ -34,10 +34,17 @@ library(dplyr)
 library(ggplot2)
 library(knitr)
 library(kableExtra)
+library(hrbrthemes)
+library(viridis)
+library(gridExtra)
+
 options(scipen = 9999)
 load('../dados/cronograma.rdata')
 load('../dados/novo_cronograma.rdata')
-load('../dados/novo_cronograma2.rdata')
+load('../dados/novo_cronograma3.rdata')
+
+novo_cronograma <- novo_cronograma3 %>%
+  janitor::clean_names()
 ```
 
 
@@ -47,9 +54,9 @@ load('../dados/novo_cronograma2.rdata')
 ## Rede municipal 2
 
 ```{r, results='asis'}
-graf <- novo_cronograma2 %>%
-  mutate(Híbrido = as.numeric(Híbrido),
-         Presencial = as.numeric(Presencial)) %>% filter(rede == 'Municipal') %>%
+graf <- novo_cronograma %>%
+  mutate(hibrido = as.numeric(hibrido),
+         presencial = as.numeric(presencial)) %>% filter(rede == 'Municipal') %>%
   select(!rede) %>%
   googleVis::gvisBarChart(
     xvar = 'capital',
@@ -72,9 +79,9 @@ print(graf, "chart")
 ## Rede estadual 2
 
 ```{r, results='asis'}
-graf <- novo_cronograma2 %>%
-  mutate(Híbrido = as.numeric(Híbrido),
-         Presencial = as.numeric(Presencial)) %>% filter(rede == 'Estadual') %>%
+graf <- novo_cronograma %>%
+  mutate(hibrido = as.numeric(hibrido),
+         presencial = as.numeric(presencial)) %>% filter(rede == 'Estadual') %>%
   select(!rede) %>%
   googleVis::gvisBarChart(
     xvar = 'capital',
@@ -92,4 +99,64 @@ graf <- novo_cronograma2 %>%
 
 print(graf, "chart")
 ```
+
+
+# Médias estaduais
+
+```{r}
+novo_cronograma_estadual <- novo_cronograma %>%
+  filter(rede == 'Estadual')
+
+novo_cronograma_municipal <- novo_cronograma %>%
+  filter(rede == 'Municipal')
+```
+
+```{r, fig.height=11}
+g1 <- novo_cronograma_estadual %>%
+  rowwise() %>%
+  mutate(total_dias = sum(remoto+hibrido+presencial)) %>%
+ggplot(aes(y=presencial, x=reorder(capital, -presencial, desc), fill=as.factor(regiao) )) + 
+  geom_col( ) +
+  scale_fill_brewer(palette = "Set1") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = 'none') +
+  coord_flip()
+
+g2 <- novo_cronograma_estadual %>%
+  rowwise() %>%
+  mutate(total_dias = sum(remoto+hibrido+presencial)) %>%
+ggplot(aes(y=hibrido, x=reorder(capital, -hibrido, desc), fill=as.factor(regiao) )) + 
+  geom_col( ) +
+  scale_fill_brewer(palette = "Set1") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = 'none') +
+  coord_flip()
+
+g3 <- novo_cronograma_estadual %>%
+  rowwise() %>%
+  mutate(total_dias = sum(remoto+hibrido+presencial)) %>%
+ggplot(aes(y=remoto, x=reorder(capital, -remoto, desc), fill=as.factor(regiao) )) + 
+  geom_col( ) +
+  scale_fill_brewer(palette = "Set1") +
+  theme(legend.position = 'none') +
+  coord_flip()
+
+g4 <- novo_cronograma_estadual %>%
+  rowwise() %>%
+  mutate(total_dias = sum(remoto+hibrido+presencial)) %>%
+ggplot(aes(y=total_dias, x=reorder(capital, -total_dias, desc), fill=as.factor(regiao))) + 
+  geom_col( ) +
+  scale_fill_brewer(palette = "Set1") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = 'none') +
+  coord_flip()
+
+grid.arrange(g1, g2, g3, g4)
+```
+
+Em média, as escolas públicas estaduais brasileiras tiveram 86 dias de aulas remotas, 63 de aulas no formato híbrido e 46 no formato presencial. Enquanto as regiões Norte, Nordeste e Centro-oeste tiveram uma média de no mínimo 89 dias de aulas remotas, as regiões sul e sudeste tiveram em média apenas 33 e 55 dias letivos nessa modalidade.
+
+Essa diferença se deve a uma maior predominância do modelo híbrido nessas duas regiões, especificamente em São Paulo, que aplicou ensino híbrido por 150 dias letivos. No caso do ensino presencial, apesar de haver novamente predominância das regiões sul e sudeste perante às demais, a diferença na média é menor. Chama atenção o caso do Amazonas, com mais de 100 dias letivos nessa modalidade nessa modalidade, m número considerável quando comparado aos demais estados.
+
+Em relação aos dias totais letivos, a maior parte dos estados (22 ou 81%) o cronograma estabelecido pelo estado foi de 200 dias letivos ou mais. 5 estados não somaram esse valor para o ano letivo: Acre, Rio Grande do Norte, Roraima, Tocantis e Espírito Santo.
+
+
+
 
