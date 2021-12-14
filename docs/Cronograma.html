@@ -278,18 +278,238 @@ pre:not(.r) {
 library(ggplot2)
 library(knitr)
 library(kableExtra)
+library(hrbrthemes)
+library(viridis)
+library(gridExtra)
+library(tidylog)
+
 options(scipen = 9999)
 load(&#39;../dados/cronograma.rdata&#39;)
 load(&#39;../dados/novo_cronograma.rdata&#39;)
-load(&#39;../dados/novo_cronograma2.rdata&#39;)</code></pre>
-<div id="dados-2021" class="section level1" number="1">
-<h1 number="1"><span class="header-section-number">1</span> Dados 2021</h1>
-<div id="rede-municipal-2" class="section level2" number="1.1">
-<h2 number="1.1"><span class="header-section-number">1.1</span> Rede municipal 2</h2>
-<pre class="r"><code>graf &lt;- novo_cronograma2 %&gt;%
-  mutate(Híbrido = as.numeric(Híbrido),
-         Presencial = as.numeric(Presencial)) %&gt;% filter(rede == &#39;Municipal&#39;) %&gt;%
-  select(!rede) %&gt;%
+load(&#39;../dados/novo_cronograma3.rdata&#39;)</code></pre>
+<pre class="r"><code>novo_cronograma &lt;- novo_cronograma3 %&gt;%
+  janitor::clean_names()
+
+novo_cronograma_estadual &lt;- novo_cronograma %&gt;%
+  filter(rede == &#39;Estadual&#39;) %&gt;%
+  rowwise() %&gt;%
+  mutate(total_dias = sum(remoto+hibrido+presencial))
+
+novo_cronograma_municipal &lt;- novo_cronograma %&gt;%
+  filter(rede == &#39;Municipal&#39;) %&gt;%
+  rowwise() %&gt;%
+  mutate(total_dias = sum(remoto+hibrido+presencial))</code></pre>
+<div id="introdução" class="section level1" number="1">
+<h1 number="1"><span class="header-section-number">1</span> Introdução</h1>
+<p>A pandemia de COVID-19 causou diversos danos no acesso à educação no mundo todo. Segundo relatório do Banco Mundial<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>, entre fevereiro de 2020 até agosto de 2021, 1,6 bilhões de crianças estiveram com as escolas totalmente fechadas por 121 dias letivos, em média. Como consequência, o relatório prevê um impacto negativo considerável no aprendizado infantil bem como desdobramentos na economia e na desigualdade.</p>
+<p>Esse fenômeno também atingiu o Brasil, que manteve boa parte de sua juventude afastada das escolas por um período significativo. Segundo dados do Censo Escolar realizado pelo Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira (INEP) havia, em 2020, aproximadamente 40 milhões de jovens e crianças matriculados em escolas municipais e estaduais no país<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>. Com isso, é esperado que os órgãos responsáveis por esses alunos tenham traçado estratégias adequadas para o retorno à aula.</p>
+<p>Este relatório apresenta uma breve descrição do calendário escolar estabelecido pelas secretarias de educação municipais e estaduais das 27 unidades federativas e 26 capitais brasileiras para o ano de 2021. Primeiramente, serão apresentados os dados das escolas municipais, seguido das informações estaduais e, por último, um comparativo entre ambos.</p>
+<p>As informações foram coletadas através de publicações em diários oficiais bem como pedidos de acesso à informação feitos aos entes governamentais. Os dados apresentados consistem em análises feitas a partir dos cronogramas estabelecidos pelos estados e municípios para suas respectivas redes de educação. Foi observado um alto grau de discricionaridade atribuído aos diretores das escolas, não sendo possível afirmar que os valores estabelecidos foram seguidos à risca pelas unidades educacionais.</p>
+<p>Ainda assim, o cronograma traçado pelo poder público é uma importante diretriz para um retorno organizado às aulas. Não apenas serve de sinalização pelo poder público sobre o impacto da pandemia na região, mas permite às escolas maior padronização do ano letivo.</p>
+<p>Optou-se por excluir 2020 das observações desse relatório conforme a qualidade dos dados prestados pela administração escolar estavam consideravelmente precários. Foi identificado gravemente que nem mesmo as secretarias de educação conseguem estimar adequadamente o período de adoção de aulas no modelo híbrido ou remoto, com considerável poder de decisão sendo atribuído às escolas naquele ano.</p>
+<p>Para 2021, no entanto, com a já consolidada situação da pandemia, todos os estados e capitais emitiram diretrizes sobre o retorno à aula, número de dias letivos e datas para adoção de cada modalidade (híbrido, presencial ou remoto).</p>
+</div>
+<div id="dados-2021" class="section level1" number="2">
+<h1 number="2"><span class="header-section-number">2</span> Dados 2021</h1>
+<p>Os gráficos abaixos apresentam o somatório de dias letivos nas capitais segundo os cronogramas estabelecidos pelas secretarias <em>estaduais</em> de educação. As barras estão coloridas de acordo com a região.</p>
+</div>
+<div id="médias-estaduais" class="section level1" number="3">
+<h1 number="3"><span class="header-section-number">3</span> Médias estaduais</h1>
+<pre class="r"><code>g1 &lt;- novo_cronograma_estadual %&gt;%
+ggplot(aes(y=presencial, x=reorder(capital, -presencial, desc), fill=as.factor(regiao) )) + 
+  geom_col( ) +
+  scale_fill_brewer(palette = &quot;Set1&quot;) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = &#39;none&#39;) +
+  coord_flip()
+
+g2 &lt;- novo_cronograma_estadual %&gt;%
+ggplot(aes(y=hibrido, x=reorder(capital, -hibrido, desc), fill=as.factor(regiao) )) + 
+  geom_col( ) +
+  scale_fill_brewer(palette = &quot;Set1&quot;) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = &#39;none&#39;) +
+  coord_flip()
+
+g3 &lt;- novo_cronograma_estadual %&gt;%
+ggplot(aes(y=remoto, x=reorder(capital, -remoto, desc), fill=as.factor(regiao) )) + 
+  geom_col( ) +
+  scale_fill_brewer(palette = &quot;Set1&quot;) +
+  theme(legend.position = &#39;none&#39;) +
+  coord_flip()
+
+g4 &lt;- novo_cronograma_estadual %&gt;%
+ggplot(aes(y=total_dias, x=reorder(capital, -total_dias, desc), fill=as.factor(regiao))) + 
+  geom_col( ) +
+  scale_fill_brewer(palette = &quot;Set1&quot;) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = &#39;none&#39;) +
+  coord_flip()
+
+grid.arrange(g1, g2, g3, g4)</code></pre>
+<p><img src="Cronograma_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<pre class="r"><code>g5 &lt;- novo_cronograma_estadual %&gt;%
+ggplot(aes(y=presencial, x=reorder(capital, -presencial, desc), fill=as.factor(regiao) )) + 
+  geom_col( ) +
+  scale_fill_brewer(palette = &quot;Set1&quot;) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1)) +
+  coord_flip()
+
+grid::grid.draw(cowplot::get_legend(g5))</code></pre>
+<p><img src="Cronograma_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>Em média, as escolas públicas estaduais brasileiras tiveram 86 dias de aulas remotas, 63 de aulas no formato híbrido e 46 no formato presencial. Enquanto as regiões Norte, Nordeste e Centro-oeste tiveram uma média de no mínimo 89 dias de aulas remotas, as regiões sul e sudeste tiveram em média apenas 33 e 55 dias letivos nessa modalidade.</p>
+<p>Essa diferença se deve a uma maior predominância do modelo híbrido nessas duas regiões, especificamente em São Paulo, que aplicou ensino híbrido por 150 dias letivos. No caso do ensino presencial, apesar de haver novamente predominância das regiões sul e sudeste perante às demais, a diferença na média é menor. Chama atenção o caso do Amazonas, com mais de 100 dias letivos nessa modalidade nessa modalidade, m número considerável quando comparado aos demais estados.</p>
+<p>Em relação aos dias totais letivos, a maior parte dos estados (22 ou 81%) o cronograma estabelecido pelo estado foi de 200 dias letivos ou mais. 5 estados não somaram esse valor para o ano letivo: Acre, Rio Grande do Norte, Roraima, Tocantis e Espírito Santo.</p>
+<div id="casos-excepcionais" class="section level2" number="3.1">
+<h2 number="3.1"><span class="header-section-number">3.1</span> Casos excepcionais</h2>
+<p>Alguns estados tiveram o cronograma de 2021 impactado pelo atraso gerado na suspensão de aulas em 2020. O Acre, citado anteriormente por não ter alcançado os 200 dias letivos, iniciou seu ano letivo em 10/05. Similarmente, o estado do Rio Grande do Norte, que também não alcançou os 200 dias letivos, iniciou o ano letivo em 05/04.</p>
+</div>
+</div>
+<div id="médias-municipais" class="section level1" number="4">
+<h1 number="4"><span class="header-section-number">4</span> Médias municipais</h1>
+<p>Os gráficos abaixos apresentam o somatório de dias letivos nas capitais segundo os cronogramas estabelecidos pelas secretarias <em>municipais</em> de educação. As barras estão coloridas de acordo com a região.</p>
+<pre class="r"><code>g1 &lt;- novo_cronograma_municipal %&gt;%
+ggplot(aes(y=presencial, x=reorder(capital, -presencial, desc), fill=as.factor(regiao) )) + 
+  geom_col( ) +
+  scale_fill_brewer(palette = &quot;Set1&quot;) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = &#39;none&#39;) +
+  coord_flip()
+
+g2 &lt;- novo_cronograma_municipal %&gt;%
+ggplot(aes(y=hibrido, x=reorder(capital, -hibrido, desc), fill=as.factor(regiao) )) + 
+  geom_col( ) +
+  scale_fill_brewer(palette = &quot;Set1&quot;) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = &#39;none&#39;) +
+  coord_flip()
+
+g3 &lt;- novo_cronograma_municipal %&gt;%
+ggplot(aes(y=remoto, x=reorder(capital, -remoto, desc), fill=as.factor(regiao) )) + 
+  geom_col( ) +
+  scale_fill_brewer(palette = &quot;Set1&quot;) +
+  theme(legend.position = &#39;none&#39;) +
+  coord_flip()
+
+g4 &lt;- novo_cronograma_municipal %&gt;%
+ggplot(aes(y=total_dias, x=reorder(capital, -total_dias, desc), fill=as.factor(regiao))) + 
+  geom_col( ) +
+  scale_fill_brewer(palette = &quot;Set1&quot;) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = &#39;none&#39;) +
+  coord_flip()
+
+grid.arrange(g1, g2, g3, g4)</code></pre>
+<p><img src="Cronograma_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<pre class="r"><code>g5 &lt;- novo_cronograma_municipal %&gt;%
+ggplot(aes(y=presencial, x=reorder(capital, -presencial, desc), fill=as.factor(regiao) )) + 
+  geom_col( ) +
+  scale_fill_brewer(palette = &quot;Set1&quot;) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1)) +
+  coord_flip()
+
+grid::grid.draw(cowplot::get_legend(g5))</code></pre>
+<p><img src="Cronograma_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>As diferenças regionais entre os cronogramas das escolas públicas municipais são similares às vistas nas escolas estaduais. A média de dias no ensino remoto foi de 85 dias, valor praticamente idêntico àquele obtido na rede estadual (86). Para ensino híbrido, houve uma média de 74 dias letivos (11 dias a mais do que a média estadual), enquanto para o ensino presencial a média obtida foi de 36 dias (10 a menos que a média estadual).</p>
+<p>Assim como antes, as regiões sul e sudeste tiveram consideravelmente menos aulas remotas do que as demais regiões, com grande prevalência da modalidade híbrida. Replicando o que ocorreu na rede estadual, as escolas municipais de São Paulo e Porto Alegre tiveram o maior número absoluto de aulas nesse formato. Similarmente, Manaus implementou um cronograma que, tal como na rede estadual, gerou o maior número de aulas presenciais.</p>
+<p>Como antes, não houve grande variação no total de dias letivos entre as capitais. Apenas 4 municípios elaboraram um cronograma com menos de 190 dias letivos: Florianópolis (SC), Boa Vista (RR), Porto Velho (RO) e Natal (RN).</p>
+<div id="casos-excepcionais-1" class="section level2" number="4.1">
+<h2 number="4.1"><span class="header-section-number">4.1</span> Casos excepcionais</h2>
+<p>Da mesma forma que o ensino estadual do Rio Grande do Norte foi afetado pela pandemia de 2020, o ensino municipal de Natal em 2021 também teve seu cronograma atrasado. Com aulas iniciadas em em julho, a capital foi gravemente prejudicada em seu calendário escolar.</p>
+</div>
+</div>
+<div id="comparativos-município-estado" class="section level1" number="5">
+<h1 number="5"><span class="header-section-number">5</span> Comparativos município-estado</h1>
+<p>É possível observar que os municípios e estados costumam conter certo grau de sintonia nos valores estabelecidos pelos cronogramas oficiais. Entretanto, há algumas exceções. Os gráficos abaixo retratam a diferença entre os dias letivos em cada modalidae estabelecidos pela secretaria municipal e a secretaria estadual. Os valores estão ordenados da maior diferença (municipios com mais dias letivos naquela modalidade do que o estado) para a menor diferença (estados com mais dias letivos naquela modalidade que o município).</p>
+<p>Importante pontuar que, no Brasil, o estado costuma ser o ente federativo responsável por escolas de ensino médio, enquanto o município é responsável pelas escolas de ensino infantil e fundamental. Por esse motivo, diferenças entre ambos podem ser justificáveis.</p>
+<pre class="r"><code>temp &lt;- novo_cronograma_municipal %&gt;%
+  rename(municipal_presencial = presencial, municipal_hibrido = hibrido, municipal_remoto = remoto, municipal_total_dias = total_dias) %&gt;%
+  left_join(select(novo_cronograma_estadual, capital, remoto, hibrido, presencial, total_dias))
+
+g1 &lt;- temp %&gt;%
+  mutate(dif = municipal_presencial-presencial) %&gt;%
+  arrange(desc(dif)) %&gt;%
+  mutate(capital=factor(capital, capital)) %&gt;%
+  ggplot() +
+  geom_segment( aes(x=capital, xend=capital, y=presencial, yend=municipal_presencial), color=&quot;grey&quot;) +
+  geom_point( aes(x=capital, y=presencial), color=&#39;#083550&#39;, size=3, alpha = 0.7) +
+  geom_point( aes(x=capital, y=municipal_presencial), color=&#39;#1f95e1&#39;, size=3, alpha = 0.7) +
+  coord_flip()+
+  theme_ipsum() +
+  theme(
+    legend.position = &quot;none&quot;,
+  ) +
+  xlab(&quot;Capital&quot;) +
+  ylab(&quot;Dias de aula presencial&quot;)
+
+g2 &lt;- temp %&gt;%
+  mutate(dif = municipal_hibrido-hibrido) %&gt;%
+  arrange(desc(dif)) %&gt;%
+  mutate(capital=factor(capital, capital)) %&gt;%
+  ggplot() +
+  geom_segment( aes(x=capital, xend=capital, y=hibrido, yend=municipal_hibrido), color=&quot;grey&quot;) +
+  geom_point( aes(x=capital, y=hibrido), color=&#39;#083550&#39;, size=3, alpha = 0.7) +
+  geom_point( aes(x=capital, y=municipal_hibrido), color=&#39;#1f95e1&#39;, size=3, alpha = 0.7) +
+  coord_flip()+
+  theme_ipsum() +
+  theme(
+    legend.position = &quot;none&quot;,
+  ) +
+  xlab(&quot;Capital&quot;) +
+  ylab(&quot;Dias na modalidade híbrida&quot;)
+
+g3 &lt;- temp %&gt;%
+  mutate(dif = municipal_remoto-remoto) %&gt;%
+  arrange(desc(dif)) %&gt;%
+  mutate(capital=factor(capital, capital)) %&gt;%
+  ggplot() +
+  geom_segment( aes(x=capital, xend=capital, y=remoto, yend=municipal_remoto), color=&quot;grey&quot;) +
+  geom_point( aes(x=capital, y=remoto), color=&#39;#083550&#39;, size=3, alpha = 0.7) +
+  geom_point( aes(x=capital, y=municipal_remoto), color=&#39;#1f95e1&#39;, size=3, alpha = 0.7) +
+  coord_flip()+
+  theme_ipsum() +
+  theme(
+    legend.position = &quot;none&quot;,
+  ) +
+  xlab(&quot;Capital&quot;) +
+  ylab(&quot;Dias na modalidade remota&quot;)
+
+g4 &lt;- temp %&gt;%
+  mutate(dif = municipal_total_dias-total_dias) %&gt;%
+  arrange(desc(dif)) %&gt;%
+  mutate(capital=factor(capital, capital)) %&gt;%
+  ggplot() +
+  geom_segment( aes(x=capital, xend=capital, y=total_dias, yend=municipal_total_dias), color=&quot;grey&quot;) +
+  geom_point( aes(x=capital, y=total_dias), color=&#39;#083550&#39;, size=3, alpha = 0.7) +
+  geom_point( aes(x=capital, y=municipal_total_dias), color=&#39;#1f95e1&#39;, size=3, alpha = 0.7) +
+  coord_flip()+
+  theme_ipsum() +
+  theme(
+    legend.position = &quot;none&quot;,
+  ) +
+  xlab(&quot;Capital&quot;) +
+  ylab(&quot;Total de dias letivos&quot;)
+
+grid.arrange(g1, g2, g3, g4)</code></pre>
+<p><img src="Cronograma_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<pre class="r"><code>g5 &lt;- temp %&gt;%
+  mutate(dif = municipal_total_dias-total_dias) %&gt;%
+  arrange(desc(dif)) %&gt;%
+  mutate(capital=factor(capital, capital)) %&gt;%
+  ggplot() +
+  geom_segment( aes(x=capital, xend=capital, y=total_dias, yend=municipal_total_dias), color=&quot;grey&quot;) +
+  geom_point( aes(x=capital, y=total_dias), color=&#39;#083550&#39;, size=3, alpha = 0.7) +
+  geom_point( aes(x=capital, y=municipal_total_dias), color=&#39;#1f95e1&#39;, size=3, alpha = 0.7) +
+  coord_flip() +
+  xlab(&quot;Capital&quot;) +
+  ylab(&quot;Total de dias letivos&quot;)
+
+grid::grid.draw(cowplot::get_legend(g5))</code></pre>
+<p>No total de dias letivos, somente Tocantis e Espírito Santo apresentam valor consideravelmente mais baixos que suas respectivas capitais e também abaixo da diretriz de 200 dias letivos seguida pela maior parte dos entes. Inversamente, Florianópolis e Porto Velho foram as únicas capitais com consideravelmente menos dias letivos que sua respectiva rede estadual de ensino e abaixo dos 200 dias.</p>
+</div>
+<div id="anexo---gráficos-para-o-site" class="section level1" number="6">
+<h1 number="6"><span class="header-section-number">6</span> Anexo - Gráficos para o site</h1>
+<div id="rede-municipal" class="section level2" number="6.1">
+<h2 number="6.1"><span class="header-section-number">6.1</span> Rede municipal</h2>
+<pre class="r"><code>graf &lt;- novo_cronograma_municipal %&gt;%
+  mutate(hibrido = as.numeric(hibrido),
+         presencial = as.numeric(presencial)) %&gt;% 
+  arrange(desc(remoto)) %&gt;%
+  select(-c(rede, total_dias)) %&gt;%
   googleVis::gvisBarChart(
     xvar = &#39;capital&#39;,
     options = list(
@@ -307,40 +527,16 @@ load(&#39;../dados/novo_cronograma2.rdata&#39;)</code></pre>
 
 print(graf, &quot;chart&quot;)</code></pre>
 <!-- BarChart generated in R 4.0.3 by googleVis 0.6.10 package -->
-<!-- Mon Dec 06 16:25:59 2021 -->
+<!-- Tue Dec 14 04:43:16 2021 -->
 <!-- jsHeader -->
 <script type="text/javascript">
  
 // jsData 
-function gvisDataBarChartID9b28411a4f67 () {
+function gvisDataBarChartIDd5c83f815d64 () {
 var data = new google.visualization.DataTable();
 var datajson =
 [
  [
-"Aracaju",
-103,
-97,
-0
-],
-[
-"Salvador",
-80,
-123,
-0
-],
-[
-"Fortaleza ",
-129,
-72,
-0
-],
-[
-"São Luiz ",
-94,
-106,
-0
-],
-[
 "João Pessoa ",
 164,
 43,
@@ -353,15 +549,15 @@ var datajson =
 0
 ],
 [
-"Natal* ",
-5,
-145,
+"Rio Branco ",
+142,
+57,
 0
 ],
 [
-"Recife",
-95,
-105,
+"Fortaleza ",
+129,
+72,
 0
 ],
 [
@@ -377,10 +573,16 @@ var datajson =
 0
 ],
 [
+"Aracaju",
+103,
+61,
+36
+],
+[
 "Cuiabá",
 103,
-97,
-0
+63,
+34
 ],
 [
 "Campo Grande ",
@@ -389,95 +591,119 @@ var datajson =
 0
 ],
 [
+"Macapá",
+102,
+22,
+76
+],
+[
 "Belém ",
 100,
-100,
-0
-],
-[
-"Rio Branco ",
-142,
-57,
-0
-],
-[
-"Macapá",
-162,
-58,
-0
-],
-[
-"Manaus",
-70,
-140,
-0
-],
-[
-"Boa Vista",
-88,
-72,
-0
+63,
+27
 ],
 [
 "Palmas",
 100,
-100,
-0
+41,
+59
 ],
 [
-"Belo Horizonte ",
-83,
-128,
-0
+"Recife",
+95,
+74,
+31
 ],
 [
-"Vitória  ",
-61,
-141,
-0
-],
-[
-"Rio de Janeiro ",
-29,
-173,
-0
-],
-[
-"São Paulo ",
-0,
-204,
-0
-],
-[
-"Florianópolis  ",
-16,
-185,
+"São Luiz ",
+94,
+106,
 0
 ],
 [
 "Curitiba ",
 93,
-107,
-0
+37,
+70
+],
+[
+"Boa Vista",
+88,
+29,
+43
+],
+[
+"Belo Horizonte ",
+83,
+82,
+46
+],
+[
+"Porto Velho",
+81,
+45,
+34
+],
+[
+"Salvador",
+80,
+64,
+59
+],
+[
+"Manaus",
+70,
+35,
+105
+],
+[
+"Vitória  ",
+61,
+81,
+60
+],
+[
+"Rio de Janeiro ",
+29,
+136,
+37
+],
+[
+"Florianópolis  ",
+16,
+63,
+82
+],
+[
+"Natal* ",
+5,
+117,
+28
+],
+[
+"São Paulo ",
+0,
+162,
+42
 ],
 [
 "Porto Alegre  ",
 0,
-100,
-100
+141,
+59
 ] 
 ];
 data.addColumn('string','capital');
-data.addColumn('number','Remoto');
-data.addColumn('number','Híbrido');
-data.addColumn('number','Presencial');
+data.addColumn('number','remoto');
+data.addColumn('number','hibrido');
+data.addColumn('number','presencial');
 data.addRows(datajson);
 return(data);
 }
  
 // jsDrawChart
-function drawChartBarChartID9b28411a4f67() {
-var data = gvisDataBarChartID9b28411a4f67();
+function drawChartBarChartIDd5c83f815d64() {
+var data = gvisDataBarChartIDd5c83f815d64();
 var options = {};
 options["allowHtml"] = true;
 options["bars"] = "horizontal";
@@ -490,7 +716,7 @@ options["fontSize"] = 14.4;
 options["chartArea"] = {height:"90%"};
 
     var chart = new google.visualization.BarChart(
-    document.getElementById('BarChartID9b28411a4f67')
+    document.getElementById('BarChartIDd5c83f815d64')
     );
     chart.draw(data,options);
     
@@ -514,9 +740,9 @@ if (newPackage)
   pkgs.push(chartid);
   
 // Add the drawChart function to the global list of callbacks
-callbacks.push(drawChartBarChartID9b28411a4f67);
+callbacks.push(drawChartBarChartIDd5c83f815d64);
 })();
-function displayChartBarChartID9b28411a4f67() {
+function displayChartBarChartIDd5c83f815d64() {
   var pkgs = window.__gvisPackages = window.__gvisPackages || [];
   var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
   window.clearTimeout(window.__gvisLoad);
@@ -539,18 +765,18 @@ callbacks.shift()();
 // jsFooter
 </script>
 <!-- jsChart -->
-<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartID9b28411a4f67"></script>
+<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartIDd5c83f815d64"></script>
 <!-- divChart -->
-<div id="BarChartID9b28411a4f67" style="width: 500; height: 700;">
+<div id="BarChartIDd5c83f815d64" style="width: 500; height: 700;">
 
 </div>
 </div>
-<div id="rede-estadual-2" class="section level2" number="1.2">
-<h2 number="1.2"><span class="header-section-number">1.2</span> Rede estadual 2</h2>
-<pre class="r"><code>graf &lt;- novo_cronograma2 %&gt;%
-  mutate(Híbrido = as.numeric(Híbrido),
-         Presencial = as.numeric(Presencial)) %&gt;% filter(rede == &#39;Estadual&#39;) %&gt;%
-  select(!rede) %&gt;%
+<div id="rede-estadual" class="section level2" number="6.2">
+<h2 number="6.2"><span class="header-section-number">6.2</span> Rede estadual</h2>
+<pre class="r"><code>graf &lt;- novo_cronograma_estadual %&gt;%
+  mutate(hibrido = as.numeric(hibrido),
+         presencial = as.numeric(presencial)) %&gt;%
+  select(-c(rede, total_dias)) %&gt;%
   googleVis::gvisBarChart(
     xvar = &#39;capital&#39;,
     options = list(
@@ -567,38 +793,38 @@ callbacks.shift()();
 
 print(graf, &quot;chart&quot;)</code></pre>
 <!-- BarChart generated in R 4.0.3 by googleVis 0.6.10 package -->
-<!-- Mon Dec 06 16:25:59 2021 -->
+<!-- Tue Dec 14 04:43:16 2021 -->
 <!-- jsHeader -->
 <script type="text/javascript">
  
 // jsData 
-function gvisDataBarChartID9b284a447b23 () {
+function gvisDataBarChartIDd5c83d711aa2 () {
 var data = new google.visualization.DataTable();
 var datajson =
 [
  [
 "Aracaju",
 100,
-100,
-0
+50,
+50
 ],
 [
 "Salvador",
 80,
-123,
-0
+81,
+42
 ],
 [
 "Fortaleza ",
 100,
-100,
-0
+41,
+59
 ],
 [
 "São Luiz ",
 89,
-111,
-0
+40,
+71
 ],
 [
 "João Pessoa ",
@@ -609,56 +835,56 @@ var datajson =
 [
 "Teresina ",
 166,
-94,
-0
+45,
+42
 ],
 [
 "Natal  ",
 80,
-98,
-0
+45,
+52
 ],
 [
 "Recife",
 105,
-95,
-0
+64,
+31
 ],
 [
 "Maceió ",
 109,
-92,
-0
+58,
+34
 ],
 [
 "Distrito Federal ",
 103,
-97,
-0
+58,
+39
 ],
 [
 "Goiânia",
 109,
-92,
-0
+62,
+40
 ],
 [
 "Cuiabá",
 112,
-88,
-0
+42,
+46
 ],
 [
 "Campo Grande ",
 112,
-88,
-0
+34,
+54
 ],
 [
 "Belém ",
 100,
-100,
-0
+42,
+58
 ],
 [
 "Rio Branco - EM ",
@@ -674,27 +900,27 @@ var datajson =
 ],
 [
 "Macapá",
-163,
-58,
-0
+102,
+22,
+76
 ],
 [
 "Manaus",
 70,
-140,
-0
+35,
+105
 ],
 [
 "Porto Velho",
 114,
-86,
-0
+27,
+59
 ],
 [
 "Boa Vista",
 89,
-85,
-0
+37,
+48
 ],
 [
 "Palmas",
@@ -705,26 +931,26 @@ var datajson =
 [
 "Belo Horizonte ",
 72,
-128,
-0
+82,
+46
 ],
 [
 "Vitória  ",
 5,
-195,
-0
+56,
+62
 ],
 [
 "Rio de Janeiro ",
 43,
-164,
-0
+102,
+62
 ],
 [
 "São Paulo ",
 12,
-188,
-0
+150,
+38
 ],
 [
 "Florianópolis  ",
@@ -735,27 +961,27 @@ var datajson =
 [
 "Curitiba ",
 55,
-145,
-0
+63,
+82
 ],
 [
 "Porto Alegre  ",
 43,
-157,
-0
+120,
+37
 ] 
 ];
 data.addColumn('string','capital');
-data.addColumn('number','Remoto');
-data.addColumn('number','Híbrido');
-data.addColumn('number','Presencial');
+data.addColumn('number','remoto');
+data.addColumn('number','hibrido');
+data.addColumn('number','presencial');
 data.addRows(datajson);
 return(data);
 }
  
 // jsDrawChart
-function drawChartBarChartID9b284a447b23() {
-var data = gvisDataBarChartID9b284a447b23();
+function drawChartBarChartIDd5c83d711aa2() {
+var data = gvisDataBarChartIDd5c83d711aa2();
 var options = {};
 options["allowHtml"] = true;
 options["bars"] = "horizontal";
@@ -768,7 +994,7 @@ options["fontSize"] = 14.4;
 options["chartArea"] = {height:"90%"};
 
     var chart = new google.visualization.BarChart(
-    document.getElementById('BarChartID9b284a447b23')
+    document.getElementById('BarChartIDd5c83d711aa2')
     );
     chart.draw(data,options);
     
@@ -792,9 +1018,9 @@ if (newPackage)
   pkgs.push(chartid);
   
 // Add the drawChart function to the global list of callbacks
-callbacks.push(drawChartBarChartID9b284a447b23);
+callbacks.push(drawChartBarChartIDd5c83d711aa2);
 })();
-function displayChartBarChartID9b284a447b23() {
+function displayChartBarChartIDd5c83d711aa2() {
   var pkgs = window.__gvisPackages = window.__gvisPackages || [];
   var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
   window.clearTimeout(window.__gvisLoad);
@@ -817,12 +1043,37 @@ callbacks.shift()();
 // jsFooter
 </script>
 <!-- jsChart -->
-<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartID9b284a447b23"></script>
+<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartIDd5c83d711aa2"></script>
 <!-- divChart -->
-<div id="BarChartID9b284a447b23" style="width: 500; height: 1080;">
+<div id="BarChartIDd5c83d711aa2" style="width: 500; height: 1080;">
 
 </div>
 </div>
+<div id="tabela-estadual" class="section level2" number="6.3">
+<h2 number="6.3"><span class="header-section-number">6.3</span> Tabela estadual</h2>
+<pre class="r"><code>novo_cronograma_estadual</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["remoto"],"name":[1],"type":["int"],"align":["right"]},{"label":["hibrido"],"name":[2],"type":["int"],"align":["right"]},{"label":["presencial"],"name":[3],"type":["int"],"align":["right"]},{"label":["capital"],"name":[4],"type":["chr"],"align":["left"]},{"label":["rede"],"name":[5],"type":["chr"],"align":["left"]},{"label":["regiao"],"name":[6],"type":["chr"],"align":["left"]},{"label":["total_dias"],"name":[7],"type":["int"],"align":["right"]}],"data":[{"1":"100","2":"50","3":"50","4":"Aracaju","5":"Estadual","6":"Nordeste","7":"200"},{"1":"80","2":"81","3":"42","4":"Salvador","5":"Estadual","6":"Nordeste","7":"203"},{"1":"100","2":"41","3":"59","4":"Fortaleza","5":"Estadual","6":"Nordeste","7":"200"},{"1":"89","2":"40","3":"71","4":"São Luiz","5":"Estadual","6":"Nordeste","7":"200"},{"1":"136","2":"69","3":"0","4":"João Pessoa","5":"Estadual","6":"Nordeste","7":"205"},{"1":"166","2":"45","3":"42","4":"Teresina","5":"Estadual","6":"Nordeste","7":"253"},{"1":"80","2":"45","3":"52","4":"Natal","5":"Estadual","6":"Nordeste","7":"177"},{"1":"105","2":"64","3":"31","4":"Recife","5":"Estadual","6":"Nordeste","7":"200"},{"1":"109","2":"58","3":"34","4":"Maceió","5":"Estadual","6":"Nordeste","7":"201"},{"1":"103","2":"58","3":"39","4":"Distrito Federal","5":"Estadual","6":"Centro-oeste","7":"200"},{"1":"109","2":"62","3":"40","4":"Goiânia","5":"Estadual","6":"Centro-oeste","7":"211"},{"1":"112","2":"42","3":"46","4":"Cuiabá","5":"Estadual","6":"Centro-oeste","7":"200"},{"1":"112","2":"34","3":"54","4":"Campo Grande","5":"Estadual","6":"Centro-oeste","7":"200"},{"1":"100","2":"42","3":"58","4":"Belém","5":"Estadual","6":"Norte","7":"200"},{"1":"93","2":"67","3":"0","4":"Rio Branco - EM","5":"Estadual","6":"Norte","7":"160"},{"1":"93","2":"87","3":"0","4":"Rio Branco - EF","5":"Estadual","6":"Norte","7":"180"},{"1":"102","2":"22","3":"76","4":"Macapá","5":"Estadual","6":"Norte","7":"200"},{"1":"70","2":"35","3":"105","4":"Manaus","5":"Estadual","6":"Norte","7":"210"},{"1":"114","2":"27","3":"59","4":"Porto Velho","5":"Estadual","6":"Norte","7":"200"},{"1":"89","2":"37","3":"48","4":"Boa Vista","5":"Estadual","6":"Norte","7":"174"},{"1":"50","2":"114","3":"0","4":"Palmas","5":"Estadual","6":"Norte","7":"164"},{"1":"72","2":"82","3":"46","4":"Belo Horizonte","5":"Estadual","6":"Sudeste","7":"200"},{"1":"5","2":"56","3":"62","4":"Vitória","5":"Estadual","6":"Sudeste","7":"123"},{"1":"43","2":"102","3":"62","4":"Rio de Janeiro","5":"Estadual","6":"Sudeste","7":"207"},{"1":"12","2":"150","3":"38","4":"São Paulo","5":"Estadual","6":"Sudeste","7":"200"},{"1":"67","2":"67","3":"67","4":"Florianópolis","5":"Estadual","6":"Sul","7":"201"},{"1":"55","2":"63","3":"82","4":"Curitiba","5":"Estadual","6":"Sul","7":"200"},{"1":"43","2":"120","3":"37","4":"Porto Alegre","5":"Estadual","6":"Sul","7":"200"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+<div id="tabela-municipal" class="section level2" number="6.4">
+<h2 number="6.4"><span class="header-section-number">6.4</span> Tabela municipal</h2>
+<pre class="r"><code>novo_cronograma_municipal</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["remoto"],"name":[1],"type":["int"],"align":["right"]},{"label":["hibrido"],"name":[2],"type":["int"],"align":["right"]},{"label":["presencial"],"name":[3],"type":["int"],"align":["right"]},{"label":["capital"],"name":[4],"type":["chr"],"align":["left"]},{"label":["rede"],"name":[5],"type":["chr"],"align":["left"]},{"label":["regiao"],"name":[6],"type":["chr"],"align":["left"]},{"label":["total_dias"],"name":[7],"type":["int"],"align":["right"]}],"data":[{"1":"103","2":"61","3":"36","4":"Aracaju","5":"Municipal","6":"Nordeste","7":"200"},{"1":"80","2":"64","3":"59","4":"Salvador","5":"Municipal","6":"Nordeste","7":"203"},{"1":"129","2":"72","3":"0","4":"Fortaleza","5":"Municipal","6":"Nordeste","7":"201"},{"1":"94","2":"106","3":"0","4":"São Luiz","5":"Municipal","6":"Nordeste","7":"200"},{"1":"164","2":"43","3":"0","4":"João Pessoa","5":"Municipal","6":"Nordeste","7":"207"},{"1":"142","2":"72","3":"0","4":"Teresina","5":"Municipal","6":"Nordeste","7":"214"},{"1":"5","2":"117","3":"28","4":"Natal*","5":"Municipal","6":"Nordeste","7":"150"},{"1":"95","2":"74","3":"31","4":"Recife","5":"Municipal","6":"Nordeste","7":"200"},{"1":"111","2":"86","3":"0","4":"Maceió","5":"Municipal","6":"Nordeste","7":"197"},{"1":"109","2":"82","3":"0","4":"Goiânia","5":"Municipal","6":"Centro-oeste","7":"191"},{"1":"103","2":"63","3":"34","4":"Cuiabá","5":"Municipal","6":"Centro-oeste","7":"200"},{"1":"103","2":"97","3":"0","4":"Campo Grande","5":"Municipal","6":"Centro-oeste","7":"200"},{"1":"100","2":"63","3":"27","4":"Belém","5":"Municipal","6":"Norte","7":"190"},{"1":"142","2":"57","3":"0","4":"Rio Branco","5":"Municipal","6":"Norte","7":"199"},{"1":"102","2":"22","3":"76","4":"Macapá","5":"Municipal","6":"Norte","7":"200"},{"1":"70","2":"35","3":"105","4":"Manaus","5":"Municipal","6":"Norte","7":"210"},{"1":"81","2":"45","3":"34","4":"Porto Velho","5":"Municipal","6":"Norte","7":"160"},{"1":"88","2":"29","3":"43","4":"Boa Vista","5":"Municipal","6":"Norte","7":"160"},{"1":"100","2":"41","3":"59","4":"Palmas","5":"Municipal","6":"Norte","7":"200"},{"1":"83","2":"82","3":"46","4":"Belo Horizonte","5":"Municipal","6":"Sudeste","7":"211"},{"1":"61","2":"81","3":"60","4":"Vitória","5":"Municipal","6":"Sudeste","7":"202"},{"1":"29","2":"136","3":"37","4":"Rio de Janeiro","5":"Municipal","6":"Sudeste","7":"202"},{"1":"0","2":"162","3":"42","4":"São Paulo","5":"Municipal","6":"Sudeste","7":"204"},{"1":"16","2":"63","3":"82","4":"Florianópolis","5":"Municipal","6":"Sul","7":"161"},{"1":"93","2":"37","3":"70","4":"Curitiba","5":"Municipal","6":"Sul","7":"200"},{"1":"0","2":"141","3":"59","4":"Porto Alegre","5":"Municipal","6":"Sul","7":"200"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://documents1.worldbank.org/curated/en/416991638768297704/pdf/The-State-of-the-Global-Education-Crisis-A-Path-to-Recovery.pdf" class="uri">https://documents1.worldbank.org/curated/en/416991638768297704/pdf/The-State-of-the-Global-Education-Crisis-A-Path-to-Recovery.pdf</a><a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>Valor obtido considerando o número de IDs de matrículas distintas presentes nos dados do censo escolar para 2020<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+</ol>
 </div>
 
 

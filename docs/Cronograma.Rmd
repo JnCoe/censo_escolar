@@ -45,8 +45,22 @@ load('../dados/cronograma.rdata')
 load('../dados/novo_cronograma.rdata')
 load('../dados/novo_cronograma3.rdata')
 
+
+```
+
+```{r}
 novo_cronograma <- novo_cronograma3 %>%
   janitor::clean_names()
+
+novo_cronograma_estadual <- novo_cronograma %>%
+  filter(rede == 'Estadual') %>%
+  rowwise() %>%
+  mutate(total_dias = sum(remoto+hibrido+presencial))
+
+novo_cronograma_municipal <- novo_cronograma %>%
+  filter(rede == 'Municipal') %>%
+  rowwise() %>%
+  mutate(total_dias = sum(remoto+hibrido+presencial))
 ```
 
 # Introdução
@@ -71,70 +85,9 @@ Para 2021, no entanto, com a já consolidada situação da pandemia, todos os es
 
 # Dados 2021
 
-O gráfico abaixo apresenta
-
-## Rede municipal 2
-
-```{r, results='asis'}
-graf <- novo_cronograma %>%
-  mutate(hibrido = as.numeric(hibrido),
-         presencial = as.numeric(presencial)) %>% filter(rede == 'Municipal') %>%
-  select(!rede) %>%
-  googleVis::gvisBarChart(
-    xvar = 'capital',
-    options = list(
-      bars = 'horizontal',
-      isStacked = TRUE,
-      height = 700,
-      focusTarget = 'category',
-      colors = "['#527184', '#62b5ea', '#f6a323']",
-      fontName = 'Source Sans Pro',
-      fontSize = 14.4,
-      chartArea = "{height:\"90%\"}"
-    )
-  )
-
-
-print(graf, "chart")
-```
-
-## Rede estadual 2
-
-```{r, results='asis'}
-graf <- novo_cronograma %>%
-  mutate(hibrido = as.numeric(hibrido),
-         presencial = as.numeric(presencial)) %>% filter(rede == 'Estadual') %>%
-  select(!rede) %>%
-  googleVis::gvisBarChart(
-    xvar = 'capital',
-    options = list(
-      bars = 'horizontal',
-      isStacked = TRUE,
-      height = 1080,
-      focusTarget = 'category',
-      colors = "['#527184', '#62b5ea', '#f6a323']",
-      fontName = 'Source Sans Pro',
-      fontSize = 14.4,
-      chartArea = "{height:\"90%\"}"
-    )
-  )
-
-print(graf, "chart")
-```
+Os gráficos abaixos apresentam o somatório de dias letivos nas capitais segundo os cronogramas estabelecidos pelas secretarias *estaduais* de educação. As barras estão coloridas de acordo com a região.
 
 # Médias estaduais
-
-```{r}
-novo_cronograma_estadual <- novo_cronograma %>%
-  filter(rede == 'Estadual') %>%
-  rowwise() %>%
-  mutate(total_dias = sum(remoto+hibrido+presencial))
-
-novo_cronograma_municipal <- novo_cronograma %>%
-  filter(rede == 'Municipal') %>%
-  rowwise() %>%
-  mutate(total_dias = sum(remoto+hibrido+presencial))
-```
 
 ```{r, fig.height=11}
 g1 <- novo_cronograma_estadual %>%
@@ -168,13 +121,30 @@ ggplot(aes(y=total_dias, x=reorder(capital, -total_dias, desc), fill=as.factor(r
 grid.arrange(g1, g2, g3, g4)
 ```
 
+```{r, fig.height=2}
+g5 <- novo_cronograma_estadual %>%
+ggplot(aes(y=presencial, x=reorder(capital, -presencial, desc), fill=as.factor(regiao) )) + 
+  geom_col( ) +
+  scale_fill_brewer(palette = "Set1") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1)) +
+  coord_flip()
+
+grid::grid.draw(cowplot::get_legend(g5))
+```
+
 Em média, as escolas públicas estaduais brasileiras tiveram 86 dias de aulas remotas, 63 de aulas no formato híbrido e 46 no formato presencial. Enquanto as regiões Norte, Nordeste e Centro-oeste tiveram uma média de no mínimo 89 dias de aulas remotas, as regiões sul e sudeste tiveram em média apenas 33 e 55 dias letivos nessa modalidade.
 
 Essa diferença se deve a uma maior predominância do modelo híbrido nessas duas regiões, especificamente em São Paulo, que aplicou ensino híbrido por 150 dias letivos. No caso do ensino presencial, apesar de haver novamente predominância das regiões sul e sudeste perante às demais, a diferença na média é menor. Chama atenção o caso do Amazonas, com mais de 100 dias letivos nessa modalidade nessa modalidade, m número considerável quando comparado aos demais estados.
 
-Em relação aos dias totais letivos, a maior parte dos estados (22 ou 81%) o cronograma estabelecido pelo estado foi de 200 dias letivos ou mais. 5 estados não somaram esse valor para o ano letivo: Acre, Rio Grande do Norte, Roraima, Tocantis e Espírito Santo. No caso do Acre, cumpre reforçar que o estado teve seu ano letivo iniciado em 10/05.
+Em relação aos dias totais letivos, a maior parte dos estados (22 ou 81%) o cronograma estabelecido pelo estado foi de 200 dias letivos ou mais. 5 estados não somaram esse valor para o ano letivo: Acre, Rio Grande do Norte, Roraima, Tocantis e Espírito Santo.
+
+## Casos excepcionais
+
+Alguns estados tiveram o cronograma de 2021 impactado pelo atraso gerado na suspensão de aulas em 2020. O Acre, citado anteriormente por não ter alcançado os 200 dias letivos, iniciou seu ano letivo em 10/05. Similarmente, o estado do Rio Grande do Norte, que também não alcançou os 200 dias letivos, iniciou o ano letivo em 05/04.
 
 # Médias municipais
+
+Os gráficos abaixos apresentam o somatório de dias letivos nas capitais segundo os cronogramas estabelecidos pelas secretarias *municipais* de educação. As barras estão coloridas de acordo com a região.
 
 ```{r, fig.height=11}
 g1 <- novo_cronograma_municipal %>%
@@ -223,9 +193,17 @@ As diferenças regionais entre os cronogramas das escolas públicas municipais s
 
 Assim como antes, as regiões sul e sudeste tiveram consideravelmente menos aulas remotas do que as demais regiões, com grande prevalência da modalidade híbrida. Replicando o que ocorreu na rede estadual, as escolas municipais de São Paulo e Porto Alegre tiveram o maior número absoluto de aulas nesse formato. Similarmente, Manaus implementou um cronograma que, tal como na rede estadual, gerou o maior número de aulas presenciais.
 
-Como antes, não houve grande variação no total de dias letivos entre as capitais. Apenas 4 municípios elaboraram um cronograma com menos de 190 dias letivos: Florianópolis (SC), Boa Vista (RR), Porto Velho (RO) e Natal (RN). No caso de Natal, o ano letivo foi iniciado apenas em julho, o que impactou significativamente o número de dias de aula.
+Como antes, não houve grande variação no total de dias letivos entre as capitais. Apenas 4 municípios elaboraram um cronograma com menos de 190 dias letivos: Florianópolis (SC), Boa Vista (RR), Porto Velho (RO) e Natal (RN).
+
+## Casos excepcionais
+
+Da mesma forma que o ensino estadual do Rio Grande do Norte foi afetado pela pandemia de 2020, o ensino municipal de Natal em 2021 também teve seu cronograma atrasado. Com aulas iniciadas em em julho, a capital foi gravemente prejudicada em seu calendário escolar.
 
 # Comparativos município-estado
+
+É possível observar que os municípios e estados costumam conter certo grau de sintonia nos valores estabelecidos pelos cronogramas oficiais. Entretanto, há algumas exceções. Os gráficos abaixo retratam a diferença entre os dias letivos em cada modalidae estabelecidos pela secretaria municipal e a secretaria estadual. Os valores estão ordenados da maior diferença (municipios com mais dias letivos naquela modalidade do que o estado) para a menor diferença (estados com mais dias letivos naquela modalidade que o município).
+
+Importante pontuar que, no Brasil, o estado costuma ser o ente federativo responsável por escolas de ensino médio, enquanto o município é responsável pelas escolas de ensino infantil e fundamental. Por esse motivo, diferenças entre ambos podem ser justificáveis.
 
 ```{r, fig.height=11}
 
@@ -246,7 +224,8 @@ g1 <- temp %>%
   theme(
     legend.position = "none",
   ) +
-  ylab("Proporção em % de escolas com acesso a água potável")
+  xlab("Capital") +
+  ylab("Dias de aula presencial")
 
 g2 <- temp %>%
   mutate(dif = municipal_hibrido-hibrido) %>%
@@ -261,8 +240,8 @@ g2 <- temp %>%
   theme(
     legend.position = "none",
   ) +
-  xlab("Estado") +
-  ylab("Proporção em % de escolas com acesso a água potável")
+  xlab("Capital") +
+  ylab("Dias na modalidade híbrida")
 
 g3 <- temp %>%
   mutate(dif = municipal_remoto-remoto) %>%
@@ -277,8 +256,8 @@ g3 <- temp %>%
   theme(
     legend.position = "none",
   ) +
-  xlab("Estado") +
-  ylab("Proporção em % de escolas com acesso a água potável")
+  xlab("Capital") +
+  ylab("Dias na modalidade remota")
 
 g4 <- temp %>%
   mutate(dif = municipal_total_dias-total_dias) %>%
@@ -293,10 +272,93 @@ g4 <- temp %>%
   theme(
     legend.position = "none",
   ) +
-  xlab("Estado") +
-  ylab("Proporção em % de escolas com acesso a água potável")
+  xlab("Capital") +
+  ylab("Total de dias letivos")
 
 grid.arrange(g1, g2, g3, g4)
-grid::grid.newpage()
-grid::grid.draw(cowplot::get_legend(g1))
+```
+
+
+```{r, fig.height=2}
+g5 <- temp %>%
+  mutate(dif = municipal_total_dias-total_dias) %>%
+  arrange(desc(dif)) %>%
+  mutate(capital=factor(capital, capital)) %>%
+  ggplot() +
+  geom_segment( aes(x=capital, xend=capital, y=total_dias, yend=municipal_total_dias), color="grey") +
+  geom_point( aes(x=capital, y=total_dias), color='#083550', size=3, alpha = 0.7) +
+  geom_point( aes(x=capital, y=municipal_total_dias), color='#1f95e1', size=3, alpha = 0.7) +
+  coord_flip() +
+  xlab("Capital") +
+  ylab("Total de dias letivos")
+
+grid::grid.draw(cowplot::get_legend(g5))
+```
+
+No total de dias letivos, somente Tocantis e Espírito Santo apresentam valor consideravelmente mais baixos que suas respectivas capitais e também abaixo da diretriz de 200 dias letivos seguida pela maior parte dos entes. Inversamente, Florianópolis e Porto Velho foram as únicas capitais com consideravelmente menos dias letivos que sua respectiva rede estadual de ensino e abaixo dos 200 dias.
+
+# Anexo - Gráficos para o site
+
+## Rede municipal
+
+```{r, results='asis'}
+graf <- novo_cronograma_municipal %>%
+  mutate(hibrido = as.numeric(hibrido),
+         presencial = as.numeric(presencial)) %>% 
+  arrange(desc(remoto)) %>%
+  select(-c(rede, total_dias)) %>%
+  googleVis::gvisBarChart(
+    xvar = 'capital',
+    options = list(
+      bars = 'horizontal',
+      isStacked = TRUE,
+      height = 700,
+      focusTarget = 'category',
+      colors = "['#527184', '#62b5ea', '#f6a323']",
+      fontName = 'Source Sans Pro',
+      fontSize = 14.4,
+      chartArea = "{height:\"90%\"}"
+    )
+  )
+
+
+print(graf, "chart")
+```
+
+
+## Rede estadual
+
+```{r, results='asis'}
+graf <- novo_cronograma_estadual %>%
+  mutate(hibrido = as.numeric(hibrido),
+         presencial = as.numeric(presencial)) %>%
+  select(-c(rede, total_dias)) %>%
+  googleVis::gvisBarChart(
+    xvar = 'capital',
+    options = list(
+      bars = 'horizontal',
+      isStacked = TRUE,
+      height = 1080,
+      focusTarget = 'category',
+      colors = "['#527184', '#62b5ea', '#f6a323']",
+      fontName = 'Source Sans Pro',
+      fontSize = 14.4,
+      chartArea = "{height:\"90%\"}"
+    )
+  )
+
+print(graf, "chart")
+```
+
+
+## Tabela estadual
+
+```{r}
+novo_cronograma_estadual
+```
+
+
+## Tabela municipal
+```{r}
+novo_cronograma_municipal
 ```
