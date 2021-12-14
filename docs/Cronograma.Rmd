@@ -15,6 +15,7 @@ output:
   word_document:
     toc: yes
 ---
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(warning = FALSE)
@@ -27,8 +28,8 @@ pre:not(.r) {
 }
 ```
 
-
 Carregando bibliotecas
+
 ```{r}
 library(dplyr)
 library(ggplot2)
@@ -37,6 +38,7 @@ library(kableExtra)
 library(hrbrthemes)
 library(viridis)
 library(gridExtra)
+library(tidylog)
 
 options(scipen = 9999)
 load('../dados/cronograma.rdata')
@@ -47,9 +49,29 @@ novo_cronograma <- novo_cronograma3 %>%
   janitor::clean_names()
 ```
 
+# Introdução
+
+A pandemia de COVID-19 causou diversos danos no acesso à educação no mundo todo. Segundo relatório do Banco Mundial[^1], entre fevereiro de 2020 até agosto de 2021, 1,6 bilhões de crianças estiveram com as escolas totalmente fechadas por 121 dias letivos, em média. Como consequência, o relatório prevê um impacto negativo considerável no aprendizado infantil bem como desdobramentos na economia e na desigualdade.
+
+[^1]: <https://documents1.worldbank.org/curated/en/416991638768297704/pdf/The-State-of-the-Global-Education-Crisis-A-Path-to-Recovery.pdf>
+
+Esse fenômeno também atingiu o Brasil, que manteve boa parte de sua juventude afastada das escolas por um período significativo. Segundo dados do Censo Escolar realizado pelo Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira (INEP) havia, em 2020, aproximadamente 40 milhões de jovens e crianças matriculados em escolas municipais e estaduais no país[^2]. Com isso, é esperado que os órgãos responsáveis por esses alunos tenham traçado estratégias adequadas para o retorno à aula.
+
+[^2]: Valor obtido considerando o número de IDs de matrículas distintas presentes nos dados do censo escolar para 2020
+
+Este relatório apresenta uma breve descrição do calendário escolar estabelecido pelas secretarias de educação municipais e estaduais das 27 unidades federativas e 26 capitais brasileiras para o ano de 2021. Primeiramente, serão apresentados os dados das escolas municipais, seguido das informações estaduais e, por último, um comparativo entre ambos.
+
+As informações foram coletadas através de publicações em diários oficiais bem como pedidos de acesso à informação feitos aos entes governamentais. Os dados apresentados consistem em análises feitas a partir dos cronogramas estabelecidos pelos estados e municípios para suas respectivas redes de educação. Foi observado um alto grau de discricionaridade atribuído aos diretores das escolas, não sendo possível afirmar que os valores estabelecidos foram seguidos à risca pelas unidades educacionais.
+
+Ainda assim, o cronograma traçado pelo poder público é uma importante diretriz para um retorno organizado às aulas. Não apenas serve de sinalização pelo poder público sobre o impacto da pandemia na região, mas permite às escolas maior padronização do ano letivo.
+
+Optou-se por excluir 2020 das observações desse relatório conforme a qualidade dos dados prestados pela administração escolar estavam consideravelmente precários. Foi identificado gravemente que nem mesmo as secretarias de educação conseguem estimar adequadamente o período de adoção de aulas no modelo híbrido ou remoto, com considerável poder de decisão sendo atribuído às escolas naquele ano.
+
+Para 2021, no entanto, com a já consolidada situação da pandemia, todos os estados e capitais emitiram diretrizes sobre o retorno à aula, número de dias letivos e datas para adoção de cada modalidade (híbrido, presencial ou remoto).
 
 # Dados 2021
 
+O gráfico abaixo apresenta
 
 ## Rede municipal 2
 
@@ -100,21 +122,22 @@ graf <- novo_cronograma %>%
 print(graf, "chart")
 ```
 
-
 # Médias estaduais
 
 ```{r}
 novo_cronograma_estadual <- novo_cronograma %>%
-  filter(rede == 'Estadual')
+  filter(rede == 'Estadual') %>%
+  rowwise() %>%
+  mutate(total_dias = sum(remoto+hibrido+presencial))
 
 novo_cronograma_municipal <- novo_cronograma %>%
-  filter(rede == 'Municipal')
+  filter(rede == 'Municipal') %>%
+  rowwise() %>%
+  mutate(total_dias = sum(remoto+hibrido+presencial))
 ```
 
 ```{r, fig.height=11}
 g1 <- novo_cronograma_estadual %>%
-  rowwise() %>%
-  mutate(total_dias = sum(remoto+hibrido+presencial)) %>%
 ggplot(aes(y=presencial, x=reorder(capital, -presencial, desc), fill=as.factor(regiao) )) + 
   geom_col( ) +
   scale_fill_brewer(palette = "Set1") +
@@ -122,8 +145,6 @@ ggplot(aes(y=presencial, x=reorder(capital, -presencial, desc), fill=as.factor(r
   coord_flip()
 
 g2 <- novo_cronograma_estadual %>%
-  rowwise() %>%
-  mutate(total_dias = sum(remoto+hibrido+presencial)) %>%
 ggplot(aes(y=hibrido, x=reorder(capital, -hibrido, desc), fill=as.factor(regiao) )) + 
   geom_col( ) +
   scale_fill_brewer(palette = "Set1") +
@@ -131,8 +152,6 @@ ggplot(aes(y=hibrido, x=reorder(capital, -hibrido, desc), fill=as.factor(regiao)
   coord_flip()
 
 g3 <- novo_cronograma_estadual %>%
-  rowwise() %>%
-  mutate(total_dias = sum(remoto+hibrido+presencial)) %>%
 ggplot(aes(y=remoto, x=reorder(capital, -remoto, desc), fill=as.factor(regiao) )) + 
   geom_col( ) +
   scale_fill_brewer(palette = "Set1") +
@@ -140,8 +159,6 @@ ggplot(aes(y=remoto, x=reorder(capital, -remoto, desc), fill=as.factor(regiao) )
   coord_flip()
 
 g4 <- novo_cronograma_estadual %>%
-  rowwise() %>%
-  mutate(total_dias = sum(remoto+hibrido+presencial)) %>%
 ggplot(aes(y=total_dias, x=reorder(capital, -total_dias, desc), fill=as.factor(regiao))) + 
   geom_col( ) +
   scale_fill_brewer(palette = "Set1") +
@@ -155,8 +172,131 @@ Em média, as escolas públicas estaduais brasileiras tiveram 86 dias de aulas r
 
 Essa diferença se deve a uma maior predominância do modelo híbrido nessas duas regiões, especificamente em São Paulo, que aplicou ensino híbrido por 150 dias letivos. No caso do ensino presencial, apesar de haver novamente predominância das regiões sul e sudeste perante às demais, a diferença na média é menor. Chama atenção o caso do Amazonas, com mais de 100 dias letivos nessa modalidade nessa modalidade, m número considerável quando comparado aos demais estados.
 
-Em relação aos dias totais letivos, a maior parte dos estados (22 ou 81%) o cronograma estabelecido pelo estado foi de 200 dias letivos ou mais. 5 estados não somaram esse valor para o ano letivo: Acre, Rio Grande do Norte, Roraima, Tocantis e Espírito Santo.
+Em relação aos dias totais letivos, a maior parte dos estados (22 ou 81%) o cronograma estabelecido pelo estado foi de 200 dias letivos ou mais. 5 estados não somaram esse valor para o ano letivo: Acre, Rio Grande do Norte, Roraima, Tocantis e Espírito Santo. No caso do Acre, cumpre reforçar que o estado teve seu ano letivo iniciado em 10/05.
 
+# Médias municipais
 
+```{r, fig.height=11}
+g1 <- novo_cronograma_municipal %>%
+ggplot(aes(y=presencial, x=reorder(capital, -presencial, desc), fill=as.factor(regiao) )) + 
+  geom_col( ) +
+  scale_fill_brewer(palette = "Set1") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = 'none') +
+  coord_flip()
 
+g2 <- novo_cronograma_municipal %>%
+ggplot(aes(y=hibrido, x=reorder(capital, -hibrido, desc), fill=as.factor(regiao) )) + 
+  geom_col( ) +
+  scale_fill_brewer(palette = "Set1") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = 'none') +
+  coord_flip()
 
+g3 <- novo_cronograma_municipal %>%
+ggplot(aes(y=remoto, x=reorder(capital, -remoto, desc), fill=as.factor(regiao) )) + 
+  geom_col( ) +
+  scale_fill_brewer(palette = "Set1") +
+  theme(legend.position = 'none') +
+  coord_flip()
+
+g4 <- novo_cronograma_municipal %>%
+ggplot(aes(y=total_dias, x=reorder(capital, -total_dias, desc), fill=as.factor(regiao))) + 
+  geom_col( ) +
+  scale_fill_brewer(palette = "Set1") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = 'none') +
+  coord_flip()
+
+grid.arrange(g1, g2, g3, g4)
+```
+
+```{r, fig.height=2}
+g5 <- novo_cronograma_municipal %>%
+ggplot(aes(y=presencial, x=reorder(capital, -presencial, desc), fill=as.factor(regiao) )) + 
+  geom_col( ) +
+  scale_fill_brewer(palette = "Set1") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1)) +
+  coord_flip()
+
+grid::grid.draw(cowplot::get_legend(g5))
+```
+
+As diferenças regionais entre os cronogramas das escolas públicas municipais são similares às vistas nas escolas estaduais. A média de dias no ensino remoto foi de 85 dias, valor praticamente idêntico àquele obtido na rede estadual (86). Para ensino híbrido, houve uma média de 74 dias letivos (11 dias a mais do que a média estadual), enquanto para o ensino presencial a média obtida foi de 36 dias (10 a menos que a média estadual).
+
+Assim como antes, as regiões sul e sudeste tiveram consideravelmente menos aulas remotas do que as demais regiões, com grande prevalência da modalidade híbrida. Replicando o que ocorreu na rede estadual, as escolas municipais de São Paulo e Porto Alegre tiveram o maior número absoluto de aulas nesse formato. Similarmente, Manaus implementou um cronograma que, tal como na rede estadual, gerou o maior número de aulas presenciais.
+
+Como antes, não houve grande variação no total de dias letivos entre as capitais. Apenas 4 municípios elaboraram um cronograma com menos de 190 dias letivos: Florianópolis (SC), Boa Vista (RR), Porto Velho (RO) e Natal (RN). No caso de Natal, o ano letivo foi iniciado apenas em julho, o que impactou significativamente o número de dias de aula.
+
+# Comparativos município-estado
+
+```{r, fig.height=11}
+
+temp <- novo_cronograma_municipal %>%
+  rename(municipal_presencial = presencial, municipal_hibrido = hibrido, municipal_remoto = remoto, municipal_total_dias = total_dias) %>%
+  left_join(select(novo_cronograma_estadual, capital, remoto, hibrido, presencial, total_dias))
+
+g1 <- temp %>%
+  mutate(dif = municipal_presencial-presencial) %>%
+  arrange(desc(dif)) %>%
+  mutate(capital=factor(capital, capital)) %>%
+  ggplot() +
+  geom_segment( aes(x=capital, xend=capital, y=presencial, yend=municipal_presencial), color="grey") +
+  geom_point( aes(x=capital, y=presencial), color='#083550', size=3, alpha = 0.7) +
+  geom_point( aes(x=capital, y=municipal_presencial), color='#1f95e1', size=3, alpha = 0.7) +
+  coord_flip()+
+  theme_ipsum() +
+  theme(
+    legend.position = "none",
+  ) +
+  ylab("Proporção em % de escolas com acesso a água potável")
+
+g2 <- temp %>%
+  mutate(dif = municipal_hibrido-hibrido) %>%
+  arrange(desc(dif)) %>%
+  mutate(capital=factor(capital, capital)) %>%
+  ggplot() +
+  geom_segment( aes(x=capital, xend=capital, y=hibrido, yend=municipal_hibrido), color="grey") +
+  geom_point( aes(x=capital, y=hibrido), color='#083550', size=3, alpha = 0.7) +
+  geom_point( aes(x=capital, y=municipal_hibrido), color='#1f95e1', size=3, alpha = 0.7) +
+  coord_flip()+
+  theme_ipsum() +
+  theme(
+    legend.position = "none",
+  ) +
+  xlab("Estado") +
+  ylab("Proporção em % de escolas com acesso a água potável")
+
+g3 <- temp %>%
+  mutate(dif = municipal_remoto-remoto) %>%
+  arrange(desc(dif)) %>%
+  mutate(capital=factor(capital, capital)) %>%
+  ggplot() +
+  geom_segment( aes(x=capital, xend=capital, y=remoto, yend=municipal_remoto), color="grey") +
+  geom_point( aes(x=capital, y=remoto), color='#083550', size=3, alpha = 0.7) +
+  geom_point( aes(x=capital, y=municipal_remoto), color='#1f95e1', size=3, alpha = 0.7) +
+  coord_flip()+
+  theme_ipsum() +
+  theme(
+    legend.position = "none",
+  ) +
+  xlab("Estado") +
+  ylab("Proporção em % de escolas com acesso a água potável")
+
+g4 <- temp %>%
+  mutate(dif = municipal_total_dias-total_dias) %>%
+  arrange(desc(dif)) %>%
+  mutate(capital=factor(capital, capital)) %>%
+  ggplot() +
+  geom_segment( aes(x=capital, xend=capital, y=total_dias, yend=municipal_total_dias), color="grey") +
+  geom_point( aes(x=capital, y=total_dias), color='#083550', size=3, alpha = 0.7) +
+  geom_point( aes(x=capital, y=municipal_total_dias), color='#1f95e1', size=3, alpha = 0.7) +
+  coord_flip()+
+  theme_ipsum() +
+  theme(
+    legend.position = "none",
+  ) +
+  xlab("Estado") +
+  ylab("Proporção em % de escolas com acesso a água potável")
+
+grid.arrange(g1, g2, g3, g4)
+grid::grid.newpage()
+grid::grid.draw(cowplot::get_legend(g1))
+```
