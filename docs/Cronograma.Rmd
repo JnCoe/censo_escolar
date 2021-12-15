@@ -44,7 +44,8 @@ options(scipen = 9999)
 load('../dados/cronograma.rdata')
 load('../dados/novo_cronograma.rdata')
 load('../dados/novo_cronograma3.rdata')
-
+load('../dados/novo_cronograma3.rdata')
+load('../dados/medias.rdata')
 
 ```
 
@@ -85,51 +86,39 @@ Para 2021, no entanto, com a já consolidada situação da pandemia, todos os es
 
 # Dados 2021
 
-Os gráficos abaixos apresentam o somatório de dias letivos nas capitais segundo os cronogramas estabelecidos pelas secretarias *estaduais* de educação. As barras estão coloridas de acordo com a região.
+A tabela 1 apresenta a média de dias letivos em cada região, por modalidade. Os valores por estado estão no gráfico 1, que ilustra o somatório de dias letivos nas capitais segundo os cronogramas estabelecidos pelas secretarias **estaduais** de educação. As cores estão categorizadas segundo a modalidade de ensino adotada. Os valores em vermelho estão presentes nas redes que obtiveram menos de 200 dias letivos no total, indicando o deficit no cronograma adotado para 2021.
 
-# Médias estaduais
+# Tabela 1 - Médias estaduais
 
-```{r, fig.height=11}
-g1 <- novo_cronograma_estadual %>%
-ggplot(aes(y=presencial, x=reorder(capital, -presencial, desc), fill=as.factor(regiao) )) + 
-  geom_col( ) +
-  scale_fill_brewer(palette = "Set1") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = 'none') +
-  coord_flip()
-
-g2 <- novo_cronograma_estadual %>%
-ggplot(aes(y=hibrido, x=reorder(capital, -hibrido, desc), fill=as.factor(regiao) )) + 
-  geom_col( ) +
-  scale_fill_brewer(palette = "Set1") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = 'none') +
-  coord_flip()
-
-g3 <- novo_cronograma_estadual %>%
-ggplot(aes(y=remoto, x=reorder(capital, -remoto, desc), fill=as.factor(regiao) )) + 
-  geom_col( ) +
-  scale_fill_brewer(palette = "Set1") +
-  theme(legend.position = 'none') +
-  coord_flip()
-
-g4 <- novo_cronograma_estadual %>%
-ggplot(aes(y=total_dias, x=reorder(capital, -total_dias, desc), fill=as.factor(regiao))) + 
-  geom_col( ) +
-  scale_fill_brewer(palette = "Set1") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = 'none') +
-  coord_flip()
-
-grid.arrange(g1, g2, g3, g4)
+```{r}
+media_estadual
 ```
 
-```{r, fig.height=2}
-g5 <- novo_cronograma_estadual %>%
-ggplot(aes(y=presencial, x=reorder(capital, -presencial, desc), fill=as.factor(regiao) )) + 
-  geom_col( ) +
-  scale_fill_brewer(palette = "Set1") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1)) +
-  coord_flip()
+# Gráfico 1 - Valores estaduais
 
-grid::grid.draw(cowplot::get_legend(g5))
+
+```{r, results='asis'}
+graf <- novo_cronograma_estadual %>%
+  mutate(hibrido = as.numeric(hibrido),
+         presencial = as.numeric(presencial)) %>%
+    mutate(deficit = ifelse(200-total_dias > 0, 200-total_dias, 0)) %>%
+    arrange(desc(total_dias), desc(deficit), desc(remoto)) %>%
+  select(-c(rede, total_dias)) %>%
+  googleVis::gvisBarChart(
+    xvar = 'capital',
+    options = list(
+      bars = 'horizontal',
+      isStacked = TRUE,
+      height = 1080,
+      focusTarget = 'category',
+      colors = "['#527184', '#62b5ea', '#f6a323', 'red']",
+      fontName = 'Source Sans Pro',
+      fontSize = 14.4,
+      chartArea = "{height:\"90%\"}"
+    )
+  )
+
+print(graf, "chart")
 ```
 
 Em média, as escolas públicas estaduais brasileiras tiveram 86 dias de aulas remotas, 63 de aulas no formato híbrido e 46 no formato presencial. Enquanto as regiões Norte, Nordeste e Centro-oeste tiveram uma média de no mínimo 89 dias de aulas remotas, as regiões sul e sudeste tiveram em média apenas 33 e 55 dias letivos nessa modalidade.
@@ -144,49 +133,38 @@ Alguns estados tiveram o cronograma de 2021 impactado pelo atraso gerado na susp
 
 # Médias municipais
 
-Os gráficos abaixos apresentam o somatório de dias letivos nas capitais segundo os cronogramas estabelecidos pelas secretarias *municipais* de educação. As barras estão coloridas de acordo com a região.
+A tabela 2 apresenta a média de dias letivos em cada região, por modalidade. Os valores por estado estão no gráfico 2, que ilustra o somatório de dias letivos nas capitais segundo os cronogramas estabelecidos pelas secretarias **municipais** de educação. As barras estão coloridas de acordo com a região.
 
-```{r, fig.height=11}
-g1 <- novo_cronograma_municipal %>%
-ggplot(aes(y=presencial, x=reorder(capital, -presencial, desc), fill=as.factor(regiao) )) + 
-  geom_col( ) +
-  scale_fill_brewer(palette = "Set1") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = 'none') +
-  coord_flip()
+# Tabela 2 - Médias municipais
 
-g2 <- novo_cronograma_municipal %>%
-ggplot(aes(y=hibrido, x=reorder(capital, -hibrido, desc), fill=as.factor(regiao) )) + 
-  geom_col( ) +
-  scale_fill_brewer(palette = "Set1") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = 'none') +
-  coord_flip()
-
-g3 <- novo_cronograma_municipal %>%
-ggplot(aes(y=remoto, x=reorder(capital, -remoto, desc), fill=as.factor(regiao) )) + 
-  geom_col( ) +
-  scale_fill_brewer(palette = "Set1") +
-  theme(legend.position = 'none') +
-  coord_flip()
-
-g4 <- novo_cronograma_municipal %>%
-ggplot(aes(y=total_dias, x=reorder(capital, -total_dias, desc), fill=as.factor(regiao))) + 
-  geom_col( ) +
-  scale_fill_brewer(palette = "Set1") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = 'none') +
-  coord_flip()
-
-grid.arrange(g1, g2, g3, g4)
+```{r}
+media_estadual
 ```
 
-```{r, fig.height=2}
-g5 <- novo_cronograma_municipal %>%
-ggplot(aes(y=presencial, x=reorder(capital, -presencial, desc), fill=as.factor(regiao) )) + 
-  geom_col( ) +
-  scale_fill_brewer(palette = "Set1") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1)) +
-  coord_flip()
+# Gráfico 2 - Valores municipais
 
-grid::grid.draw(cowplot::get_legend(g5))
+```{r, results='asis'}
+graf <- novo_cronograma_municipal %>%
+  mutate(hibrido = as.numeric(hibrido),
+         presencial = as.numeric(presencial)) %>%
+    mutate(deficit = ifelse(200-total_dias > 0, 200-total_dias, 0)) %>%
+    arrange(desc(total_dias), desc(deficit), desc(remoto)) %>%
+  select(-c(rede, total_dias)) %>%
+  googleVis::gvisBarChart(
+    xvar = 'capital',
+    options = list(
+      bars = 'horizontal',
+      isStacked = TRUE,
+      height = 1080,
+      focusTarget = 'category',
+      colors = "['#527184', '#62b5ea', '#f6a323', 'red']",
+      fontName = 'Source Sans Pro',
+      fontSize = 14.4,
+      chartArea = "{height:\"90%\"}"
+    )
+  )
+
+print(graf, "chart")
 ```
 
 As diferenças regionais entre os cronogramas das escolas públicas municipais são similares às vistas nas escolas estaduais. A média de dias no ensino remoto foi de 85 dias, valor praticamente idêntico àquele obtido na rede estadual (86). Para ensino híbrido, houve uma média de 74 dias letivos (11 dias a mais do que a média estadual), enquanto para o ensino presencial a média obtida foi de 36 dias (10 a menos que a média estadual).
@@ -297,59 +275,7 @@ grid::grid.draw(cowplot::get_legend(g5))
 
 No total de dias letivos, somente Tocantis e Espírito Santo apresentam valor consideravelmente mais baixos que suas respectivas capitais e também abaixo da diretriz de 200 dias letivos seguida pela maior parte dos entes. Inversamente, Florianópolis e Porto Velho foram as únicas capitais com consideravelmente menos dias letivos que sua respectiva rede estadual de ensino e abaixo dos 200 dias.
 
-# Anexo - Gráficos para o site
-
-## Rede municipal
-
-```{r, results='asis'}
-graf <- novo_cronograma_municipal %>%
-  mutate(hibrido = as.numeric(hibrido),
-         presencial = as.numeric(presencial)) %>% 
-  arrange(desc(remoto)) %>%
-  select(-c(rede, total_dias)) %>%
-  googleVis::gvisBarChart(
-    xvar = 'capital',
-    options = list(
-      bars = 'horizontal',
-      isStacked = TRUE,
-      height = 700,
-      focusTarget = 'category',
-      colors = "['#527184', '#62b5ea', '#f6a323']",
-      fontName = 'Source Sans Pro',
-      fontSize = 14.4,
-      chartArea = "{height:\"90%\"}"
-    )
-  )
-
-
-print(graf, "chart")
-```
-
-
-## Rede estadual
-
-```{r, results='asis'}
-graf <- novo_cronograma_estadual %>%
-  mutate(hibrido = as.numeric(hibrido),
-         presencial = as.numeric(presencial)) %>%
-  select(-c(rede, total_dias)) %>%
-  googleVis::gvisBarChart(
-    xvar = 'capital',
-    options = list(
-      bars = 'horizontal',
-      isStacked = TRUE,
-      height = 1080,
-      focusTarget = 'category',
-      colors = "['#527184', '#62b5ea', '#f6a323']",
-      fontName = 'Source Sans Pro',
-      fontSize = 14.4,
-      chartArea = "{height:\"90%\"}"
-    )
-  )
-
-print(graf, "chart")
-```
-
+# Anexo
 
 ## Tabela estadual
 

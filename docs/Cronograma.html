@@ -286,7 +286,9 @@ library(tidylog)
 options(scipen = 9999)
 load(&#39;../dados/cronograma.rdata&#39;)
 load(&#39;../dados/novo_cronograma.rdata&#39;)
-load(&#39;../dados/novo_cronograma3.rdata&#39;)</code></pre>
+load(&#39;../dados/novo_cronograma3.rdata&#39;)
+load(&#39;../dados/novo_cronograma3.rdata&#39;)
+load(&#39;../dados/medias.rdata&#39;)</code></pre>
 <pre class="r"><code>novo_cronograma &lt;- novo_cronograma3 %&gt;%
   janitor::clean_names()
 
@@ -311,109 +313,650 @@ novo_cronograma_municipal &lt;- novo_cronograma %&gt;%
 </div>
 <div id="dados-2021" class="section level1" number="2">
 <h1 number="2"><span class="header-section-number">2</span> Dados 2021</h1>
-<p>Os gráficos abaixos apresentam o somatório de dias letivos nas capitais segundo os cronogramas estabelecidos pelas secretarias <em>estaduais</em> de educação. As barras estão coloridas de acordo com a região.</p>
+<p>A tabela 1 apresenta a média de dias letivos em cada região, por modalidade. Os valores por estado estão no gráfico 1, que ilustra o somatório de dias letivos nas capitais segundo os cronogramas estabelecidos pelas secretarias <strong>estaduais</strong> de educação. As cores estão categorizadas segundo a modalidade de ensino adotada. Os valores em vermelho estão presentes nas redes que obtiveram menos de 200 dias letivos no total, indicando o deficit no cronograma adotado para 2021.</p>
 </div>
-<div id="médias-estaduais" class="section level1" number="3">
-<h1 number="3"><span class="header-section-number">3</span> Médias estaduais</h1>
-<pre class="r"><code>g1 &lt;- novo_cronograma_estadual %&gt;%
-ggplot(aes(y=presencial, x=reorder(capital, -presencial, desc), fill=as.factor(regiao) )) + 
-  geom_col( ) +
-  scale_fill_brewer(palette = &quot;Set1&quot;) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = &#39;none&#39;) +
-  coord_flip()
+<div id="tabela-1---médias-estaduais" class="section level1" number="3">
+<h1 number="3"><span class="header-section-number">3</span> Tabela 1 - Médias estaduais</h1>
+<pre class="r"><code>media_estadual</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["Região"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Média.remoto"],"name":[2],"type":["int"],"align":["right"]},{"label":["Média.híbrido"],"name":[3],"type":["int"],"align":["right"]},{"label":["Média.presencial"],"name":[4],"type":["int"],"align":["right"]}],"data":[{"1":"Centro-oeste","2":"109","3":"49","4":"45"},{"1":"Nordeste","2":"107","3":"55","4":"42"},{"1":"Norte","2":"89","3":"54","4":"43"},{"1":"Sudeste","2":"33","3":"98","4":"52"},{"1":"Sul","2":"55","3":"83","4":"62"},{"1":"Média geral","2":"86","3":"63","4":"46"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+<div id="gráfico-1---valores-estaduais" class="section level1" number="4">
+<h1 number="4"><span class="header-section-number">4</span> Gráfico 1 - Valores estaduais</h1>
+<pre class="r"><code>graf &lt;- novo_cronograma_estadual %&gt;%
+  mutate(hibrido = as.numeric(hibrido),
+         presencial = as.numeric(presencial)) %&gt;%
+    mutate(deficit = ifelse(200-total_dias &gt; 0, 200-total_dias, 0)) %&gt;%
+    arrange(desc(total_dias), desc(deficit), desc(remoto)) %&gt;%
+  select(-c(rede, total_dias)) %&gt;%
+  googleVis::gvisBarChart(
+    xvar = &#39;capital&#39;,
+    options = list(
+      bars = &#39;horizontal&#39;,
+      isStacked = TRUE,
+      height = 1080,
+      focusTarget = &#39;category&#39;,
+      colors = &quot;[&#39;#527184&#39;, &#39;#62b5ea&#39;, &#39;#f6a323&#39;, &#39;red&#39;]&quot;,
+      fontName = &#39;Source Sans Pro&#39;,
+      fontSize = 14.4,
+      chartArea = &quot;{height:\&quot;90%\&quot;}&quot;
+    )
+  )
 
-g2 &lt;- novo_cronograma_estadual %&gt;%
-ggplot(aes(y=hibrido, x=reorder(capital, -hibrido, desc), fill=as.factor(regiao) )) + 
-  geom_col( ) +
-  scale_fill_brewer(palette = &quot;Set1&quot;) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = &#39;none&#39;) +
-  coord_flip()
+print(graf, &quot;chart&quot;)</code></pre>
+<!-- BarChart generated in R 4.0.3 by googleVis 0.6.10 package -->
+<!-- Wed Dec 15 12:04:23 2021 -->
+<!-- jsHeader -->
+<script type="text/javascript">
+ 
+// jsData 
+function gvisDataBarChartID3b781357e8 () {
+var data = new google.visualization.DataTable();
+var datajson =
+[
+ [
+"Teresina ",
+166,
+45,
+42,
+0
+],
+[
+"Goiânia",
+109,
+62,
+40,
+0
+],
+[
+"Manaus",
+70,
+35,
+105,
+0
+],
+[
+"Rio de Janeiro ",
+43,
+102,
+62,
+0
+],
+[
+"João Pessoa ",
+136,
+69,
+0,
+0
+],
+[
+"Salvador",
+80,
+81,
+42,
+0
+],
+[
+"Maceió ",
+109,
+58,
+34,
+0
+],
+[
+"Florianópolis  ",
+67,
+67,
+67,
+0
+],
+[
+"Porto Velho",
+114,
+27,
+59,
+0
+],
+[
+"Cuiabá",
+112,
+42,
+46,
+0
+],
+[
+"Campo Grande ",
+112,
+34,
+54,
+0
+],
+[
+"Recife",
+105,
+64,
+31,
+0
+],
+[
+"Distrito Federal ",
+103,
+58,
+39,
+0
+],
+[
+"Macapá",
+102,
+22,
+76,
+0
+],
+[
+"Aracaju",
+100,
+50,
+50,
+0
+],
+[
+"Fortaleza ",
+100,
+41,
+59,
+0
+],
+[
+"Belém ",
+100,
+42,
+58,
+0
+],
+[
+"São Luiz ",
+89,
+40,
+71,
+0
+],
+[
+"Belo Horizonte ",
+72,
+82,
+46,
+0
+],
+[
+"Curitiba ",
+55,
+63,
+82,
+0
+],
+[
+"Porto Alegre  ",
+43,
+120,
+37,
+0
+],
+[
+"São Paulo ",
+12,
+150,
+38,
+0
+],
+[
+"Rio Branco - EF ",
+93,
+87,
+0,
+20
+],
+[
+"Natal  ",
+80,
+45,
+52,
+23
+],
+[
+"Boa Vista",
+89,
+37,
+48,
+26
+],
+[
+"Palmas",
+50,
+114,
+0,
+36
+],
+[
+"Rio Branco - EM ",
+93,
+67,
+0,
+40
+],
+[
+"Vitória  ",
+5,
+56,
+62,
+77
+] 
+];
+data.addColumn('string','capital');
+data.addColumn('number','remoto');
+data.addColumn('number','hibrido');
+data.addColumn('number','presencial');
+data.addColumn('number','deficit');
+data.addRows(datajson);
+return(data);
+}
+ 
+// jsDrawChart
+function drawChartBarChartID3b781357e8() {
+var data = gvisDataBarChartID3b781357e8();
+var options = {};
+options["allowHtml"] = true;
+options["bars"] = "horizontal";
+options["isStacked"] = true;
+options["height"] = 1080;
+options["focusTarget"] = "category";
+options["colors"] = ['#527184', '#62b5ea', '#f6a323', 'red'];
+options["fontName"] = "Source Sans Pro";
+options["fontSize"] = 14.4;
+options["chartArea"] = {height:"90%"};
 
-g3 &lt;- novo_cronograma_estadual %&gt;%
-ggplot(aes(y=remoto, x=reorder(capital, -remoto, desc), fill=as.factor(regiao) )) + 
-  geom_col( ) +
-  scale_fill_brewer(palette = &quot;Set1&quot;) +
-  theme(legend.position = &#39;none&#39;) +
-  coord_flip()
+    var chart = new google.visualization.BarChart(
+    document.getElementById('BarChartID3b781357e8')
+    );
+    chart.draw(data,options);
+    
 
-g4 &lt;- novo_cronograma_estadual %&gt;%
-ggplot(aes(y=total_dias, x=reorder(capital, -total_dias, desc), fill=as.factor(regiao))) + 
-  geom_col( ) +
-  scale_fill_brewer(palette = &quot;Set1&quot;) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = &#39;none&#39;) +
-  coord_flip()
+}
+  
+ 
+// jsDisplayChart
+(function() {
+var pkgs = window.__gvisPackages = window.__gvisPackages || [];
+var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
+var chartid = "corechart";
+  
+// Manually see if chartid is in pkgs (not all browsers support Array.indexOf)
+var i, newPackage = true;
+for (i = 0; newPackage && i < pkgs.length; i++) {
+if (pkgs[i] === chartid)
+newPackage = false;
+}
+if (newPackage)
+  pkgs.push(chartid);
+  
+// Add the drawChart function to the global list of callbacks
+callbacks.push(drawChartBarChartID3b781357e8);
+})();
+function displayChartBarChartID3b781357e8() {
+  var pkgs = window.__gvisPackages = window.__gvisPackages || [];
+  var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
+  window.clearTimeout(window.__gvisLoad);
+  // The timeout is set to 100 because otherwise the container div we are
+  // targeting might not be part of the document yet
+  window.__gvisLoad = setTimeout(function() {
+  var pkgCount = pkgs.length;
+  google.load("visualization", "1", { packages:pkgs, callback: function() {
+  if (pkgCount != pkgs.length) {
+  // Race condition where another setTimeout call snuck in after us; if
+  // that call added a package, we must not shift its callback
+  return;
+}
+while (callbacks.length > 0)
+callbacks.shift()();
+} });
+}, 100);
+}
+ 
+// jsFooter
+</script>
+<!-- jsChart -->
+<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartID3b781357e8"></script>
+<!-- divChart -->
+<div id="BarChartID3b781357e8" style="width: 500; height: 1080;">
 
-grid.arrange(g1, g2, g3, g4)</code></pre>
-<p><img src="Cronograma_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
-<pre class="r"><code>g5 &lt;- novo_cronograma_estadual %&gt;%
-ggplot(aes(y=presencial, x=reorder(capital, -presencial, desc), fill=as.factor(regiao) )) + 
-  geom_col( ) +
-  scale_fill_brewer(palette = &quot;Set1&quot;) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1)) +
-  coord_flip()
-
-grid::grid.draw(cowplot::get_legend(g5))</code></pre>
-<p><img src="Cronograma_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+</div>
 <p>Em média, as escolas públicas estaduais brasileiras tiveram 86 dias de aulas remotas, 63 de aulas no formato híbrido e 46 no formato presencial. Enquanto as regiões Norte, Nordeste e Centro-oeste tiveram uma média de no mínimo 89 dias de aulas remotas, as regiões sul e sudeste tiveram em média apenas 33 e 55 dias letivos nessa modalidade.</p>
 <p>Essa diferença se deve a uma maior predominância do modelo híbrido nessas duas regiões, especificamente em São Paulo, que aplicou ensino híbrido por 150 dias letivos. No caso do ensino presencial, apesar de haver novamente predominância das regiões sul e sudeste perante às demais, a diferença na média é menor. Chama atenção o caso do Amazonas, com mais de 100 dias letivos nessa modalidade nessa modalidade, m número considerável quando comparado aos demais estados.</p>
 <p>Em relação aos dias totais letivos, a maior parte dos estados (22 ou 81%) o cronograma estabelecido pelo estado foi de 200 dias letivos ou mais. 5 estados não somaram esse valor para o ano letivo: Acre, Rio Grande do Norte, Roraima, Tocantis e Espírito Santo.</p>
-<div id="casos-excepcionais" class="section level2" number="3.1">
-<h2 number="3.1"><span class="header-section-number">3.1</span> Casos excepcionais</h2>
+<div id="casos-excepcionais" class="section level2" number="4.1">
+<h2 number="4.1"><span class="header-section-number">4.1</span> Casos excepcionais</h2>
 <p>Alguns estados tiveram o cronograma de 2021 impactado pelo atraso gerado na suspensão de aulas em 2020. O Acre, citado anteriormente por não ter alcançado os 200 dias letivos, iniciou seu ano letivo em 10/05. Similarmente, o estado do Rio Grande do Norte, que também não alcançou os 200 dias letivos, iniciou o ano letivo em 05/04.</p>
 </div>
 </div>
-<div id="médias-municipais" class="section level1" number="4">
-<h1 number="4"><span class="header-section-number">4</span> Médias municipais</h1>
-<p>Os gráficos abaixos apresentam o somatório de dias letivos nas capitais segundo os cronogramas estabelecidos pelas secretarias <em>municipais</em> de educação. As barras estão coloridas de acordo com a região.</p>
-<pre class="r"><code>g1 &lt;- novo_cronograma_municipal %&gt;%
-ggplot(aes(y=presencial, x=reorder(capital, -presencial, desc), fill=as.factor(regiao) )) + 
-  geom_col( ) +
-  scale_fill_brewer(palette = &quot;Set1&quot;) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = &#39;none&#39;) +
-  coord_flip()
+<div id="médias-municipais" class="section level1" number="5">
+<h1 number="5"><span class="header-section-number">5</span> Médias municipais</h1>
+<p>A tabela 2 apresenta a média de dias letivos em cada região, por modalidade. Os valores por estado estão no gráfico 2, que ilustra o somatório de dias letivos nas capitais segundo os cronogramas estabelecidos pelas secretarias <strong>municipais</strong> de educação. As barras estão coloridas de acordo com a região.</p>
+</div>
+<div id="tabela-2---médias-municipais" class="section level1" number="6">
+<h1 number="6"><span class="header-section-number">6</span> Tabela 2 - Médias municipais</h1>
+<pre class="r"><code>media_estadual</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["Região"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Média.remoto"],"name":[2],"type":["int"],"align":["right"]},{"label":["Média.híbrido"],"name":[3],"type":["int"],"align":["right"]},{"label":["Média.presencial"],"name":[4],"type":["int"],"align":["right"]}],"data":[{"1":"Centro-oeste","2":"109","3":"49","4":"45"},{"1":"Nordeste","2":"107","3":"55","4":"42"},{"1":"Norte","2":"89","3":"54","4":"43"},{"1":"Sudeste","2":"33","3":"98","4":"52"},{"1":"Sul","2":"55","3":"83","4":"62"},{"1":"Média geral","2":"86","3":"63","4":"46"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+<div id="gráfico-2---valores-municipais" class="section level1" number="7">
+<h1 number="7"><span class="header-section-number">7</span> Gráfico 2 - Valores municipais</h1>
+<pre class="r"><code>graf &lt;- novo_cronograma_municipal %&gt;%
+  mutate(hibrido = as.numeric(hibrido),
+         presencial = as.numeric(presencial)) %&gt;%
+    mutate(deficit = ifelse(200-total_dias &gt; 0, 200-total_dias, 0)) %&gt;%
+    arrange(desc(total_dias), desc(deficit), desc(remoto)) %&gt;%
+  select(-c(rede, total_dias)) %&gt;%
+  googleVis::gvisBarChart(
+    xvar = &#39;capital&#39;,
+    options = list(
+      bars = &#39;horizontal&#39;,
+      isStacked = TRUE,
+      height = 1080,
+      focusTarget = &#39;category&#39;,
+      colors = &quot;[&#39;#527184&#39;, &#39;#62b5ea&#39;, &#39;#f6a323&#39;, &#39;red&#39;]&quot;,
+      fontName = &#39;Source Sans Pro&#39;,
+      fontSize = 14.4,
+      chartArea = &quot;{height:\&quot;90%\&quot;}&quot;
+    )
+  )
 
-g2 &lt;- novo_cronograma_municipal %&gt;%
-ggplot(aes(y=hibrido, x=reorder(capital, -hibrido, desc), fill=as.factor(regiao) )) + 
-  geom_col( ) +
-  scale_fill_brewer(palette = &quot;Set1&quot;) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = &#39;none&#39;) +
-  coord_flip()
+print(graf, &quot;chart&quot;)</code></pre>
+<!-- BarChart generated in R 4.0.3 by googleVis 0.6.10 package -->
+<!-- Wed Dec 15 12:04:23 2021 -->
+<!-- jsHeader -->
+<script type="text/javascript">
+ 
+// jsData 
+function gvisDataBarChartID3b782f97cdc () {
+var data = new google.visualization.DataTable();
+var datajson =
+[
+ [
+"Teresina ",
+142,
+72,
+0,
+0
+],
+[
+"Belo Horizonte ",
+83,
+82,
+46,
+0
+],
+[
+"Manaus",
+70,
+35,
+105,
+0
+],
+[
+"João Pessoa ",
+164,
+43,
+0,
+0
+],
+[
+"São Paulo ",
+0,
+162,
+42,
+0
+],
+[
+"Salvador",
+80,
+64,
+59,
+0
+],
+[
+"Vitória  ",
+61,
+81,
+60,
+0
+],
+[
+"Rio de Janeiro ",
+29,
+136,
+37,
+0
+],
+[
+"Fortaleza ",
+129,
+72,
+0,
+0
+],
+[
+"Aracaju",
+103,
+61,
+36,
+0
+],
+[
+"Cuiabá",
+103,
+63,
+34,
+0
+],
+[
+"Campo Grande ",
+103,
+97,
+0,
+0
+],
+[
+"Macapá",
+102,
+22,
+76,
+0
+],
+[
+"Palmas",
+100,
+41,
+59,
+0
+],
+[
+"Recife",
+95,
+74,
+31,
+0
+],
+[
+"São Luiz ",
+94,
+106,
+0,
+0
+],
+[
+"Curitiba ",
+93,
+37,
+70,
+0
+],
+[
+"Porto Alegre  ",
+0,
+141,
+59,
+0
+],
+[
+"Rio Branco ",
+142,
+57,
+0,
+1
+],
+[
+"Maceió ",
+111,
+86,
+0,
+3
+],
+[
+"Goiânia",
+109,
+82,
+0,
+9
+],
+[
+"Belém ",
+100,
+63,
+27,
+10
+],
+[
+"Florianópolis  ",
+16,
+63,
+82,
+39
+],
+[
+"Boa Vista",
+88,
+29,
+43,
+40
+],
+[
+"Porto Velho",
+81,
+45,
+34,
+40
+],
+[
+"Natal* ",
+5,
+117,
+28,
+50
+] 
+];
+data.addColumn('string','capital');
+data.addColumn('number','remoto');
+data.addColumn('number','hibrido');
+data.addColumn('number','presencial');
+data.addColumn('number','deficit');
+data.addRows(datajson);
+return(data);
+}
+ 
+// jsDrawChart
+function drawChartBarChartID3b782f97cdc() {
+var data = gvisDataBarChartID3b782f97cdc();
+var options = {};
+options["allowHtml"] = true;
+options["bars"] = "horizontal";
+options["isStacked"] = true;
+options["height"] = 1080;
+options["focusTarget"] = "category";
+options["colors"] = ['#527184', '#62b5ea', '#f6a323', 'red'];
+options["fontName"] = "Source Sans Pro";
+options["fontSize"] = 14.4;
+options["chartArea"] = {height:"90%"};
 
-g3 &lt;- novo_cronograma_municipal %&gt;%
-ggplot(aes(y=remoto, x=reorder(capital, -remoto, desc), fill=as.factor(regiao) )) + 
-  geom_col( ) +
-  scale_fill_brewer(palette = &quot;Set1&quot;) +
-  theme(legend.position = &#39;none&#39;) +
-  coord_flip()
+    var chart = new google.visualization.BarChart(
+    document.getElementById('BarChartID3b782f97cdc')
+    );
+    chart.draw(data,options);
+    
 
-g4 &lt;- novo_cronograma_municipal %&gt;%
-ggplot(aes(y=total_dias, x=reorder(capital, -total_dias, desc), fill=as.factor(regiao))) + 
-  geom_col( ) +
-  scale_fill_brewer(palette = &quot;Set1&quot;) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = &#39;none&#39;) +
-  coord_flip()
+}
+  
+ 
+// jsDisplayChart
+(function() {
+var pkgs = window.__gvisPackages = window.__gvisPackages || [];
+var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
+var chartid = "corechart";
+  
+// Manually see if chartid is in pkgs (not all browsers support Array.indexOf)
+var i, newPackage = true;
+for (i = 0; newPackage && i < pkgs.length; i++) {
+if (pkgs[i] === chartid)
+newPackage = false;
+}
+if (newPackage)
+  pkgs.push(chartid);
+  
+// Add the drawChart function to the global list of callbacks
+callbacks.push(drawChartBarChartID3b782f97cdc);
+})();
+function displayChartBarChartID3b782f97cdc() {
+  var pkgs = window.__gvisPackages = window.__gvisPackages || [];
+  var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
+  window.clearTimeout(window.__gvisLoad);
+  // The timeout is set to 100 because otherwise the container div we are
+  // targeting might not be part of the document yet
+  window.__gvisLoad = setTimeout(function() {
+  var pkgCount = pkgs.length;
+  google.load("visualization", "1", { packages:pkgs, callback: function() {
+  if (pkgCount != pkgs.length) {
+  // Race condition where another setTimeout call snuck in after us; if
+  // that call added a package, we must not shift its callback
+  return;
+}
+while (callbacks.length > 0)
+callbacks.shift()();
+} });
+}, 100);
+}
+ 
+// jsFooter
+</script>
+<!-- jsChart -->
+<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartID3b782f97cdc"></script>
+<!-- divChart -->
+<div id="BarChartID3b782f97cdc" style="width: 500; height: 1080;">
 
-grid.arrange(g1, g2, g3, g4)</code></pre>
-<p><img src="Cronograma_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
-<pre class="r"><code>g5 &lt;- novo_cronograma_municipal %&gt;%
-ggplot(aes(y=presencial, x=reorder(capital, -presencial, desc), fill=as.factor(regiao) )) + 
-  geom_col( ) +
-  scale_fill_brewer(palette = &quot;Set1&quot;) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1)) +
-  coord_flip()
-
-grid::grid.draw(cowplot::get_legend(g5))</code></pre>
-<p><img src="Cronograma_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+</div>
 <p>As diferenças regionais entre os cronogramas das escolas públicas municipais são similares às vistas nas escolas estaduais. A média de dias no ensino remoto foi de 85 dias, valor praticamente idêntico àquele obtido na rede estadual (86). Para ensino híbrido, houve uma média de 74 dias letivos (11 dias a mais do que a média estadual), enquanto para o ensino presencial a média obtida foi de 36 dias (10 a menos que a média estadual).</p>
 <p>Assim como antes, as regiões sul e sudeste tiveram consideravelmente menos aulas remotas do que as demais regiões, com grande prevalência da modalidade híbrida. Replicando o que ocorreu na rede estadual, as escolas municipais de São Paulo e Porto Alegre tiveram o maior número absoluto de aulas nesse formato. Similarmente, Manaus implementou um cronograma que, tal como na rede estadual, gerou o maior número de aulas presenciais.</p>
 <p>Como antes, não houve grande variação no total de dias letivos entre as capitais. Apenas 4 municípios elaboraram um cronograma com menos de 190 dias letivos: Florianópolis (SC), Boa Vista (RR), Porto Velho (RO) e Natal (RN).</p>
-<div id="casos-excepcionais-1" class="section level2" number="4.1">
-<h2 number="4.1"><span class="header-section-number">4.1</span> Casos excepcionais</h2>
+<div id="casos-excepcionais-1" class="section level2" number="7.1">
+<h2 number="7.1"><span class="header-section-number">7.1</span> Casos excepcionais</h2>
 <p>Da mesma forma que o ensino estadual do Rio Grande do Norte foi afetado pela pandemia de 2020, o ensino municipal de Natal em 2021 também teve seu cronograma atrasado. Com aulas iniciadas em em julho, a capital foi gravemente prejudicada em seu calendário escolar.</p>
 </div>
 </div>
-<div id="comparativos-município-estado" class="section level1" number="5">
-<h1 number="5"><span class="header-section-number">5</span> Comparativos município-estado</h1>
+<div id="comparativos-município-estado" class="section level1" number="8">
+<h1 number="8"><span class="header-section-number">8</span> Comparativos município-estado</h1>
 <p>É possível observar que os municípios e estados costumam conter certo grau de sintonia nos valores estabelecidos pelos cronogramas oficiais. Entretanto, há algumas exceções. Os gráficos abaixo retratam a diferença entre os dias letivos em cada modalidae estabelecidos pela secretaria municipal e a secretaria estadual. Os valores estão ordenados da maior diferença (municipios com mais dias letivos naquela modalidade do que o estado) para a menor diferença (estados com mais dias letivos naquela modalidade que o município).</p>
 <p>Importante pontuar que, no Brasil, o estado costuma ser o ente federativo responsável por escolas de ensino médio, enquanto o município é responsável pelas escolas de ensino infantil e fundamental. Por esse motivo, diferenças entre ambos podem ser justificáveis.</p>
 <pre class="r"><code>temp &lt;- novo_cronograma_municipal %&gt;%
@@ -501,556 +1044,10 @@ grid.arrange(g1, g2, g3, g4)</code></pre>
 grid::grid.draw(cowplot::get_legend(g5))</code></pre>
 <p>No total de dias letivos, somente Tocantis e Espírito Santo apresentam valor consideravelmente mais baixos que suas respectivas capitais e também abaixo da diretriz de 200 dias letivos seguida pela maior parte dos entes. Inversamente, Florianópolis e Porto Velho foram as únicas capitais com consideravelmente menos dias letivos que sua respectiva rede estadual de ensino e abaixo dos 200 dias.</p>
 </div>
-<div id="anexo---gráficos-para-o-site" class="section level1" number="6">
-<h1 number="6"><span class="header-section-number">6</span> Anexo - Gráficos para o site</h1>
-<div id="rede-municipal" class="section level2" number="6.1">
-<h2 number="6.1"><span class="header-section-number">6.1</span> Rede municipal</h2>
-<pre class="r"><code>graf &lt;- novo_cronograma_municipal %&gt;%
-  mutate(hibrido = as.numeric(hibrido),
-         presencial = as.numeric(presencial)) %&gt;% 
-  arrange(desc(remoto)) %&gt;%
-  select(-c(rede, total_dias)) %&gt;%
-  googleVis::gvisBarChart(
-    xvar = &#39;capital&#39;,
-    options = list(
-      bars = &#39;horizontal&#39;,
-      isStacked = TRUE,
-      height = 700,
-      focusTarget = &#39;category&#39;,
-      colors = &quot;[&#39;#527184&#39;, &#39;#62b5ea&#39;, &#39;#f6a323&#39;]&quot;,
-      fontName = &#39;Source Sans Pro&#39;,
-      fontSize = 14.4,
-      chartArea = &quot;{height:\&quot;90%\&quot;}&quot;
-    )
-  )
-
-
-print(graf, &quot;chart&quot;)</code></pre>
-<!-- BarChart generated in R 4.0.3 by googleVis 0.6.10 package -->
-<!-- Tue Dec 14 04:43:16 2021 -->
-<!-- jsHeader -->
-<script type="text/javascript">
- 
-// jsData 
-function gvisDataBarChartIDd5c83f815d64 () {
-var data = new google.visualization.DataTable();
-var datajson =
-[
- [
-"João Pessoa ",
-164,
-43,
-0
-],
-[
-"Teresina ",
-142,
-72,
-0
-],
-[
-"Rio Branco ",
-142,
-57,
-0
-],
-[
-"Fortaleza ",
-129,
-72,
-0
-],
-[
-"Maceió ",
-111,
-86,
-0
-],
-[
-"Goiânia",
-109,
-82,
-0
-],
-[
-"Aracaju",
-103,
-61,
-36
-],
-[
-"Cuiabá",
-103,
-63,
-34
-],
-[
-"Campo Grande ",
-103,
-97,
-0
-],
-[
-"Macapá",
-102,
-22,
-76
-],
-[
-"Belém ",
-100,
-63,
-27
-],
-[
-"Palmas",
-100,
-41,
-59
-],
-[
-"Recife",
-95,
-74,
-31
-],
-[
-"São Luiz ",
-94,
-106,
-0
-],
-[
-"Curitiba ",
-93,
-37,
-70
-],
-[
-"Boa Vista",
-88,
-29,
-43
-],
-[
-"Belo Horizonte ",
-83,
-82,
-46
-],
-[
-"Porto Velho",
-81,
-45,
-34
-],
-[
-"Salvador",
-80,
-64,
-59
-],
-[
-"Manaus",
-70,
-35,
-105
-],
-[
-"Vitória  ",
-61,
-81,
-60
-],
-[
-"Rio de Janeiro ",
-29,
-136,
-37
-],
-[
-"Florianópolis  ",
-16,
-63,
-82
-],
-[
-"Natal* ",
-5,
-117,
-28
-],
-[
-"São Paulo ",
-0,
-162,
-42
-],
-[
-"Porto Alegre  ",
-0,
-141,
-59
-] 
-];
-data.addColumn('string','capital');
-data.addColumn('number','remoto');
-data.addColumn('number','hibrido');
-data.addColumn('number','presencial');
-data.addRows(datajson);
-return(data);
-}
- 
-// jsDrawChart
-function drawChartBarChartIDd5c83f815d64() {
-var data = gvisDataBarChartIDd5c83f815d64();
-var options = {};
-options["allowHtml"] = true;
-options["bars"] = "horizontal";
-options["isStacked"] = true;
-options["height"] = 700;
-options["focusTarget"] = "category";
-options["colors"] = ['#527184', '#62b5ea', '#f6a323'];
-options["fontName"] = "Source Sans Pro";
-options["fontSize"] = 14.4;
-options["chartArea"] = {height:"90%"};
-
-    var chart = new google.visualization.BarChart(
-    document.getElementById('BarChartIDd5c83f815d64')
-    );
-    chart.draw(data,options);
-    
-
-}
-  
- 
-// jsDisplayChart
-(function() {
-var pkgs = window.__gvisPackages = window.__gvisPackages || [];
-var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
-var chartid = "corechart";
-  
-// Manually see if chartid is in pkgs (not all browsers support Array.indexOf)
-var i, newPackage = true;
-for (i = 0; newPackage && i < pkgs.length; i++) {
-if (pkgs[i] === chartid)
-newPackage = false;
-}
-if (newPackage)
-  pkgs.push(chartid);
-  
-// Add the drawChart function to the global list of callbacks
-callbacks.push(drawChartBarChartIDd5c83f815d64);
-})();
-function displayChartBarChartIDd5c83f815d64() {
-  var pkgs = window.__gvisPackages = window.__gvisPackages || [];
-  var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
-  window.clearTimeout(window.__gvisLoad);
-  // The timeout is set to 100 because otherwise the container div we are
-  // targeting might not be part of the document yet
-  window.__gvisLoad = setTimeout(function() {
-  var pkgCount = pkgs.length;
-  google.load("visualization", "1", { packages:pkgs, callback: function() {
-  if (pkgCount != pkgs.length) {
-  // Race condition where another setTimeout call snuck in after us; if
-  // that call added a package, we must not shift its callback
-  return;
-}
-while (callbacks.length > 0)
-callbacks.shift()();
-} });
-}, 100);
-}
- 
-// jsFooter
-</script>
-<!-- jsChart -->
-<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartIDd5c83f815d64"></script>
-<!-- divChart -->
-<div id="BarChartIDd5c83f815d64" style="width: 500; height: 700;">
-
-</div>
-</div>
-<div id="rede-estadual" class="section level2" number="6.2">
-<h2 number="6.2"><span class="header-section-number">6.2</span> Rede estadual</h2>
-<pre class="r"><code>graf &lt;- novo_cronograma_estadual %&gt;%
-  mutate(hibrido = as.numeric(hibrido),
-         presencial = as.numeric(presencial)) %&gt;%
-  select(-c(rede, total_dias)) %&gt;%
-  googleVis::gvisBarChart(
-    xvar = &#39;capital&#39;,
-    options = list(
-      bars = &#39;horizontal&#39;,
-      isStacked = TRUE,
-      height = 1080,
-      focusTarget = &#39;category&#39;,
-      colors = &quot;[&#39;#527184&#39;, &#39;#62b5ea&#39;, &#39;#f6a323&#39;]&quot;,
-      fontName = &#39;Source Sans Pro&#39;,
-      fontSize = 14.4,
-      chartArea = &quot;{height:\&quot;90%\&quot;}&quot;
-    )
-  )
-
-print(graf, &quot;chart&quot;)</code></pre>
-<!-- BarChart generated in R 4.0.3 by googleVis 0.6.10 package -->
-<!-- Tue Dec 14 04:43:16 2021 -->
-<!-- jsHeader -->
-<script type="text/javascript">
- 
-// jsData 
-function gvisDataBarChartIDd5c83d711aa2 () {
-var data = new google.visualization.DataTable();
-var datajson =
-[
- [
-"Aracaju",
-100,
-50,
-50
-],
-[
-"Salvador",
-80,
-81,
-42
-],
-[
-"Fortaleza ",
-100,
-41,
-59
-],
-[
-"São Luiz ",
-89,
-40,
-71
-],
-[
-"João Pessoa ",
-136,
-69,
-0
-],
-[
-"Teresina ",
-166,
-45,
-42
-],
-[
-"Natal  ",
-80,
-45,
-52
-],
-[
-"Recife",
-105,
-64,
-31
-],
-[
-"Maceió ",
-109,
-58,
-34
-],
-[
-"Distrito Federal ",
-103,
-58,
-39
-],
-[
-"Goiânia",
-109,
-62,
-40
-],
-[
-"Cuiabá",
-112,
-42,
-46
-],
-[
-"Campo Grande ",
-112,
-34,
-54
-],
-[
-"Belém ",
-100,
-42,
-58
-],
-[
-"Rio Branco - EM ",
-93,
-67,
-0
-],
-[
-"Rio Branco - EF ",
-93,
-87,
-0
-],
-[
-"Macapá",
-102,
-22,
-76
-],
-[
-"Manaus",
-70,
-35,
-105
-],
-[
-"Porto Velho",
-114,
-27,
-59
-],
-[
-"Boa Vista",
-89,
-37,
-48
-],
-[
-"Palmas",
-50,
-114,
-0
-],
-[
-"Belo Horizonte ",
-72,
-82,
-46
-],
-[
-"Vitória  ",
-5,
-56,
-62
-],
-[
-"Rio de Janeiro ",
-43,
-102,
-62
-],
-[
-"São Paulo ",
-12,
-150,
-38
-],
-[
-"Florianópolis  ",
-67,
-67,
-67
-],
-[
-"Curitiba ",
-55,
-63,
-82
-],
-[
-"Porto Alegre  ",
-43,
-120,
-37
-] 
-];
-data.addColumn('string','capital');
-data.addColumn('number','remoto');
-data.addColumn('number','hibrido');
-data.addColumn('number','presencial');
-data.addRows(datajson);
-return(data);
-}
- 
-// jsDrawChart
-function drawChartBarChartIDd5c83d711aa2() {
-var data = gvisDataBarChartIDd5c83d711aa2();
-var options = {};
-options["allowHtml"] = true;
-options["bars"] = "horizontal";
-options["isStacked"] = true;
-options["height"] = 1080;
-options["focusTarget"] = "category";
-options["colors"] = ['#527184', '#62b5ea', '#f6a323'];
-options["fontName"] = "Source Sans Pro";
-options["fontSize"] = 14.4;
-options["chartArea"] = {height:"90%"};
-
-    var chart = new google.visualization.BarChart(
-    document.getElementById('BarChartIDd5c83d711aa2')
-    );
-    chart.draw(data,options);
-    
-
-}
-  
- 
-// jsDisplayChart
-(function() {
-var pkgs = window.__gvisPackages = window.__gvisPackages || [];
-var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
-var chartid = "corechart";
-  
-// Manually see if chartid is in pkgs (not all browsers support Array.indexOf)
-var i, newPackage = true;
-for (i = 0; newPackage && i < pkgs.length; i++) {
-if (pkgs[i] === chartid)
-newPackage = false;
-}
-if (newPackage)
-  pkgs.push(chartid);
-  
-// Add the drawChart function to the global list of callbacks
-callbacks.push(drawChartBarChartIDd5c83d711aa2);
-})();
-function displayChartBarChartIDd5c83d711aa2() {
-  var pkgs = window.__gvisPackages = window.__gvisPackages || [];
-  var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
-  window.clearTimeout(window.__gvisLoad);
-  // The timeout is set to 100 because otherwise the container div we are
-  // targeting might not be part of the document yet
-  window.__gvisLoad = setTimeout(function() {
-  var pkgCount = pkgs.length;
-  google.load("visualization", "1", { packages:pkgs, callback: function() {
-  if (pkgCount != pkgs.length) {
-  // Race condition where another setTimeout call snuck in after us; if
-  // that call added a package, we must not shift its callback
-  return;
-}
-while (callbacks.length > 0)
-callbacks.shift()();
-} });
-}, 100);
-}
- 
-// jsFooter
-</script>
-<!-- jsChart -->
-<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartIDd5c83d711aa2"></script>
-<!-- divChart -->
-<div id="BarChartIDd5c83d711aa2" style="width: 500; height: 1080;">
-
-</div>
-</div>
-<div id="tabela-estadual" class="section level2" number="6.3">
-<h2 number="6.3"><span class="header-section-number">6.3</span> Tabela estadual</h2>
+<div id="anexo" class="section level1" number="9">
+<h1 number="9"><span class="header-section-number">9</span> Anexo</h1>
+<div id="tabela-estadual" class="section level2" number="9.1">
+<h2 number="9.1"><span class="header-section-number">9.1</span> Tabela estadual</h2>
 <pre class="r"><code>novo_cronograma_estadual</code></pre>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
@@ -1058,8 +1055,8 @@ callbacks.shift()();
   </script>
 </div>
 </div>
-<div id="tabela-municipal" class="section level2" number="6.4">
-<h2 number="6.4"><span class="header-section-number">6.4</span> Tabela municipal</h2>
+<div id="tabela-municipal" class="section level2" number="9.2">
+<h2 number="9.2"><span class="header-section-number">9.2</span> Tabela municipal</h2>
 <pre class="r"><code>novo_cronograma_municipal</code></pre>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
