@@ -42,8 +42,6 @@ library(tidylog)
 
 options(scipen = 9999)
 load('../dados/cronograma.rdata')
-load('../dados/novo_cronograma.rdata')
-load('../dados/novo_cronograma3.rdata')
 load('../dados/novo_cronograma3.rdata')
 load('../dados/medias.rdata')
 
@@ -109,7 +107,7 @@ graf <- novo_cronograma_estadual %>%
     options = list(
       bars = 'horizontal',
       isStacked = TRUE,
-      height = 1080,
+      height = 600,
       focusTarget = 'category',
       colors = "['#527184', '#62b5ea', '#f6a323', 'red']",
       fontName = 'Source Sans Pro',
@@ -155,7 +153,7 @@ graf <- novo_cronograma_municipal %>%
     options = list(
       bars = 'horizontal',
       isStacked = TRUE,
-      height = 1080,
+      height = 600,
       focusTarget = 'category',
       colors = "['#527184', '#62b5ea', '#f6a323', 'red']",
       fontName = 'Source Sans Pro',
@@ -183,20 +181,23 @@ Da mesma forma que o ensino estadual do Rio Grande do Norte foi afetado pela pan
 
 Importante pontuar que, no Brasil, o estado costuma ser o ente federativo responsável por escolas de ensino médio, enquanto o município é responsável pelas escolas de ensino infantil e fundamental. Por esse motivo, diferenças entre ambos podem ser justificáveis.
 
-```{r, fig.height=11}
+```{r}
 
 temp <- novo_cronograma_municipal %>%
   rename(municipal_presencial = presencial, municipal_hibrido = hibrido, municipal_remoto = remoto, municipal_total_dias = total_dias) %>%
   left_join(select(novo_cronograma_estadual, capital, remoto, hibrido, presencial, total_dias))
 
 g1 <- temp %>%
-  mutate(dif = municipal_presencial-presencial) %>%
-  arrange(desc(dif)) %>%
+  mutate(dif = municipal_presencial-presencial, cor = ifelse(dif<0, '#083550', '#1f95e1')) %>%
+  filter(dif != 0) %>%
+  arrange(desc(abs(dif))) %>%
   mutate(capital=factor(capital, capital)) %>%
   ggplot() +
-  geom_segment( aes(x=capital, xend=capital, y=presencial, yend=municipal_presencial), color="grey") +
+  geom_segment( aes(x=capital, xend=capital, y=presencial, yend=municipal_presencial, color=cor), alpha = 0.7) +
+  scale_color_manual(values=c("#083550", "#1f95e1")) +
   geom_point( aes(x=capital, y=presencial), color='#083550', size=3, alpha = 0.7) +
   geom_point( aes(x=capital, y=municipal_presencial), color='#1f95e1', size=3, alpha = 0.7) +
+  scale_y_continuous(limits = c(0, NA)) +
   coord_flip()+
   theme_ipsum() +
   theme(
@@ -206,13 +207,16 @@ g1 <- temp %>%
   ylab("Dias de aula presencial")
 
 g2 <- temp %>%
-  mutate(dif = municipal_hibrido-hibrido) %>%
-  arrange(desc(dif)) %>%
+  mutate(dif = municipal_hibrido-hibrido, cor = ifelse(dif<0, '#083550', '#1f95e1')) %>%
+  filter(dif != 0) %>%
+  arrange(desc(abs(dif))) %>%
   mutate(capital=factor(capital, capital)) %>%
   ggplot() +
-  geom_segment( aes(x=capital, xend=capital, y=hibrido, yend=municipal_hibrido), color="grey") +
+  geom_segment( aes(x=capital, xend=capital, y=hibrido, yend=municipal_hibrido, color=cor), alpha = 0.7) +
+  scale_color_manual(values=c("#083550", "#1f95e1")) +
   geom_point( aes(x=capital, y=hibrido), color='#083550', size=3, alpha = 0.7) +
   geom_point( aes(x=capital, y=municipal_hibrido), color='#1f95e1', size=3, alpha = 0.7) +
+  scale_y_continuous(limits = c(0, NA)) +
   coord_flip()+
   theme_ipsum() +
   theme(
@@ -222,13 +226,16 @@ g2 <- temp %>%
   ylab("Dias na modalidade híbrida")
 
 g3 <- temp %>%
-  mutate(dif = municipal_remoto-remoto) %>%
-  arrange(desc(dif)) %>%
+  mutate(dif = municipal_remoto-remoto, cor = ifelse(dif<0, '#083550', '#1f95e1')) %>%
+  filter(dif != 0) %>%
+  arrange(desc(abs(dif))) %>%
   mutate(capital=factor(capital, capital)) %>%
   ggplot() +
-  geom_segment( aes(x=capital, xend=capital, y=remoto, yend=municipal_remoto), color="grey") +
+  geom_segment( aes(x=capital, xend=capital, y=remoto, yend=municipal_remoto, color=cor), alpha = 0.7) +
+  scale_color_manual(values=c("#083550", "#1f95e1")) +
   geom_point( aes(x=capital, y=remoto), color='#083550', size=3, alpha = 0.7) +
   geom_point( aes(x=capital, y=municipal_remoto), color='#1f95e1', size=3, alpha = 0.7) +
+  scale_y_continuous(limits = c(0, NA)) +
   coord_flip()+
   theme_ipsum() +
   theme(
@@ -238,13 +245,16 @@ g3 <- temp %>%
   ylab("Dias na modalidade remota")
 
 g4 <- temp %>%
-  mutate(dif = municipal_total_dias-total_dias) %>%
-  arrange(desc(dif)) %>%
+  mutate(dif = municipal_total_dias-total_dias, cor = ifelse(dif<0, '#083550', '#1f95e1')) %>%
+  filter(dif != 0) %>%
+  arrange(desc(abs(dif))) %>%
   mutate(capital=factor(capital, capital)) %>%
   ggplot() +
-  geom_segment( aes(x=capital, xend=capital, y=total_dias, yend=municipal_total_dias), color="grey") +
+  geom_segment( aes(x=capital, xend=capital, y=total_dias, yend=municipal_total_dias, color=cor), alpha = 0.7) +
+  scale_color_manual(values=c("#083550", "#1f95e1")) +
   geom_point( aes(x=capital, y=total_dias), color='#083550', size=3, alpha = 0.7) +
   geom_point( aes(x=capital, y=municipal_total_dias), color='#1f95e1', size=3, alpha = 0.7) +
+  scale_y_continuous(limits = c(0, NA)) +
   coord_flip()+
   theme_ipsum() +
   theme(
@@ -253,25 +263,35 @@ g4 <- temp %>%
   xlab("Capital") +
   ylab("Total de dias letivos")
 
-grid.arrange(g1, g2, g3, g4)
+g1
+g2
+g3
+g4
 ```
 
-
-```{r, fig.height=2}
-g5 <- temp %>%
-  mutate(dif = municipal_total_dias-total_dias) %>%
+```{r}
+legenda <- temp %>%
+  mutate(dif = municipal_presencial-presencial) %>%
   arrange(desc(dif)) %>%
   mutate(capital=factor(capital, capital)) %>%
   ggplot() +
-  geom_segment( aes(x=capital, xend=capital, y=total_dias, yend=municipal_total_dias), color="grey") +
-  geom_point( aes(x=capital, y=total_dias), color='#083550', size=3, alpha = 0.7) +
-  geom_point( aes(x=capital, y=municipal_total_dias), color='#1f95e1', size=3, alpha = 0.7) +
-  coord_flip() +
+  geom_segment( aes(x=capital, xend=capital, y=presencial, yend=municipal_presencial), color="grey") +
+  geom_point( aes(x=capital, y=presencial, color='Estadual') , size=3, alpha = 0.7) +
+  geom_point( aes(x=capital, y=municipal_presencial, color='Municipal'), size=3, alpha = 0.7) +
+  coord_flip()+
+  scale_color_manual(values = c('#083550', '#1f95e1')) +
+  theme(
+    legend.position = "bottom", text = element_text(size = 12)) +
   xlab("Capital") +
-  ylab("Total de dias letivos")
+  ylab("Dias de aula presencial") +
+  labs(color='Legenda')
 
-grid::grid.draw(cowplot::get_legend(g5))
+legenda <- cowplot::get_legend(legenda)
+
+cowplot::plot_grid(legenda)
 ```
+
+
 
 No total de dias letivos, somente Tocantis e Espírito Santo apresentam valor consideravelmente mais baixos que suas respectivas capitais e também abaixo da diretriz de 200 dias letivos seguida pela maior parte dos entes. Inversamente, Florianópolis e Porto Velho foram as únicas capitais com consideravelmente menos dias letivos que sua respectiva rede estadual de ensino e abaixo dos 200 dias.
 
