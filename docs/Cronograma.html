@@ -285,8 +285,6 @@ library(tidylog)
 
 options(scipen = 9999)
 load(&#39;../dados/cronograma.rdata&#39;)
-load(&#39;../dados/novo_cronograma.rdata&#39;)
-load(&#39;../dados/novo_cronograma3.rdata&#39;)
 load(&#39;../dados/novo_cronograma3.rdata&#39;)
 load(&#39;../dados/medias.rdata&#39;)</code></pre>
 <pre class="r"><code>novo_cronograma &lt;- novo_cronograma3 %&gt;%
@@ -337,7 +335,7 @@ novo_cronograma_municipal &lt;- novo_cronograma %&gt;%
     options = list(
       bars = &#39;horizontal&#39;,
       isStacked = TRUE,
-      height = 1080,
+      height = 600,
       focusTarget = &#39;category&#39;,
       colors = &quot;[&#39;#527184&#39;, &#39;#62b5ea&#39;, &#39;#f6a323&#39;, &#39;red&#39;]&quot;,
       fontName = &#39;Source Sans Pro&#39;,
@@ -348,12 +346,12 @@ novo_cronograma_municipal &lt;- novo_cronograma %&gt;%
 
 print(graf, &quot;chart&quot;)</code></pre>
 <!-- BarChart generated in R 4.0.3 by googleVis 0.6.10 package -->
-<!-- Wed Dec 15 12:04:23 2021 -->
+<!-- Tue Dec 21 16:52:07 2021 -->
 <!-- jsHeader -->
 <script type="text/javascript">
  
 // jsData 
-function gvisDataBarChartID3b781357e8 () {
+function gvisDataBarChartIDbf4834286e43 () {
 var data = new google.visualization.DataTable();
 var datajson =
 [
@@ -512,14 +510,14 @@ var datajson =
 0
 ],
 [
-"Rio Branco - EF ",
+"Rio Branco - EF",
 93,
 87,
 0,
 20
 ],
 [
-"Natal  ",
+"Natal",
 80,
 45,
 52,
@@ -564,13 +562,13 @@ return(data);
 }
  
 // jsDrawChart
-function drawChartBarChartID3b781357e8() {
-var data = gvisDataBarChartID3b781357e8();
+function drawChartBarChartIDbf4834286e43() {
+var data = gvisDataBarChartIDbf4834286e43();
 var options = {};
 options["allowHtml"] = true;
 options["bars"] = "horizontal";
 options["isStacked"] = true;
-options["height"] = 1080;
+options["height"] = 600;
 options["focusTarget"] = "category";
 options["colors"] = ['#527184', '#62b5ea', '#f6a323', 'red'];
 options["fontName"] = "Source Sans Pro";
@@ -578,7 +576,7 @@ options["fontSize"] = 14.4;
 options["chartArea"] = {height:"90%"};
 
     var chart = new google.visualization.BarChart(
-    document.getElementById('BarChartID3b781357e8')
+    document.getElementById('BarChartIDbf4834286e43')
     );
     chart.draw(data,options);
     
@@ -602,9 +600,9 @@ if (newPackage)
   pkgs.push(chartid);
   
 // Add the drawChart function to the global list of callbacks
-callbacks.push(drawChartBarChartID3b781357e8);
+callbacks.push(drawChartBarChartIDbf4834286e43);
 })();
-function displayChartBarChartID3b781357e8() {
+function displayChartBarChartIDbf4834286e43() {
   var pkgs = window.__gvisPackages = window.__gvisPackages || [];
   var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
   window.clearTimeout(window.__gvisLoad);
@@ -627,9 +625,9 @@ callbacks.shift()();
 // jsFooter
 </script>
 <!-- jsChart -->
-<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartID3b781357e8"></script>
+<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartIDbf4834286e43"></script>
 <!-- divChart -->
-<div id="BarChartID3b781357e8" style="width: 500; height: 1080;">
+<div id="BarChartIDbf4834286e43" style="width: 500; height: 600;">
 
 </div>
 <p>Em média, as escolas públicas estaduais brasileiras tiveram 86 dias de aulas remotas, 63 de aulas no formato híbrido e 46 no formato presencial. Enquanto as regiões Norte, Nordeste e Centro-oeste tiveram uma média de no mínimo 89 dias de aulas remotas, as regiões sul e sudeste tiveram em média apenas 33 e 55 dias letivos nessa modalidade.</p>
@@ -666,7 +664,7 @@ callbacks.shift()();
     options = list(
       bars = &#39;horizontal&#39;,
       isStacked = TRUE,
-      height = 1080,
+      height = 600,
       focusTarget = &#39;category&#39;,
       colors = &quot;[&#39;#527184&#39;, &#39;#62b5ea&#39;, &#39;#f6a323&#39;, &#39;red&#39;]&quot;,
       fontName = &#39;Source Sans Pro&#39;,
@@ -677,12 +675,12 @@ callbacks.shift()();
 
 print(graf, &quot;chart&quot;)</code></pre>
 <!-- BarChart generated in R 4.0.3 by googleVis 0.6.10 package -->
-<!-- Wed Dec 15 12:04:23 2021 -->
+<!-- Tue Dec 21 16:52:08 2021 -->
 <!-- jsHeader -->
 <script type="text/javascript">
  
 // jsData 
-function gvisDataBarChartID3b782f97cdc () {
+function gvisDataBarChartIDbf48cc14909 () {
 var data = new google.visualization.DataTable();
 var datajson =
 [
@@ -813,7 +811,7 @@ var datajson =
 0
 ],
 [
-"Rio Branco ",
+"Rio Branco - EF",
 142,
 57,
 0,
@@ -862,7 +860,7 @@ var datajson =
 40
 ],
 [
-"Natal* ",
+"Natal",
 5,
 117,
 28,
@@ -879,13 +877,13 @@ return(data);
 }
  
 // jsDrawChart
-function drawChartBarChartID3b782f97cdc() {
-var data = gvisDataBarChartID3b782f97cdc();
+function drawChartBarChartIDbf48cc14909() {
+var data = gvisDataBarChartIDbf48cc14909();
 var options = {};
 options["allowHtml"] = true;
 options["bars"] = "horizontal";
 options["isStacked"] = true;
-options["height"] = 1080;
+options["height"] = 600;
 options["focusTarget"] = "category";
 options["colors"] = ['#527184', '#62b5ea', '#f6a323', 'red'];
 options["fontName"] = "Source Sans Pro";
@@ -893,7 +891,7 @@ options["fontSize"] = 14.4;
 options["chartArea"] = {height:"90%"};
 
     var chart = new google.visualization.BarChart(
-    document.getElementById('BarChartID3b782f97cdc')
+    document.getElementById('BarChartIDbf48cc14909')
     );
     chart.draw(data,options);
     
@@ -917,9 +915,9 @@ if (newPackage)
   pkgs.push(chartid);
   
 // Add the drawChart function to the global list of callbacks
-callbacks.push(drawChartBarChartID3b782f97cdc);
+callbacks.push(drawChartBarChartIDbf48cc14909);
 })();
-function displayChartBarChartID3b782f97cdc() {
+function displayChartBarChartIDbf48cc14909() {
   var pkgs = window.__gvisPackages = window.__gvisPackages || [];
   var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
   window.clearTimeout(window.__gvisLoad);
@@ -942,9 +940,9 @@ callbacks.shift()();
 // jsFooter
 </script>
 <!-- jsChart -->
-<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartID3b782f97cdc"></script>
+<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartIDbf48cc14909"></script>
 <!-- divChart -->
-<div id="BarChartID3b782f97cdc" style="width: 500; height: 1080;">
+<div id="BarChartIDbf48cc14909" style="width: 500; height: 600;">
 
 </div>
 <p>As diferenças regionais entre os cronogramas das escolas públicas municipais são similares às vistas nas escolas estaduais. A média de dias no ensino remoto foi de 85 dias, valor praticamente idêntico àquele obtido na rede estadual (86). Para ensino híbrido, houve uma média de 74 dias letivos (11 dias a mais do que a média estadual), enquanto para o ensino presencial a média obtida foi de 36 dias (10 a menos que a média estadual).</p>
@@ -964,13 +962,16 @@ callbacks.shift()();
   left_join(select(novo_cronograma_estadual, capital, remoto, hibrido, presencial, total_dias))
 
 g1 &lt;- temp %&gt;%
-  mutate(dif = municipal_presencial-presencial) %&gt;%
-  arrange(desc(dif)) %&gt;%
+  mutate(dif = municipal_presencial-presencial, cor = ifelse(dif&lt;0, &#39;#083550&#39;, &#39;#1f95e1&#39;)) %&gt;%
+  filter(dif != 0) %&gt;%
+  arrange(desc(abs(dif))) %&gt;%
   mutate(capital=factor(capital, capital)) %&gt;%
   ggplot() +
-  geom_segment( aes(x=capital, xend=capital, y=presencial, yend=municipal_presencial), color=&quot;grey&quot;) +
+  geom_segment( aes(x=capital, xend=capital, y=presencial, yend=municipal_presencial, color=cor), alpha = 0.7) +
+  scale_color_manual(values=c(&quot;#083550&quot;, &quot;#1f95e1&quot;)) +
   geom_point( aes(x=capital, y=presencial), color=&#39;#083550&#39;, size=3, alpha = 0.7) +
   geom_point( aes(x=capital, y=municipal_presencial), color=&#39;#1f95e1&#39;, size=3, alpha = 0.7) +
+  scale_y_continuous(limits = c(0, NA)) +
   coord_flip()+
   theme_ipsum() +
   theme(
@@ -980,13 +981,16 @@ g1 &lt;- temp %&gt;%
   ylab(&quot;Dias de aula presencial&quot;)
 
 g2 &lt;- temp %&gt;%
-  mutate(dif = municipal_hibrido-hibrido) %&gt;%
-  arrange(desc(dif)) %&gt;%
+  mutate(dif = municipal_hibrido-hibrido, cor = ifelse(dif&lt;0, &#39;#083550&#39;, &#39;#1f95e1&#39;)) %&gt;%
+  filter(dif != 0) %&gt;%
+  arrange(desc(abs(dif))) %&gt;%
   mutate(capital=factor(capital, capital)) %&gt;%
   ggplot() +
-  geom_segment( aes(x=capital, xend=capital, y=hibrido, yend=municipal_hibrido), color=&quot;grey&quot;) +
+  geom_segment( aes(x=capital, xend=capital, y=hibrido, yend=municipal_hibrido, color=cor), alpha = 0.7) +
+  scale_color_manual(values=c(&quot;#083550&quot;, &quot;#1f95e1&quot;)) +
   geom_point( aes(x=capital, y=hibrido), color=&#39;#083550&#39;, size=3, alpha = 0.7) +
   geom_point( aes(x=capital, y=municipal_hibrido), color=&#39;#1f95e1&#39;, size=3, alpha = 0.7) +
+  scale_y_continuous(limits = c(0, NA)) +
   coord_flip()+
   theme_ipsum() +
   theme(
@@ -996,13 +1000,16 @@ g2 &lt;- temp %&gt;%
   ylab(&quot;Dias na modalidade híbrida&quot;)
 
 g3 &lt;- temp %&gt;%
-  mutate(dif = municipal_remoto-remoto) %&gt;%
-  arrange(desc(dif)) %&gt;%
+  mutate(dif = municipal_remoto-remoto, cor = ifelse(dif&lt;0, &#39;#083550&#39;, &#39;#1f95e1&#39;)) %&gt;%
+  filter(dif != 0) %&gt;%
+  arrange(desc(abs(dif))) %&gt;%
   mutate(capital=factor(capital, capital)) %&gt;%
   ggplot() +
-  geom_segment( aes(x=capital, xend=capital, y=remoto, yend=municipal_remoto), color=&quot;grey&quot;) +
+  geom_segment( aes(x=capital, xend=capital, y=remoto, yend=municipal_remoto, color=cor), alpha = 0.7) +
+  scale_color_manual(values=c(&quot;#083550&quot;, &quot;#1f95e1&quot;)) +
   geom_point( aes(x=capital, y=remoto), color=&#39;#083550&#39;, size=3, alpha = 0.7) +
   geom_point( aes(x=capital, y=municipal_remoto), color=&#39;#1f95e1&#39;, size=3, alpha = 0.7) +
+  scale_y_continuous(limits = c(0, NA)) +
   coord_flip()+
   theme_ipsum() +
   theme(
@@ -1012,13 +1019,16 @@ g3 &lt;- temp %&gt;%
   ylab(&quot;Dias na modalidade remota&quot;)
 
 g4 &lt;- temp %&gt;%
-  mutate(dif = municipal_total_dias-total_dias) %&gt;%
-  arrange(desc(dif)) %&gt;%
+  mutate(dif = municipal_total_dias-total_dias, cor = ifelse(dif&lt;0, &#39;#083550&#39;, &#39;#1f95e1&#39;)) %&gt;%
+  filter(dif != 0) %&gt;%
+  arrange(desc(abs(dif))) %&gt;%
   mutate(capital=factor(capital, capital)) %&gt;%
   ggplot() +
-  geom_segment( aes(x=capital, xend=capital, y=total_dias, yend=municipal_total_dias), color=&quot;grey&quot;) +
+  geom_segment( aes(x=capital, xend=capital, y=total_dias, yend=municipal_total_dias, color=cor), alpha = 0.7) +
+  scale_color_manual(values=c(&quot;#083550&quot;, &quot;#1f95e1&quot;)) +
   geom_point( aes(x=capital, y=total_dias), color=&#39;#083550&#39;, size=3, alpha = 0.7) +
   geom_point( aes(x=capital, y=municipal_total_dias), color=&#39;#1f95e1&#39;, size=3, alpha = 0.7) +
+  scale_y_continuous(limits = c(0, NA)) +
   coord_flip()+
   theme_ipsum() +
   theme(
@@ -1027,21 +1037,34 @@ g4 &lt;- temp %&gt;%
   xlab(&quot;Capital&quot;) +
   ylab(&quot;Total de dias letivos&quot;)
 
-grid.arrange(g1, g2, g3, g4)</code></pre>
+g1</code></pre>
 <p><img src="Cronograma_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
-<pre class="r"><code>g5 &lt;- temp %&gt;%
-  mutate(dif = municipal_total_dias-total_dias) %&gt;%
+<pre class="r"><code>g2</code></pre>
+<p><img src="Cronograma_files/figure-html/unnamed-chunk-8-2.png" width="672" /></p>
+<pre class="r"><code>g3</code></pre>
+<p><img src="Cronograma_files/figure-html/unnamed-chunk-8-3.png" width="672" /></p>
+<pre class="r"><code>g4</code></pre>
+<p><img src="Cronograma_files/figure-html/unnamed-chunk-8-4.png" width="672" /></p>
+<pre class="r"><code>legenda &lt;- temp %&gt;%
+  mutate(dif = municipal_presencial-presencial) %&gt;%
   arrange(desc(dif)) %&gt;%
   mutate(capital=factor(capital, capital)) %&gt;%
   ggplot() +
-  geom_segment( aes(x=capital, xend=capital, y=total_dias, yend=municipal_total_dias), color=&quot;grey&quot;) +
-  geom_point( aes(x=capital, y=total_dias), color=&#39;#083550&#39;, size=3, alpha = 0.7) +
-  geom_point( aes(x=capital, y=municipal_total_dias), color=&#39;#1f95e1&#39;, size=3, alpha = 0.7) +
-  coord_flip() +
+  geom_segment( aes(x=capital, xend=capital, y=presencial, yend=municipal_presencial), color=&quot;grey&quot;) +
+  geom_point( aes(x=capital, y=presencial, color=&#39;Estadual&#39;) , size=3, alpha = 0.7) +
+  geom_point( aes(x=capital, y=municipal_presencial, color=&#39;Municipal&#39;), size=3, alpha = 0.7) +
+  coord_flip()+
+  scale_color_manual(values = c(&#39;#083550&#39;, &#39;#1f95e1&#39;)) +
+  theme(
+    legend.position = &quot;bottom&quot;, text = element_text(size = 12)) +
   xlab(&quot;Capital&quot;) +
-  ylab(&quot;Total de dias letivos&quot;)
+  ylab(&quot;Dias de aula presencial&quot;) +
+  labs(color=&#39;Legenda&#39;)
 
-grid::grid.draw(cowplot::get_legend(g5))</code></pre>
+legenda &lt;- cowplot::get_legend(legenda)
+
+cowplot::plot_grid(legenda)</code></pre>
+<p><img src="Cronograma_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
 <p>No total de dias letivos, somente Tocantis e Espírito Santo apresentam valor consideravelmente mais baixos que suas respectivas capitais e também abaixo da diretriz de 200 dias letivos seguida pela maior parte dos entes. Inversamente, Florianópolis e Porto Velho foram as únicas capitais com consideravelmente menos dias letivos que sua respectiva rede estadual de ensino e abaixo dos 200 dias.</p>
 </div>
 <div id="anexo" class="section level1" number="9">
@@ -1051,7 +1074,7 @@ grid::grid.draw(cowplot::get_legend(g5))</code></pre>
 <pre class="r"><code>novo_cronograma_estadual</code></pre>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["remoto"],"name":[1],"type":["int"],"align":["right"]},{"label":["hibrido"],"name":[2],"type":["int"],"align":["right"]},{"label":["presencial"],"name":[3],"type":["int"],"align":["right"]},{"label":["capital"],"name":[4],"type":["chr"],"align":["left"]},{"label":["rede"],"name":[5],"type":["chr"],"align":["left"]},{"label":["regiao"],"name":[6],"type":["chr"],"align":["left"]},{"label":["total_dias"],"name":[7],"type":["int"],"align":["right"]}],"data":[{"1":"100","2":"50","3":"50","4":"Aracaju","5":"Estadual","6":"Nordeste","7":"200"},{"1":"80","2":"81","3":"42","4":"Salvador","5":"Estadual","6":"Nordeste","7":"203"},{"1":"100","2":"41","3":"59","4":"Fortaleza","5":"Estadual","6":"Nordeste","7":"200"},{"1":"89","2":"40","3":"71","4":"São Luiz","5":"Estadual","6":"Nordeste","7":"200"},{"1":"136","2":"69","3":"0","4":"João Pessoa","5":"Estadual","6":"Nordeste","7":"205"},{"1":"166","2":"45","3":"42","4":"Teresina","5":"Estadual","6":"Nordeste","7":"253"},{"1":"80","2":"45","3":"52","4":"Natal","5":"Estadual","6":"Nordeste","7":"177"},{"1":"105","2":"64","3":"31","4":"Recife","5":"Estadual","6":"Nordeste","7":"200"},{"1":"109","2":"58","3":"34","4":"Maceió","5":"Estadual","6":"Nordeste","7":"201"},{"1":"103","2":"58","3":"39","4":"Distrito Federal","5":"Estadual","6":"Centro-oeste","7":"200"},{"1":"109","2":"62","3":"40","4":"Goiânia","5":"Estadual","6":"Centro-oeste","7":"211"},{"1":"112","2":"42","3":"46","4":"Cuiabá","5":"Estadual","6":"Centro-oeste","7":"200"},{"1":"112","2":"34","3":"54","4":"Campo Grande","5":"Estadual","6":"Centro-oeste","7":"200"},{"1":"100","2":"42","3":"58","4":"Belém","5":"Estadual","6":"Norte","7":"200"},{"1":"93","2":"67","3":"0","4":"Rio Branco - EM","5":"Estadual","6":"Norte","7":"160"},{"1":"93","2":"87","3":"0","4":"Rio Branco - EF","5":"Estadual","6":"Norte","7":"180"},{"1":"102","2":"22","3":"76","4":"Macapá","5":"Estadual","6":"Norte","7":"200"},{"1":"70","2":"35","3":"105","4":"Manaus","5":"Estadual","6":"Norte","7":"210"},{"1":"114","2":"27","3":"59","4":"Porto Velho","5":"Estadual","6":"Norte","7":"200"},{"1":"89","2":"37","3":"48","4":"Boa Vista","5":"Estadual","6":"Norte","7":"174"},{"1":"50","2":"114","3":"0","4":"Palmas","5":"Estadual","6":"Norte","7":"164"},{"1":"72","2":"82","3":"46","4":"Belo Horizonte","5":"Estadual","6":"Sudeste","7":"200"},{"1":"5","2":"56","3":"62","4":"Vitória","5":"Estadual","6":"Sudeste","7":"123"},{"1":"43","2":"102","3":"62","4":"Rio de Janeiro","5":"Estadual","6":"Sudeste","7":"207"},{"1":"12","2":"150","3":"38","4":"São Paulo","5":"Estadual","6":"Sudeste","7":"200"},{"1":"67","2":"67","3":"67","4":"Florianópolis","5":"Estadual","6":"Sul","7":"201"},{"1":"55","2":"63","3":"82","4":"Curitiba","5":"Estadual","6":"Sul","7":"200"},{"1":"43","2":"120","3":"37","4":"Porto Alegre","5":"Estadual","6":"Sul","7":"200"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":["remoto"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["hibrido"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["presencial"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["capital"],"name":[4],"type":["chr"],"align":["left"]},{"label":["rede"],"name":[5],"type":["chr"],"align":["left"]},{"label":["regiao"],"name":[6],"type":["chr"],"align":["left"]},{"label":["total_dias"],"name":[7],"type":["dbl"],"align":["right"]}],"data":[{"1":"100","2":"50","3":"50","4":"Aracaju","5":"Estadual","6":"Nordeste","7":"200"},{"1":"80","2":"81","3":"42","4":"Salvador","5":"Estadual","6":"Nordeste","7":"203"},{"1":"100","2":"41","3":"59","4":"Fortaleza","5":"Estadual","6":"Nordeste","7":"200"},{"1":"89","2":"40","3":"71","4":"São Luiz","5":"Estadual","6":"Nordeste","7":"200"},{"1":"136","2":"69","3":"0","4":"João Pessoa","5":"Estadual","6":"Nordeste","7":"205"},{"1":"166","2":"45","3":"42","4":"Teresina","5":"Estadual","6":"Nordeste","7":"253"},{"1":"80","2":"45","3":"52","4":"Natal","5":"Estadual","6":"Nordeste","7":"177"},{"1":"105","2":"64","3":"31","4":"Recife","5":"Estadual","6":"Nordeste","7":"200"},{"1":"109","2":"58","3":"34","4":"Maceió","5":"Estadual","6":"Nordeste","7":"201"},{"1":"103","2":"58","3":"39","4":"Distrito Federal","5":"Estadual","6":"Centro-oeste","7":"200"},{"1":"109","2":"62","3":"40","4":"Goiânia","5":"Estadual","6":"Centro-oeste","7":"211"},{"1":"112","2":"42","3":"46","4":"Cuiabá","5":"Estadual","6":"Centro-oeste","7":"200"},{"1":"112","2":"34","3":"54","4":"Campo Grande","5":"Estadual","6":"Centro-oeste","7":"200"},{"1":"100","2":"42","3":"58","4":"Belém","5":"Estadual","6":"Norte","7":"200"},{"1":"93","2":"67","3":"0","4":"Rio Branco - EM","5":"Estadual","6":"Norte","7":"160"},{"1":"93","2":"87","3":"0","4":"Rio Branco - EF","5":"Estadual","6":"Norte","7":"180"},{"1":"102","2":"22","3":"76","4":"Macapá","5":"Estadual","6":"Norte","7":"200"},{"1":"70","2":"35","3":"105","4":"Manaus","5":"Estadual","6":"Norte","7":"210"},{"1":"114","2":"27","3":"59","4":"Porto Velho","5":"Estadual","6":"Norte","7":"200"},{"1":"89","2":"37","3":"48","4":"Boa Vista","5":"Estadual","6":"Norte","7":"174"},{"1":"50","2":"114","3":"0","4":"Palmas","5":"Estadual","6":"Norte","7":"164"},{"1":"72","2":"82","3":"46","4":"Belo Horizonte","5":"Estadual","6":"Sudeste","7":"200"},{"1":"5","2":"56","3":"62","4":"Vitória","5":"Estadual","6":"Sudeste","7":"123"},{"1":"43","2":"102","3":"62","4":"Rio de Janeiro","5":"Estadual","6":"Sudeste","7":"207"},{"1":"12","2":"150","3":"38","4":"São Paulo","5":"Estadual","6":"Sudeste","7":"200"},{"1":"67","2":"67","3":"67","4":"Florianópolis","5":"Estadual","6":"Sul","7":"201"},{"1":"55","2":"63","3":"82","4":"Curitiba","5":"Estadual","6":"Sul","7":"200"},{"1":"43","2":"120","3":"37","4":"Porto Alegre","5":"Estadual","6":"Sul","7":"200"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
 </div>
@@ -1060,7 +1083,7 @@ grid::grid.draw(cowplot::get_legend(g5))</code></pre>
 <pre class="r"><code>novo_cronograma_municipal</code></pre>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["remoto"],"name":[1],"type":["int"],"align":["right"]},{"label":["hibrido"],"name":[2],"type":["int"],"align":["right"]},{"label":["presencial"],"name":[3],"type":["int"],"align":["right"]},{"label":["capital"],"name":[4],"type":["chr"],"align":["left"]},{"label":["rede"],"name":[5],"type":["chr"],"align":["left"]},{"label":["regiao"],"name":[6],"type":["chr"],"align":["left"]},{"label":["total_dias"],"name":[7],"type":["int"],"align":["right"]}],"data":[{"1":"103","2":"61","3":"36","4":"Aracaju","5":"Municipal","6":"Nordeste","7":"200"},{"1":"80","2":"64","3":"59","4":"Salvador","5":"Municipal","6":"Nordeste","7":"203"},{"1":"129","2":"72","3":"0","4":"Fortaleza","5":"Municipal","6":"Nordeste","7":"201"},{"1":"94","2":"106","3":"0","4":"São Luiz","5":"Municipal","6":"Nordeste","7":"200"},{"1":"164","2":"43","3":"0","4":"João Pessoa","5":"Municipal","6":"Nordeste","7":"207"},{"1":"142","2":"72","3":"0","4":"Teresina","5":"Municipal","6":"Nordeste","7":"214"},{"1":"5","2":"117","3":"28","4":"Natal*","5":"Municipal","6":"Nordeste","7":"150"},{"1":"95","2":"74","3":"31","4":"Recife","5":"Municipal","6":"Nordeste","7":"200"},{"1":"111","2":"86","3":"0","4":"Maceió","5":"Municipal","6":"Nordeste","7":"197"},{"1":"109","2":"82","3":"0","4":"Goiânia","5":"Municipal","6":"Centro-oeste","7":"191"},{"1":"103","2":"63","3":"34","4":"Cuiabá","5":"Municipal","6":"Centro-oeste","7":"200"},{"1":"103","2":"97","3":"0","4":"Campo Grande","5":"Municipal","6":"Centro-oeste","7":"200"},{"1":"100","2":"63","3":"27","4":"Belém","5":"Municipal","6":"Norte","7":"190"},{"1":"142","2":"57","3":"0","4":"Rio Branco","5":"Municipal","6":"Norte","7":"199"},{"1":"102","2":"22","3":"76","4":"Macapá","5":"Municipal","6":"Norte","7":"200"},{"1":"70","2":"35","3":"105","4":"Manaus","5":"Municipal","6":"Norte","7":"210"},{"1":"81","2":"45","3":"34","4":"Porto Velho","5":"Municipal","6":"Norte","7":"160"},{"1":"88","2":"29","3":"43","4":"Boa Vista","5":"Municipal","6":"Norte","7":"160"},{"1":"100","2":"41","3":"59","4":"Palmas","5":"Municipal","6":"Norte","7":"200"},{"1":"83","2":"82","3":"46","4":"Belo Horizonte","5":"Municipal","6":"Sudeste","7":"211"},{"1":"61","2":"81","3":"60","4":"Vitória","5":"Municipal","6":"Sudeste","7":"202"},{"1":"29","2":"136","3":"37","4":"Rio de Janeiro","5":"Municipal","6":"Sudeste","7":"202"},{"1":"0","2":"162","3":"42","4":"São Paulo","5":"Municipal","6":"Sudeste","7":"204"},{"1":"16","2":"63","3":"82","4":"Florianópolis","5":"Municipal","6":"Sul","7":"161"},{"1":"93","2":"37","3":"70","4":"Curitiba","5":"Municipal","6":"Sul","7":"200"},{"1":"0","2":"141","3":"59","4":"Porto Alegre","5":"Municipal","6":"Sul","7":"200"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":["remoto"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["hibrido"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["presencial"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["capital"],"name":[4],"type":["chr"],"align":["left"]},{"label":["rede"],"name":[5],"type":["chr"],"align":["left"]},{"label":["regiao"],"name":[6],"type":["chr"],"align":["left"]},{"label":["total_dias"],"name":[7],"type":["dbl"],"align":["right"]}],"data":[{"1":"103","2":"61","3":"36","4":"Aracaju","5":"Municipal","6":"Nordeste","7":"200"},{"1":"80","2":"64","3":"59","4":"Salvador","5":"Municipal","6":"Nordeste","7":"203"},{"1":"129","2":"72","3":"0","4":"Fortaleza","5":"Municipal","6":"Nordeste","7":"201"},{"1":"94","2":"106","3":"0","4":"São Luiz","5":"Municipal","6":"Nordeste","7":"200"},{"1":"164","2":"43","3":"0","4":"João Pessoa","5":"Municipal","6":"Nordeste","7":"207"},{"1":"142","2":"72","3":"0","4":"Teresina","5":"Municipal","6":"Nordeste","7":"214"},{"1":"5","2":"117","3":"28","4":"Natal","5":"Municipal","6":"Nordeste","7":"150"},{"1":"95","2":"74","3":"31","4":"Recife","5":"Municipal","6":"Nordeste","7":"200"},{"1":"111","2":"86","3":"0","4":"Maceió","5":"Municipal","6":"Nordeste","7":"197"},{"1":"109","2":"82","3":"0","4":"Goiânia","5":"Municipal","6":"Centro-oeste","7":"191"},{"1":"103","2":"63","3":"34","4":"Cuiabá","5":"Municipal","6":"Centro-oeste","7":"200"},{"1":"103","2":"97","3":"0","4":"Campo Grande","5":"Municipal","6":"Centro-oeste","7":"200"},{"1":"100","2":"63","3":"27","4":"Belém","5":"Municipal","6":"Norte","7":"190"},{"1":"142","2":"57","3":"0","4":"Rio Branco - EF","5":"Municipal","6":"Norte","7":"199"},{"1":"102","2":"22","3":"76","4":"Macapá","5":"Municipal","6":"Norte","7":"200"},{"1":"70","2":"35","3":"105","4":"Manaus","5":"Municipal","6":"Norte","7":"210"},{"1":"81","2":"45","3":"34","4":"Porto Velho","5":"Municipal","6":"Norte","7":"160"},{"1":"88","2":"29","3":"43","4":"Boa Vista","5":"Municipal","6":"Norte","7":"160"},{"1":"100","2":"41","3":"59","4":"Palmas","5":"Municipal","6":"Norte","7":"200"},{"1":"83","2":"82","3":"46","4":"Belo Horizonte","5":"Municipal","6":"Sudeste","7":"211"},{"1":"61","2":"81","3":"60","4":"Vitória","5":"Municipal","6":"Sudeste","7":"202"},{"1":"29","2":"136","3":"37","4":"Rio de Janeiro","5":"Municipal","6":"Sudeste","7":"202"},{"1":"0","2":"162","3":"42","4":"São Paulo","5":"Municipal","6":"Sudeste","7":"204"},{"1":"16","2":"63","3":"82","4":"Florianópolis","5":"Municipal","6":"Sul","7":"161"},{"1":"93","2":"37","3":"70","4":"Curitiba","5":"Municipal","6":"Sul","7":"200"},{"1":"0","2":"141","3":"59","4":"Porto Alegre","5":"Municipal","6":"Sul","7":"200"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
 </div>
