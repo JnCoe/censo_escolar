@@ -89,7 +89,23 @@ A tabela 1 apresenta a média de dias letivos em cada região, por modalidade. O
 # Tabela 1 - Médias estaduais
 
 ```{r}
-media_estadual
+geral_est <- novo_cronograma_estadual %>%
+  group_by(.) %>%
+  summarise('Média remoto' = round(mean(remoto)),
+            'Média híbrido' = round(mean(hibrido)),
+            'Média presencial' = round(mean(presencial)),
+            'Média total' = round(mean(total_dias))) %>%
+  mutate(regiao = 'Total', .before='Média remoto')
+
+media_estadual2 <- novo_cronograma_estadual %>%
+  group_by(regiao) %>%
+  summarise('Média remoto' = round(mean(remoto)),
+            'Média híbrido' = round(mean(hibrido)),
+            'Média presencial' = round(mean(presencial)),
+            'Média total' = round(mean(total_dias))) %>%
+  rbind(geral_est)
+
+media_estadual2
 ```
 
 # Gráfico 1 - Valores estaduais
@@ -136,7 +152,23 @@ A tabela 2 apresenta a média de dias letivos em cada região, por modalidade. O
 # Tabela 2 - Médias municipais
 
 ```{r}
-media_estadual
+geral_mun <- novo_cronograma_municipal %>%
+  group_by(.) %>%
+  summarise('Média remoto' = round(mean(remoto)),
+            'Média híbrido' = round(mean(hibrido)),
+            'Média presencial' = round(mean(presencial)),
+            'Média total' = round(mean(total_dias))) %>%
+  mutate(regiao = 'Total', .before='Média remoto')
+
+media_municipal2 <- novo_cronograma_municipal %>%
+  group_by(regiao) %>%
+  summarise('Média remoto' = round(mean(remoto)),
+            'Média híbrido' = round(mean(hibrido)),
+            'Média presencial' = round(mean(presencial)),
+            'Média total' = round(mean(total_dias))) %>%
+    rbind(geral_mun)
+
+media_municipal2
 ```
 
 # Gráfico 2 - Valores municipais
@@ -190,7 +222,7 @@ temp <- novo_cronograma_municipal %>%
 g1 <- temp %>%
   mutate(dif = municipal_presencial-presencial, cor = ifelse(dif<0, '#083550', '#1f95e1')) %>%
   filter(dif != 0) %>%
-  arrange(desc(abs(dif))) %>%
+  arrange(abs(dif)) %>%
   mutate(capital=factor(capital, capital)) %>%
   ggplot() +
   geom_segment( aes(x=capital, xend=capital, y=presencial, yend=municipal_presencial, color=cor), alpha = 0.7) +
@@ -209,7 +241,7 @@ g1 <- temp %>%
 g2 <- temp %>%
   mutate(dif = municipal_hibrido-hibrido, cor = ifelse(dif<0, '#083550', '#1f95e1')) %>%
   filter(dif != 0) %>%
-  arrange(desc(abs(dif))) %>%
+  arrange(abs(dif)) %>%
   mutate(capital=factor(capital, capital)) %>%
   ggplot() +
   geom_segment( aes(x=capital, xend=capital, y=hibrido, yend=municipal_hibrido, color=cor), alpha = 0.7) +
@@ -228,7 +260,7 @@ g2 <- temp %>%
 g3 <- temp %>%
   mutate(dif = municipal_remoto-remoto, cor = ifelse(dif<0, '#083550', '#1f95e1')) %>%
   filter(dif != 0) %>%
-  arrange(desc(abs(dif))) %>%
+  arrange(abs(dif)) %>%
   mutate(capital=factor(capital, capital)) %>%
   ggplot() +
   geom_segment( aes(x=capital, xend=capital, y=remoto, yend=municipal_remoto, color=cor), alpha = 0.7) +
@@ -247,7 +279,7 @@ g3 <- temp %>%
 g4 <- temp %>%
   mutate(dif = municipal_total_dias-total_dias, cor = ifelse(dif<0, '#083550', '#1f95e1')) %>%
   filter(dif != 0) %>%
-  arrange(desc(abs(dif))) %>%
+  arrange(abs(dif)) %>%
   mutate(capital=factor(capital, capital)) %>%
   ggplot() +
   geom_segment( aes(x=capital, xend=capital, y=total_dias, yend=municipal_total_dias, color=cor), alpha = 0.7) +

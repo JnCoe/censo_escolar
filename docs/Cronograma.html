@@ -315,10 +315,26 @@ novo_cronograma_municipal &lt;- novo_cronograma %&gt;%
 </div>
 <div id="tabela-1---médias-estaduais" class="section level1" number="3">
 <h1 number="3"><span class="header-section-number">3</span> Tabela 1 - Médias estaduais</h1>
-<pre class="r"><code>media_estadual</code></pre>
+<pre class="r"><code>geral_est &lt;- novo_cronograma_estadual %&gt;%
+  group_by(.) %&gt;%
+  summarise(&#39;Média remoto&#39; = round(mean(remoto)),
+            &#39;Média híbrido&#39; = round(mean(hibrido)),
+            &#39;Média presencial&#39; = round(mean(presencial)),
+            &#39;Média total&#39; = round(mean(total_dias))) %&gt;%
+  mutate(regiao = &#39;Total&#39;, .before=&#39;Média remoto&#39;)
+
+media_estadual2 &lt;- novo_cronograma_estadual %&gt;%
+  group_by(regiao) %&gt;%
+  summarise(&#39;Média remoto&#39; = round(mean(remoto)),
+            &#39;Média híbrido&#39; = round(mean(hibrido)),
+            &#39;Média presencial&#39; = round(mean(presencial)),
+            &#39;Média total&#39; = round(mean(total_dias))) %&gt;%
+  rbind(geral_est)
+
+media_estadual2</code></pre>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["Região"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Média.remoto"],"name":[2],"type":["int"],"align":["right"]},{"label":["Média.híbrido"],"name":[3],"type":["int"],"align":["right"]},{"label":["Média.presencial"],"name":[4],"type":["int"],"align":["right"]}],"data":[{"1":"Centro-oeste","2":"109","3":"49","4":"45"},{"1":"Nordeste","2":"107","3":"55","4":"42"},{"1":"Norte","2":"89","3":"54","4":"43"},{"1":"Sudeste","2":"33","3":"98","4":"52"},{"1":"Sul","2":"55","3":"83","4":"62"},{"1":"Média geral","2":"86","3":"63","4":"46"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":["regiao"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Média remoto"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["Média híbrido"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["Média presencial"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["Média total"],"name":[5],"type":["dbl"],"align":["right"]}],"data":[{"1":"Centro-oeste","2":"109","3":"49","4":"45","5":"203"},{"1":"Nordeste","2":"101","3":"56","4":"42","5":"200"},{"1":"Norte","2":"89","3":"54","4":"43","5":"186"},{"1":"Sudeste","2":"33","3":"98","4":"52","5":"182"},{"1":"Sul","2":"55","3":"83","4":"62","5":"200"},{"1":"Total","2":"84","3":"63","4":"46","5":"194"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
 </div>
@@ -346,12 +362,12 @@ novo_cronograma_municipal &lt;- novo_cronograma %&gt;%
 
 print(graf, &quot;chart&quot;)</code></pre>
 <!-- BarChart generated in R 4.0.3 by googleVis 0.6.10 package -->
-<!-- Wed Dec 22 12:39:04 2021 -->
+<!-- Wed Dec 22 17:43:28 2021 -->
 <!-- jsHeader -->
 <script type="text/javascript">
  
 // jsData 
-function gvisDataBarChartID1a54444f1712 () {
+function gvisDataBarChartID7944798a7cff () {
 var data = new google.visualization.DataTable();
 var datajson =
 [
@@ -562,8 +578,8 @@ return(data);
 }
  
 // jsDrawChart
-function drawChartBarChartID1a54444f1712() {
-var data = gvisDataBarChartID1a54444f1712();
+function drawChartBarChartID7944798a7cff() {
+var data = gvisDataBarChartID7944798a7cff();
 var options = {};
 options["allowHtml"] = true;
 options["bars"] = "horizontal";
@@ -576,7 +592,7 @@ options["fontSize"] = 14.4;
 options["chartArea"] = {height:"90%"};
 
     var chart = new google.visualization.BarChart(
-    document.getElementById('BarChartID1a54444f1712')
+    document.getElementById('BarChartID7944798a7cff')
     );
     chart.draw(data,options);
     
@@ -600,9 +616,9 @@ if (newPackage)
   pkgs.push(chartid);
   
 // Add the drawChart function to the global list of callbacks
-callbacks.push(drawChartBarChartID1a54444f1712);
+callbacks.push(drawChartBarChartID7944798a7cff);
 })();
-function displayChartBarChartID1a54444f1712() {
+function displayChartBarChartID7944798a7cff() {
   var pkgs = window.__gvisPackages = window.__gvisPackages || [];
   var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
   window.clearTimeout(window.__gvisLoad);
@@ -625,9 +641,9 @@ callbacks.shift()();
 // jsFooter
 </script>
 <!-- jsChart -->
-<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartID1a54444f1712"></script>
+<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartID7944798a7cff"></script>
 <!-- divChart -->
-<div id="BarChartID1a54444f1712" style="width: 500; height: 600;">
+<div id="BarChartID7944798a7cff" style="width: 500; height: 600;">
 
 </div>
 <p>Em média, as escolas públicas estaduais brasileiras tiveram 86 dias de aulas remotas, 63 de aulas no formato híbrido e 46 no formato presencial. Enquanto as regiões Norte, Nordeste e Centro-oeste tiveram uma média de no mínimo 89 dias de aulas remotas, as regiões sul e sudeste tiveram em média apenas 33 e 55 dias letivos nessa modalidade.</p>
@@ -644,10 +660,26 @@ callbacks.shift()();
 </div>
 <div id="tabela-2---médias-municipais" class="section level1" number="6">
 <h1 number="6"><span class="header-section-number">6</span> Tabela 2 - Médias municipais</h1>
-<pre class="r"><code>media_estadual</code></pre>
+<pre class="r"><code>geral_mun &lt;- novo_cronograma_municipal %&gt;%
+  group_by(.) %&gt;%
+  summarise(&#39;Média remoto&#39; = round(mean(remoto)),
+            &#39;Média híbrido&#39; = round(mean(hibrido)),
+            &#39;Média presencial&#39; = round(mean(presencial)),
+            &#39;Média total&#39; = round(mean(total_dias))) %&gt;%
+  mutate(regiao = &#39;Total&#39;, .before=&#39;Média remoto&#39;)
+
+media_municipal2 &lt;- novo_cronograma_municipal %&gt;%
+  group_by(regiao) %&gt;%
+  summarise(&#39;Média remoto&#39; = round(mean(remoto)),
+            &#39;Média híbrido&#39; = round(mean(hibrido)),
+            &#39;Média presencial&#39; = round(mean(presencial)),
+            &#39;Média total&#39; = round(mean(total_dias))) %&gt;%
+    rbind(geral_mun)
+
+media_municipal2</code></pre>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["Região"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Média.remoto"],"name":[2],"type":["int"],"align":["right"]},{"label":["Média.híbrido"],"name":[3],"type":["int"],"align":["right"]},{"label":["Média.presencial"],"name":[4],"type":["int"],"align":["right"]}],"data":[{"1":"Centro-oeste","2":"109","3":"49","4":"45"},{"1":"Nordeste","2":"107","3":"55","4":"42"},{"1":"Norte","2":"89","3":"54","4":"43"},{"1":"Sudeste","2":"33","3":"98","4":"52"},{"1":"Sul","2":"55","3":"83","4":"62"},{"1":"Média geral","2":"86","3":"63","4":"46"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":["regiao"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Média remoto"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["Média híbrido"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["Média presencial"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["Média total"],"name":[5],"type":["dbl"],"align":["right"]}],"data":[{"1":"Centro-oeste","2":"105","3":"81","4":"11","5":"197"},{"1":"Nordeste","2":"103","3":"77","4":"17","5":"197"},{"1":"Norte","2":"98","3":"42","4":"49","5":"188"},{"1":"Sudeste","2":"43","3":"115","4":"46","5":"205"},{"1":"Sul","2":"36","3":"80","4":"70","5":"187"},{"1":"Total","2":"85","3":"74","4":"36","5":"195"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
 </div>
@@ -675,12 +707,12 @@ callbacks.shift()();
 
 print(graf, &quot;chart&quot;)</code></pre>
 <!-- BarChart generated in R 4.0.3 by googleVis 0.6.10 package -->
-<!-- Wed Dec 22 12:39:04 2021 -->
+<!-- Wed Dec 22 17:43:28 2021 -->
 <!-- jsHeader -->
 <script type="text/javascript">
  
 // jsData 
-function gvisDataBarChartID1a5431341909 () {
+function gvisDataBarChartID79446e276773 () {
 var data = new google.visualization.DataTable();
 var datajson =
 [
@@ -877,8 +909,8 @@ return(data);
 }
  
 // jsDrawChart
-function drawChartBarChartID1a5431341909() {
-var data = gvisDataBarChartID1a5431341909();
+function drawChartBarChartID79446e276773() {
+var data = gvisDataBarChartID79446e276773();
 var options = {};
 options["allowHtml"] = true;
 options["bars"] = "horizontal";
@@ -891,7 +923,7 @@ options["fontSize"] = 14.4;
 options["chartArea"] = {height:"90%"};
 
     var chart = new google.visualization.BarChart(
-    document.getElementById('BarChartID1a5431341909')
+    document.getElementById('BarChartID79446e276773')
     );
     chart.draw(data,options);
     
@@ -915,9 +947,9 @@ if (newPackage)
   pkgs.push(chartid);
   
 // Add the drawChart function to the global list of callbacks
-callbacks.push(drawChartBarChartID1a5431341909);
+callbacks.push(drawChartBarChartID79446e276773);
 })();
-function displayChartBarChartID1a5431341909() {
+function displayChartBarChartID79446e276773() {
   var pkgs = window.__gvisPackages = window.__gvisPackages || [];
   var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
   window.clearTimeout(window.__gvisLoad);
@@ -940,9 +972,9 @@ callbacks.shift()();
 // jsFooter
 </script>
 <!-- jsChart -->
-<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartID1a5431341909"></script>
+<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartID79446e276773"></script>
 <!-- divChart -->
-<div id="BarChartID1a5431341909" style="width: 500; height: 600;">
+<div id="BarChartID79446e276773" style="width: 500; height: 600;">
 
 </div>
 <p>As diferenças regionais entre os cronogramas das escolas públicas municipais são similares às vistas nas escolas estaduais. A média de dias no ensino remoto foi de 85 dias, valor praticamente idêntico àquele obtido na rede estadual (86). Para ensino híbrido, houve uma média de 74 dias letivos (11 dias a mais do que a média estadual), enquanto para o ensino presencial a média obtida foi de 36 dias (10 a menos que a média estadual).</p>
@@ -964,7 +996,7 @@ callbacks.shift()();
 g1 &lt;- temp %&gt;%
   mutate(dif = municipal_presencial-presencial, cor = ifelse(dif&lt;0, &#39;#083550&#39;, &#39;#1f95e1&#39;)) %&gt;%
   filter(dif != 0) %&gt;%
-  arrange(desc(abs(dif))) %&gt;%
+  arrange(abs(dif)) %&gt;%
   mutate(capital=factor(capital, capital)) %&gt;%
   ggplot() +
   geom_segment( aes(x=capital, xend=capital, y=presencial, yend=municipal_presencial, color=cor), alpha = 0.7) +
@@ -983,7 +1015,7 @@ g1 &lt;- temp %&gt;%
 g2 &lt;- temp %&gt;%
   mutate(dif = municipal_hibrido-hibrido, cor = ifelse(dif&lt;0, &#39;#083550&#39;, &#39;#1f95e1&#39;)) %&gt;%
   filter(dif != 0) %&gt;%
-  arrange(desc(abs(dif))) %&gt;%
+  arrange(abs(dif)) %&gt;%
   mutate(capital=factor(capital, capital)) %&gt;%
   ggplot() +
   geom_segment( aes(x=capital, xend=capital, y=hibrido, yend=municipal_hibrido, color=cor), alpha = 0.7) +
@@ -1002,7 +1034,7 @@ g2 &lt;- temp %&gt;%
 g3 &lt;- temp %&gt;%
   mutate(dif = municipal_remoto-remoto, cor = ifelse(dif&lt;0, &#39;#083550&#39;, &#39;#1f95e1&#39;)) %&gt;%
   filter(dif != 0) %&gt;%
-  arrange(desc(abs(dif))) %&gt;%
+  arrange(abs(dif)) %&gt;%
   mutate(capital=factor(capital, capital)) %&gt;%
   ggplot() +
   geom_segment( aes(x=capital, xend=capital, y=remoto, yend=municipal_remoto, color=cor), alpha = 0.7) +
@@ -1021,7 +1053,7 @@ g3 &lt;- temp %&gt;%
 g4 &lt;- temp %&gt;%
   mutate(dif = municipal_total_dias-total_dias, cor = ifelse(dif&lt;0, &#39;#083550&#39;, &#39;#1f95e1&#39;)) %&gt;%
   filter(dif != 0) %&gt;%
-  arrange(desc(abs(dif))) %&gt;%
+  arrange(abs(dif)) %&gt;%
   mutate(capital=factor(capital, capital)) %&gt;%
   ggplot() +
   geom_segment( aes(x=capital, xend=capital, y=total_dias, yend=municipal_total_dias, color=cor), alpha = 0.7) +
