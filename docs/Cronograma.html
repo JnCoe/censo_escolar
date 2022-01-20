@@ -372,12 +372,12 @@ media_estadual2</code></pre>
 
 print(graf, &quot;chart&quot;)</code></pre>
 <!-- BarChart generated in R 4.0.3 by googleVis 0.6.10 package -->
-<!-- Thu Jan 20 17:11:22 2022 -->
+<!-- Thu Jan 20 17:12:57 2022 -->
 <!-- jsHeader -->
 <script type="text/javascript">
  
 // jsData 
-function gvisDataBarChartID83541ae2272f () {
+function gvisDataBarChartID37fc68061e09 () {
 var data = new google.visualization.DataTable();
 var datajson =
 [
@@ -588,8 +588,8 @@ return(data);
 }
  
 // jsDrawChart
-function drawChartBarChartID83541ae2272f() {
-var data = gvisDataBarChartID83541ae2272f();
+function drawChartBarChartID37fc68061e09() {
+var data = gvisDataBarChartID37fc68061e09();
 var options = {};
 options["allowHtml"] = true;
 options["bars"] = "horizontal";
@@ -602,7 +602,7 @@ options["fontSize"] = 14.4;
 options["chartArea"] = {height:"90%"};
 
     var chart = new google.visualization.BarChart(
-    document.getElementById('BarChartID83541ae2272f')
+    document.getElementById('BarChartID37fc68061e09')
     );
     chart.draw(data,options);
     
@@ -626,9 +626,9 @@ if (newPackage)
   pkgs.push(chartid);
   
 // Add the drawChart function to the global list of callbacks
-callbacks.push(drawChartBarChartID83541ae2272f);
+callbacks.push(drawChartBarChartID37fc68061e09);
 })();
-function displayChartBarChartID83541ae2272f() {
+function displayChartBarChartID37fc68061e09() {
   var pkgs = window.__gvisPackages = window.__gvisPackages || [];
   var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
   window.clearTimeout(window.__gvisLoad);
@@ -651,9 +651,9 @@ callbacks.shift()();
 // jsFooter
 </script>
 <!-- jsChart -->
-<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartID83541ae2272f"></script>
+<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartID37fc68061e09"></script>
 <!-- divChart -->
-<div id="BarChartID83541ae2272f" style="width: 500; height: 600;">
+<div id="BarChartID37fc68061e09" style="width: 500; height: 600;">
 
 </div>
 <p>Em média, as escolas públicas estaduais brasileiras tiveram 86 dias de aulas remotas, 63 de aulas no formato híbrido e 46 no formato presencial. Enquanto as regiões Norte, Nordeste e Centro-oeste tiveram uma média de no mínimo 89 dias de aulas remotas, as regiões sul e sudeste tiveram em média apenas 33 e 55 dias letivos nessa modalidade.</p>
@@ -717,12 +717,12 @@ media_municipal2</code></pre>
 
 print(graf, &quot;chart&quot;)</code></pre>
 <!-- BarChart generated in R 4.0.3 by googleVis 0.6.10 package -->
-<!-- Thu Jan 20 17:11:23 2022 -->
+<!-- Thu Jan 20 17:12:57 2022 -->
 <!-- jsHeader -->
 <script type="text/javascript">
  
 // jsData 
-function gvisDataBarChartID8354488849be () {
+function gvisDataBarChartID37fc423adc () {
 var data = new google.visualization.DataTable();
 var datajson =
 [
@@ -919,8 +919,8 @@ return(data);
 }
  
 // jsDrawChart
-function drawChartBarChartID8354488849be() {
-var data = gvisDataBarChartID8354488849be();
+function drawChartBarChartID37fc423adc() {
+var data = gvisDataBarChartID37fc423adc();
 var options = {};
 options["allowHtml"] = true;
 options["bars"] = "horizontal";
@@ -933,7 +933,7 @@ options["fontSize"] = 14.4;
 options["chartArea"] = {height:"90%"};
 
     var chart = new google.visualization.BarChart(
-    document.getElementById('BarChartID8354488849be')
+    document.getElementById('BarChartID37fc423adc')
     );
     chart.draw(data,options);
     
@@ -957,9 +957,9 @@ if (newPackage)
   pkgs.push(chartid);
   
 // Add the drawChart function to the global list of callbacks
-callbacks.push(drawChartBarChartID8354488849be);
+callbacks.push(drawChartBarChartID37fc423adc);
 })();
-function displayChartBarChartID8354488849be() {
+function displayChartBarChartID37fc423adc() {
   var pkgs = window.__gvisPackages = window.__gvisPackages || [];
   var callbacks = window.__gvisCallbacks = window.__gvisCallbacks || [];
   window.clearTimeout(window.__gvisLoad);
@@ -982,9 +982,9 @@ callbacks.shift()();
 // jsFooter
 </script>
 <!-- jsChart -->
-<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartID8354488849be"></script>
+<script type="text/javascript" src="https://www.google.com/jsapi?callback=displayChartBarChartID37fc423adc"></script>
 <!-- divChart -->
-<div id="BarChartID8354488849be" style="width: 500; height: 600;">
+<div id="BarChartID37fc423adc" style="width: 500; height: 600;">
 
 </div>
 <p>As diferenças regionais entre os cronogramas das escolas públicas municipais são similares às vistas nas escolas estaduais. A média de dias no ensino remoto foi de 85 dias, valor praticamente idêntico àquele obtido na rede estadual (86). Para ensino híbrido, houve uma média de 74 dias letivos (11 dias a mais do que a média estadual), enquanto para o ensino presencial a média obtida foi de 36 dias (10 a menos que a média estadual).</p>
@@ -1137,10 +1137,10 @@ cowplot::plot_grid(legenda)</code></pre>
    mutate(capital = tolower(iconv(capital, to=&quot;ASCII//TRANSLIT&quot;))) %&gt;%
   mutate(capital = stringr::str_trim(capital)) %&gt;%
   left_join(select(cronograma_estadual, capital, estado, regiao)) %&gt;%
-  arrange(regiao, estado)</code></pre>
+  arrange(regiao, estado, rede)</code></pre>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["remoto"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["hibrido"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["presencial"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["capital"],"name":[4],"type":["chr"],"align":["left"]},{"label":["rede"],"name":[5],"type":["chr"],"align":["left"]},{"label":["regiao"],"name":[6],"type":["chr"],"align":["left"]},{"label":["total_dias"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["estado"],"name":[8],"type":["chr"],"align":["left"]}],"data":[{"1":"103","2":"58","3":"39","4":"distrito federal","5":"Estadual","6":"Centro-oeste","7":"200","8":"Distrito Federal"},{"1":"109","2":"82","3":"0","4":"goiania","5":"Municipal","6":"Centro-oeste","7":"191","8":"Goiás"},{"1":"109","2":"62","3":"40","4":"goiania","5":"Estadual","6":"Centro-oeste","7":"211","8":"Goiás"},{"1":"103","2":"63","3":"34","4":"cuiaba","5":"Municipal","6":"Centro-oeste","7":"200","8":"Mato Grosso"},{"1":"112","2":"42","3":"46","4":"cuiaba","5":"Estadual","6":"Centro-oeste","7":"200","8":"Mato Grosso"},{"1":"103","2":"97","3":"0","4":"campo grande","5":"Municipal","6":"Centro-oeste","7":"200","8":"Mato Grosso do Sul"},{"1":"112","2":"34","3":"54","4":"campo grande","5":"Estadual","6":"Centro-oeste","7":"200","8":"Mato Grosso do Sul"},{"1":"111","2":"86","3":"0","4":"maceio","5":"Municipal","6":"Nordeste","7":"197","8":"Alagoas"},{"1":"109","2":"58","3":"34","4":"maceio","5":"Estadual","6":"Nordeste","7":"201","8":"Alagoas"},{"1":"80","2":"64","3":"59","4":"salvador","5":"Municipal","6":"Nordeste","7":"203","8":"Bahia"},{"1":"80","2":"81","3":"42","4":"salvador","5":"Estadual","6":"Nordeste","7":"203","8":"Bahia"},{"1":"129","2":"72","3":"0","4":"fortaleza","5":"Municipal","6":"Nordeste","7":"201","8":"Ceará"},{"1":"100","2":"41","3":"59","4":"fortaleza","5":"Estadual","6":"Nordeste","7":"200","8":"Ceará"},{"1":"94","2":"106","3":"0","4":"sao luis","5":"Municipal","6":"Nordeste","7":"200","8":"Maranhão"},{"1":"89","2":"40","3":"71","4":"sao luis","5":"Estadual","6":"Nordeste","7":"200","8":"Maranhão"},{"1":"164","2":"43","3":"0","4":"joao pessoa","5":"Municipal","6":"Nordeste","7":"207","8":"Paraíba"},{"1":"136","2":"69","3":"0","4":"joao pessoa","5":"Estadual","6":"Nordeste","7":"205","8":"Paraíba"},{"1":"95","2":"74","3":"31","4":"recife","5":"Municipal","6":"Nordeste","7":"200","8":"Pernambuco"},{"1":"105","2":"64","3":"31","4":"recife","5":"Estadual","6":"Nordeste","7":"200","8":"Pernambuco"},{"1":"142","2":"72","3":"0","4":"teresina","5":"Municipal","6":"Nordeste","7":"214","8":"Piauí"},{"1":"111","2":"57","3":"42","4":"teresina","5":"Estadual","6":"Nordeste","7":"210","8":"Piauí"},{"1":"5","2":"117","3":"28","4":"natal","5":"Municipal","6":"Nordeste","7":"150","8":"Rio Grande do Norte"},{"1":"80","2":"45","3":"52","4":"natal","5":"Estadual","6":"Nordeste","7":"177","8":"Rio Grande do Norte"},{"1":"103","2":"61","3":"36","4":"aracaju","5":"Municipal","6":"Nordeste","7":"200","8":"Sergipe"},{"1":"100","2":"50","3":"50","4":"aracaju","5":"Estadual","6":"Nordeste","7":"200","8":"Sergipe"},{"1":"142","2":"57","3":"0","4":"rio branco - ef","5":"Municipal","6":"Norte","7":"199","8":"Acre - EF"},{"1":"93","2":"87","3":"0","4":"rio branco - ef","5":"Estadual","6":"Norte","7":"180","8":"Acre - EF"},{"1":"93","2":"67","3":"0","4":"rio branco - em","5":"Estadual","6":"Norte","7":"160","8":"Acre - EM"},{"1":"102","2":"22","3":"76","4":"macapa","5":"Municipal","6":"Norte","7":"200","8":"Amapá"},{"1":"102","2":"22","3":"76","4":"macapa","5":"Estadual","6":"Norte","7":"200","8":"Amapá"},{"1":"70","2":"35","3":"105","4":"manaus","5":"Municipal","6":"Norte","7":"210","8":"Amazonas"},{"1":"70","2":"35","3":"105","4":"manaus","5":"Estadual","6":"Norte","7":"210","8":"Amazonas"},{"1":"100","2":"63","3":"27","4":"belem","5":"Municipal","6":"Norte","7":"190","8":"Pará"},{"1":"100","2":"42","3":"58","4":"belem","5":"Estadual","6":"Norte","7":"200","8":"Pará"},{"1":"81","2":"45","3":"34","4":"porto velho","5":"Municipal","6":"Norte","7":"160","8":"Rondônia"},{"1":"114","2":"27","3":"59","4":"porto velho","5":"Estadual","6":"Norte","7":"200","8":"Rondônia"},{"1":"88","2":"29","3":"43","4":"boa vista","5":"Municipal","6":"Norte","7":"160","8":"Roraima"},{"1":"89","2":"37","3":"48","4":"boa vista","5":"Estadual","6":"Norte","7":"174","8":"Roraima"},{"1":"100","2":"41","3":"59","4":"palmas","5":"Municipal","6":"Norte","7":"200","8":"Tocantins"},{"1":"50","2":"114","3":"0","4":"palmas","5":"Estadual","6":"Norte","7":"164","8":"Tocantins"},{"1":"61","2":"81","3":"60","4":"vitoria","5":"Municipal","6":"Sudeste","7":"202","8":"Espírito Santo"},{"1":"82","2":"56","3":"62","4":"vitoria","5":"Estadual","6":"Sudeste","7":"200","8":"Espírito Santo"},{"1":"83","2":"82","3":"46","4":"belo horizonte","5":"Municipal","6":"Sudeste","7":"211","8":"Minas Gerais"},{"1":"72","2":"82","3":"46","4":"belo horizonte","5":"Estadual","6":"Sudeste","7":"200","8":"Minas Gerais"},{"1":"29","2":"136","3":"37","4":"rio de janeiro","5":"Municipal","6":"Sudeste","7":"202","8":"Rio de Janeiro"},{"1":"43","2":"102","3":"62","4":"rio de janeiro","5":"Estadual","6":"Sudeste","7":"207","8":"Rio de Janeiro"},{"1":"0","2":"162","3":"42","4":"sao paulo","5":"Municipal","6":"Sudeste","7":"204","8":"São Paulo"},{"1":"12","2":"150","3":"38","4":"sao paulo","5":"Estadual","6":"Sudeste","7":"200","8":"São Paulo"},{"1":"93","2":"37","3":"70","4":"curitiba","5":"Municipal","6":"Sul","7":"200","8":"Paraná"},{"1":"55","2":"63","3":"82","4":"curitiba","5":"Estadual","6":"Sul","7":"200","8":"Paraná"},{"1":"0","2":"141","3":"59","4":"porto alegre","5":"Municipal","6":"Sul","7":"200","8":"Rio Grande do Sul"},{"1":"43","2":"120","3":"37","4":"porto alegre","5":"Estadual","6":"Sul","7":"200","8":"Rio Grande do Sul"},{"1":"16","2":"185","3":"0","4":"florianopolis","5":"Municipal","6":"Sul","7":"201","8":"Santa Catarina"},{"1":"67","2":"67","3":"67","4":"florianopolis","5":"Estadual","6":"Sul","7":"201","8":"Santa Catarina"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":["remoto"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["hibrido"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["presencial"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["capital"],"name":[4],"type":["chr"],"align":["left"]},{"label":["rede"],"name":[5],"type":["chr"],"align":["left"]},{"label":["regiao"],"name":[6],"type":["chr"],"align":["left"]},{"label":["total_dias"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["estado"],"name":[8],"type":["chr"],"align":["left"]}],"data":[{"1":"103","2":"58","3":"39","4":"distrito federal","5":"Estadual","6":"Centro-oeste","7":"200","8":"Distrito Federal"},{"1":"109","2":"62","3":"40","4":"goiania","5":"Estadual","6":"Centro-oeste","7":"211","8":"Goiás"},{"1":"109","2":"82","3":"0","4":"goiania","5":"Municipal","6":"Centro-oeste","7":"191","8":"Goiás"},{"1":"112","2":"42","3":"46","4":"cuiaba","5":"Estadual","6":"Centro-oeste","7":"200","8":"Mato Grosso"},{"1":"103","2":"63","3":"34","4":"cuiaba","5":"Municipal","6":"Centro-oeste","7":"200","8":"Mato Grosso"},{"1":"112","2":"34","3":"54","4":"campo grande","5":"Estadual","6":"Centro-oeste","7":"200","8":"Mato Grosso do Sul"},{"1":"103","2":"97","3":"0","4":"campo grande","5":"Municipal","6":"Centro-oeste","7":"200","8":"Mato Grosso do Sul"},{"1":"109","2":"58","3":"34","4":"maceio","5":"Estadual","6":"Nordeste","7":"201","8":"Alagoas"},{"1":"111","2":"86","3":"0","4":"maceio","5":"Municipal","6":"Nordeste","7":"197","8":"Alagoas"},{"1":"80","2":"81","3":"42","4":"salvador","5":"Estadual","6":"Nordeste","7":"203","8":"Bahia"},{"1":"80","2":"64","3":"59","4":"salvador","5":"Municipal","6":"Nordeste","7":"203","8":"Bahia"},{"1":"100","2":"41","3":"59","4":"fortaleza","5":"Estadual","6":"Nordeste","7":"200","8":"Ceará"},{"1":"129","2":"72","3":"0","4":"fortaleza","5":"Municipal","6":"Nordeste","7":"201","8":"Ceará"},{"1":"89","2":"40","3":"71","4":"sao luis","5":"Estadual","6":"Nordeste","7":"200","8":"Maranhão"},{"1":"94","2":"106","3":"0","4":"sao luis","5":"Municipal","6":"Nordeste","7":"200","8":"Maranhão"},{"1":"136","2":"69","3":"0","4":"joao pessoa","5":"Estadual","6":"Nordeste","7":"205","8":"Paraíba"},{"1":"164","2":"43","3":"0","4":"joao pessoa","5":"Municipal","6":"Nordeste","7":"207","8":"Paraíba"},{"1":"105","2":"64","3":"31","4":"recife","5":"Estadual","6":"Nordeste","7":"200","8":"Pernambuco"},{"1":"95","2":"74","3":"31","4":"recife","5":"Municipal","6":"Nordeste","7":"200","8":"Pernambuco"},{"1":"111","2":"57","3":"42","4":"teresina","5":"Estadual","6":"Nordeste","7":"210","8":"Piauí"},{"1":"142","2":"72","3":"0","4":"teresina","5":"Municipal","6":"Nordeste","7":"214","8":"Piauí"},{"1":"80","2":"45","3":"52","4":"natal","5":"Estadual","6":"Nordeste","7":"177","8":"Rio Grande do Norte"},{"1":"5","2":"117","3":"28","4":"natal","5":"Municipal","6":"Nordeste","7":"150","8":"Rio Grande do Norte"},{"1":"100","2":"50","3":"50","4":"aracaju","5":"Estadual","6":"Nordeste","7":"200","8":"Sergipe"},{"1":"103","2":"61","3":"36","4":"aracaju","5":"Municipal","6":"Nordeste","7":"200","8":"Sergipe"},{"1":"93","2":"87","3":"0","4":"rio branco - ef","5":"Estadual","6":"Norte","7":"180","8":"Acre - EF"},{"1":"142","2":"57","3":"0","4":"rio branco - ef","5":"Municipal","6":"Norte","7":"199","8":"Acre - EF"},{"1":"93","2":"67","3":"0","4":"rio branco - em","5":"Estadual","6":"Norte","7":"160","8":"Acre - EM"},{"1":"102","2":"22","3":"76","4":"macapa","5":"Estadual","6":"Norte","7":"200","8":"Amapá"},{"1":"102","2":"22","3":"76","4":"macapa","5":"Municipal","6":"Norte","7":"200","8":"Amapá"},{"1":"70","2":"35","3":"105","4":"manaus","5":"Estadual","6":"Norte","7":"210","8":"Amazonas"},{"1":"70","2":"35","3":"105","4":"manaus","5":"Municipal","6":"Norte","7":"210","8":"Amazonas"},{"1":"100","2":"42","3":"58","4":"belem","5":"Estadual","6":"Norte","7":"200","8":"Pará"},{"1":"100","2":"63","3":"27","4":"belem","5":"Municipal","6":"Norte","7":"190","8":"Pará"},{"1":"114","2":"27","3":"59","4":"porto velho","5":"Estadual","6":"Norte","7":"200","8":"Rondônia"},{"1":"81","2":"45","3":"34","4":"porto velho","5":"Municipal","6":"Norte","7":"160","8":"Rondônia"},{"1":"89","2":"37","3":"48","4":"boa vista","5":"Estadual","6":"Norte","7":"174","8":"Roraima"},{"1":"88","2":"29","3":"43","4":"boa vista","5":"Municipal","6":"Norte","7":"160","8":"Roraima"},{"1":"50","2":"114","3":"0","4":"palmas","5":"Estadual","6":"Norte","7":"164","8":"Tocantins"},{"1":"100","2":"41","3":"59","4":"palmas","5":"Municipal","6":"Norte","7":"200","8":"Tocantins"},{"1":"82","2":"56","3":"62","4":"vitoria","5":"Estadual","6":"Sudeste","7":"200","8":"Espírito Santo"},{"1":"61","2":"81","3":"60","4":"vitoria","5":"Municipal","6":"Sudeste","7":"202","8":"Espírito Santo"},{"1":"72","2":"82","3":"46","4":"belo horizonte","5":"Estadual","6":"Sudeste","7":"200","8":"Minas Gerais"},{"1":"83","2":"82","3":"46","4":"belo horizonte","5":"Municipal","6":"Sudeste","7":"211","8":"Minas Gerais"},{"1":"43","2":"102","3":"62","4":"rio de janeiro","5":"Estadual","6":"Sudeste","7":"207","8":"Rio de Janeiro"},{"1":"29","2":"136","3":"37","4":"rio de janeiro","5":"Municipal","6":"Sudeste","7":"202","8":"Rio de Janeiro"},{"1":"12","2":"150","3":"38","4":"sao paulo","5":"Estadual","6":"Sudeste","7":"200","8":"São Paulo"},{"1":"0","2":"162","3":"42","4":"sao paulo","5":"Municipal","6":"Sudeste","7":"204","8":"São Paulo"},{"1":"55","2":"63","3":"82","4":"curitiba","5":"Estadual","6":"Sul","7":"200","8":"Paraná"},{"1":"93","2":"37","3":"70","4":"curitiba","5":"Municipal","6":"Sul","7":"200","8":"Paraná"},{"1":"43","2":"120","3":"37","4":"porto alegre","5":"Estadual","6":"Sul","7":"200","8":"Rio Grande do Sul"},{"1":"0","2":"141","3":"59","4":"porto alegre","5":"Municipal","6":"Sul","7":"200","8":"Rio Grande do Sul"},{"1":"67","2":"67","3":"67","4":"florianopolis","5":"Estadual","6":"Sul","7":"201","8":"Santa Catarina"},{"1":"16","2":"185","3":"0","4":"florianopolis","5":"Municipal","6":"Sul","7":"201","8":"Santa Catarina"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
 </div>

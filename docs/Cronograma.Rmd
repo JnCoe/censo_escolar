@@ -359,5 +359,5 @@ novo_cronograma_municipal %>%
    mutate(capital = tolower(iconv(capital, to="ASCII//TRANSLIT"))) %>%
   mutate(capital = stringr::str_trim(capital)) %>%
   left_join(select(cronograma_estadual, capital, estado, regiao)) %>%
-  arrange(regiao, estado)
+  arrange(regiao, estado, rede)
 ```
