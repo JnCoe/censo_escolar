@@ -41,9 +41,10 @@ library(gridExtra)
 library(tidylog)
 
 options(scipen = 9999)
-load('../dados/cronograma.rdata')
+#load('../dados/cronograma.rdata')
 load('../dados/novo_cronograma3.rdata')
-load('../dados/medias.rdata')
+#load('../dados/medias.rdata')
+load('../dados/cronograma_estadual.rdata')
 
 ```
 
@@ -54,7 +55,16 @@ novo_cronograma <- novo_cronograma3 %>%
 novo_cronograma_estadual <- novo_cronograma %>%
   filter(rede == 'Estadual') %>%
   rowwise() %>%
+#   mutate(capital = tolower(iconv(capital, to="ASCII//TRANSLIT"))) %>%
+#  mutate(capital = stringr::str_trim(capital)) %>%
   mutate(total_dias = sum(remoto+hibrido+presencial))
+
+#equivalencias <- equivalencias %>%
+#  mutate(capital = tolower(iconv(capital, to="ASCII//TRANSLIT"))) %>%
+#  mutate(capital = stringr::str_trim(capital))
+
+#cron_est <- novo_cronograma_estadual %>%
+#  left_join(equivalencias)
 
 novo_cronograma_municipal <- novo_cronograma %>%
   filter(rede == 'Municipal') %>%
@@ -89,7 +99,7 @@ A tabela 1 apresenta a média de dias letivos em cada região, por modalidade. O
 # Tabela 1 - Médias estaduais
 
 ```{r}
-geral_est <- novo_cronograma_estadual %>%
+geral_est <- cronograma_estadual %>%
   group_by(.) %>%
   summarise('Média remoto' = round(mean(remoto)),
             'Média híbrido' = round(mean(hibrido)),
@@ -97,7 +107,7 @@ geral_est <- novo_cronograma_estadual %>%
             'Média total' = round(mean(total_dias))) %>%
   mutate(regiao = 'Total', .before='Média remoto')
 
-media_estadual2 <- novo_cronograma_estadual %>%
+media_estadual2 <- cronograma_estadual %>%
   group_by(regiao) %>%
   summarise('Média remoto' = round(mean(remoto)),
             'Média híbrido' = round(mean(hibrido)),
@@ -112,14 +122,14 @@ media_estadual2
 
 
 ```{r, results='asis'}
-graf <- novo_cronograma_estadual %>%
+graf <- cronograma_estadual %>%
   mutate(hibrido = as.numeric(hibrido),
          presencial = as.numeric(presencial)) %>%
     mutate(deficit = ifelse(200-total_dias > 0, 200-total_dias, 0)) %>%
     arrange(desc(total_dias), desc(deficit), desc(remoto)) %>%
   select(-c(rede, total_dias)) %>%
   googleVis::gvisBarChart(
-    xvar = 'capital',
+    xvar = 'estado',
     options = list(
       bars = 'horizontal',
       isStacked = TRUE,
