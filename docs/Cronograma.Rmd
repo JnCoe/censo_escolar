@@ -350,3 +350,14 @@ novo_cronograma_estadual
 ```{r}
 novo_cronograma_municipal
 ```
+
+## Tabela unificada
+```{r}
+novo_cronograma_municipal %>%
+  rbind(novo_cronograma_estadual) %>%
+    rowwise() %>%
+   mutate(capital = tolower(iconv(capital, to="ASCII//TRANSLIT"))) %>%
+  mutate(capital = stringr::str_trim(capital)) %>%
+  left_join(select(cronograma_estadual, capital, estado, regiao)) %>%
+  arrange(regiao, estado)
+```
