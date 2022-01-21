@@ -57,7 +57,9 @@ novo_cronograma_estadual <- novo_cronograma %>%
   rowwise() %>%
 #   mutate(capital = tolower(iconv(capital, to="ASCII//TRANSLIT"))) %>%
 #  mutate(capital = stringr::str_trim(capital)) %>%
-  mutate(total_dias = sum(remoto+hibrido+presencial))
+  mutate(total_dias = sum(remoto+hibrido+presencial)) %>%
+  mutate(capital_limpo = stringr::str_trim(tolower(iconv(capital, to="ASCII//TRANSLIT")))) %>%
+  left_join(select(cronograma_estadual, capital, estado), by = c('capital_limpo' = 'capital'))
 
 #equivalencias <- equivalencias %>%
 #  mutate(capital = tolower(iconv(capital, to="ASCII//TRANSLIT"))) %>%
@@ -69,7 +71,11 @@ novo_cronograma_estadual <- novo_cronograma %>%
 novo_cronograma_municipal <- novo_cronograma %>%
   filter(rede == 'Municipal') %>%
   rowwise() %>%
-  mutate(total_dias = sum(remoto+hibrido+presencial))
+  mutate(total_dias = sum(remoto+hibrido+presencial)) %>%
+  mutate(capital_limpo = stringr::str_trim(tolower(iconv(capital, to="ASCII//TRANSLIT")))) %>%
+  left_join(select(cronograma_estadual, capital, estado), by = c('capital_limpo' = 'capital'))
+
+rm(cronograma_estadual)
 ```
 
 # Introdução
@@ -99,7 +105,7 @@ A tabela 1 apresenta a média de dias letivos em cada região, por modalidade. O
 # Tabela 1 - Médias estaduais
 
 ```{r}
-geral_est <- cronograma_estadual %>%
+geral_est <- novo_cronograma_estadual %>%
   group_by(.) %>%
   summarise('Média remoto' = round(mean(remoto)),
             'Média híbrido' = round(mean(hibrido)),
@@ -107,7 +113,7 @@ geral_est <- cronograma_estadual %>%
             'Média total' = round(mean(total_dias))) %>%
   mutate(regiao = 'Total', .before='Média remoto')
 
-media_estadual2 <- cronograma_estadual %>%
+media_estadual2 <- novo_cronograma_estadual %>%
   group_by(regiao) %>%
   summarise('Média remoto' = round(mean(remoto)),
             'Média híbrido' = round(mean(hibrido)),
@@ -122,7 +128,7 @@ media_estadual2
 
 
 ```{r, results='asis'}
-graf <- cronograma_estadual %>%
+graf <- novo_cronograma_estadual %>%
   mutate(hibrido = as.numeric(hibrido),
          presencial = as.numeric(presencial)) %>%
     mutate(deficit = ifelse(200-total_dias > 0, 200-total_dias, 0)) %>%
@@ -354,10 +360,50 @@ novo_cronograma_municipal
 ## Tabela unificada
 ```{r}
 novo_cronograma_municipal %>%
-  rbind(novo_cronograma_estadual) %>%
-    rowwise() %>%
-   mutate(capital = tolower(iconv(capital, to="ASCII//TRANSLIT"))) %>%
-  mutate(capital = stringr::str_trim(capital)) %>%
-  left_join(select(cronograma_estadual, capital, estado, regiao)) %>%
-  arrange(regiao, estado, rede)
+  rbind(novo_cronograma_estadual) #%>%
+#  arrange(regiao, estado, rede)
+```
+
+## Médias não arrendodadas
+
+### Estadual
+```{r}
+geral_est <- novo_cronograma_estadual %>%
+  group_by(.) %>%
+  summarise('Média remoto' = mean(remoto),
+            'Média híbrido' = mean(hibrido),
+            'Média presencial' = mean(presencial),
+            'Média total' = mean(total_dias)) %>%
+  mutate(regiao = 'Total', .before='Média remoto')
+
+media_estadual2 <- novo_cronograma_estadual %>%
+  group_by(regiao) %>%
+  summarise('Média remoto' = mean(remoto),
+            'Média híbrido' = mean(hibrido),
+            'Média presencial' = mean(presencial),
+            'Média total' = mean(total_dias)) %>%
+  rbind(geral_est)
+
+media_estadual2
+```
+
+### Municipal
+```{r}
+geral_mun <- novo_cronograma_municipal %>%
+  group_by(.) %>%
+  summarise('Média remoto' = mean(remoto),
+            'Média híbrido' = mean(hibrido),
+            'Média presencial' = mean(presencial),
+            'Média total' = mean(total_dias)) %>%
+  mutate(regiao = 'Total', .before='Média remoto')
+
+media_municipal2 <- novo_cronograma_municipal %>%
+  group_by(regiao) %>%
+  summarise('Média remoto' = mean(remoto),
+            'Média híbrido' = mean(hibrido),
+            'Média presencial' = mean(presencial),
+            'Média total' = mean(total_dias)) %>%
+    rbind(geral_mun)
+
+media_municipal2
 ```
